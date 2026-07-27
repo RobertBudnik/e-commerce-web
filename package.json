@@ -1,0 +1,17 @@
+{
+  "name": "nordo-shop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Szablon sklepu Nordo — frontend statyczny + backend Supabase",
+  "scripts": {
+    "db:start": "SITE_URL=${SITE_URL:-http://127.0.0.1:8000} ADDITIONAL_REDIRECT_URL=${ADDITIONAL_REDIRECT_URL:-http://127.0.0.1:8000} supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "SITE_URL=${SITE_URL:-http://127.0.0.1:8000} ADDITIONAL_REDIRECT_URL=${ADDITIONAL_REDIRECT_URL:-http://127.0.0.1:8000} supabase db reset",
+    "db:test": "node scripts/test-schema.mjs",
+    "serve": "python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.2.17",
+    "supabase": "^2.30.4"
+  }
+}

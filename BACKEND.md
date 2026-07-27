@@ -1,0 +1,130 @@
+# Nordo — backend na Supabase
+
+Warstwa serwerowa: Postgres ze wszystkimi regułami dostępu w bazie (RLS), logika
+handlowa w funkcjach SQL, płatności w funkcjach Edge. Na razie wszystko lokalnie,
+ale nic nie jest przybite do `localhost` — przejście na domenę to zmiana zmiennych
+środowiskowych, nie kodu.
+
+## Co już działa
+
+```
+supabase/
+  config.toml                              konfiguracja projektu, adresy z env(), hook roli
+  migrations/
+    20260727090000_init_schema.sql         tabele, typy, triggery
+    20260727090100_auth_and_commerce_...   role, uprawnienia, zamówienia, magazyn
+    20260727090200_rls_policies.sql        polityki RLS i GRANT-y
+  seed.sql                                 dane startowe + konto właściciela
+  functions/
+    create-checkout/                       zamówienie + sesja płatności
+    stripe-webhook/                        potwierdzenie płatności (weryfikacja podpisu)
+scripts/
+  gen-seed.mjs                             js/data.js → supabase/seed.sql
+  test-schema.mjs                          testy schematu na Postgresie w WASM
+```
+
+## Uruchomienie bez Dockera — testy schematu
+
+```bash
+npm run db:test
+```
+
+Odpala Postgres 16 skompilowany do WebAssembly, wgrywa migracje i seed, po czym
+sprawdza 51 przypadków: uprawnienia ról, liczenie cen, rezerwację stanu, RLS.
+Nie zastępuje pełnego stosu (brak Auth, PostgREST, Realtime), ale weryfikuje
+wszystko, co jest w SQL.
+
+## Uruchomienie pełnego stosu — wymaga Dockera
+
+Docker instaluje się z prawami administratora, więc ten krok należy do Ciebie:
+
+1. Pobierz **Docker Desktop** (albo OrbStack) na Apple Silicon i zainstaluj.
+2. Uruchom aplikację, poczekaj aż wieloryb w pasku menu przestanie się animować.
+3. Dalej:
+
+```bash
+npm run db:start
+```
+
+CLI wypisze adresy i klucze — `API URL`, `anon key`, `service_role key`, Studio
+pod `http://127.0.0.1:54323`. Wpisz je do `.env` na podstawie `.env.example`.
+
+Reset bazy razem z seedem:
+
+```bash
+npm run db:reset
+```
+
+Funkcje Edge lokalnie:
+
+```bash
+npx supabase functions serve create-checkout --env-file supabase/.env.local
+npx supabase functions serve stripe-webhook --env-file supabase/.env.local --no-verify-jwt
+```
+
+`--no-verify-jwt` przy webhooku jest konieczne: operator płatności nie nosi tokenu
+użytkownika. Autentyczność żądania potwierdza podpis HMAC, nie JWT.
+
+## Role i uprawnienia
+
+| rola | uprawnienia |
+|---|---|
+| `owner` | wszystko, łącznie z nadawaniem ról |
+| `manager` | katalog, zamówienia, klienci, magazyn |
+| `staff` | odczyt katalogu, obsługa zamówień, magazyn |
+| `customer` | własne zamówienia, adresy, lista życzeń |
+
+Rola trafia do access tokenu jako claim `user_role` (hook `custom_access_token_hook`,
+włączony w `config.toml`). Polityki czytają ją bez dodatkowego zapytania, a gdy claimu
+brakuje — funkcja `current_role_name()` sięga do tabeli `user_roles`.
+
+Nadanie roli pracownikowi:
+
+```sql
+insert into public.user_roles (user_id, role)
+select id, 'staff' from auth.users where email = 'magazyn@nordo.pl';
+```
+
+Rola zapisana w tokenie żyje do jego wygaśnięcia. Odebranie uprawnień wymaga
+unieważnienia sesji (`auth.admin.signOut(user_id)`), samo skasowanie wiersza nie wystarczy.
+
+## Logika, która musi siedzieć na serwerze
+
+- **Ceny** — `create_order()` czyta je z tabeli `products`. Przeglądarka przysyła
+  wyłącznie `product_id` i `qty`.
+- **Rabaty** — kupon sprawdzany w bazie przed powstaniem zamówienia, licznik użyć rośnie tam samo.
+- **Dostawa** — próg darmowej dostawy i stawka w tabeli `store_settings`.
+- **Stany magazynowe** — `take_stock()` robi warunkowy `UPDATE ... WHERE stock >= qty`.
+  Dwa równoległe zamówienia na ostatnią sztukę: jedno przechodzi, drugie dostaje błąd.
+  Sprawdzone testem.
+- **Płatność** — `mark_order_paid()` woła wyłącznie webhook z kluczem `service_role`,
+  a funkcja jest idempotentna, więc powtórka zdarzenia niczego nie psuje.
+
+## Przejście na domenę
+
+Nic w kodzie nie zawiera adresu na sztywno. Do przełączenia wystarczy:
+
+```bash
+export SITE_URL="https://nordo.pl"
+export ADDITIONAL_REDIRECT_URL="https://nordo.pl/login.html"
+
+npx supabase link --project-ref <ref-projektu>
+npx supabase db push                 # migracje na zdalną bazę
+npx supabase functions deploy create-checkout
+npx supabase functions deploy stripe-webhook --no-verify-jwt
+npx supabase secrets set --env-file supabase/.env.local
+```
+
+Do tego w panelu Supabase: **Authentication → URL Configuration** ustawić Site URL
+na domenę, a w Stripe wskazać webhook na
+`https://<ref>.supabase.co/functions/v1/stripe-webhook`.
+
+Seed z kontem `admin@nordo.pl` i hasłem wpisanym w pliku jest wyłącznie do pracy
+lokalnej — `db push` go nie wysyła, ale nie wolno go uruchamiać na produkcji.
+
+## Czego jeszcze nie ma
+
+- Podpięcia frontendu do bazy — strona nadal czyta `js/data.js` i `localStorage`
+- Faktur, integracji z kurierem, powiadomień e-mail o statusie
+- Aplikacji magazynowej (PWA) — następny etap
+- Wariantów produktów (rozmiar, kolor) i wielu magazynów
