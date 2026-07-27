@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Wszystkie produkty w sklepie Nordo — filtruj po kategorii, sortuj po cenie i ocenie.">
+  <title>Sklep — Nordo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="index.html">Nordo</a>
+    <nav class="nav">
+      <a href="index.html">Start</a>
+      <a href="shop.html" aria-current="page">Sklep</a>
+    </nav>
+    <div class="header-actions">
+      <div class="search">
+        <span data-icon="search"></span>
+        <label class="sr-only" for="q">Szukaj produktów</label>
+        <input id="q" type="search" placeholder="Szukaj" data-search>
+      </div>
+      <div class="account-menu" data-account></div>
+      <a class="btn btn-ghost btn-sm cart-btn" href="cart.html">
+        Koszyk
+        <span class="cart-count" data-cart-count hidden>0</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="container section">
+  <div class="section-head">
+    <div>
+      <span class="label">Katalog</span>
+      <h1>Sklep</h1>
+    </div>
+    <p class="muted num" data-result-count></p>
+  </div>
+
+  <div class="toolbar">
+    <div class="chips">
+      <button class="chip" data-filter="all" aria-pressed="true">Wszystkie</button>
+      <button class="chip" data-filter="audio" aria-pressed="false">Audio</button>
+      <button class="chip" data-filter="komputery" aria-pressed="false">Komputery</button>
+      <button class="chip" data-filter="foto" aria-pressed="false">Foto</button>
+      <button class="chip" data-filter="smart" aria-pressed="false">Smart home</button>
+    </div>
+    <div class="select-wrap">
+      <label class="sr-only" for="sort">Sortowanie</label>
+      <select id="sort" data-sort>
+        <option value="popular">Najpopularniejsze</option>
+        <option value="price-asc">Cena rosnąco</option>
+        <option value="price-desc">Cena malejąco</option>
+        <option value="rating">Najwyżej oceniane</option>
+        <option value="name">Nazwa A–Z</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid" data-grid="shop"></div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom" style="margin-top:0">
+      <span>© 2026 Nordo</span>
+      <a href="index.html">Strona główna</a>
+    </div>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/backend.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

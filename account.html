@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Panel klienta Nordo — dane, adres, lista życzeń.">
+  <title>Moje konto — Nordo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="index.html">Nordo</a>
+    <nav class="nav">
+      <a href="index.html">Start</a>
+      <a href="shop.html">Sklep</a>
+    </nav>
+    <div class="header-actions">
+      <div class="account-menu" data-account></div>
+      <a class="btn btn-ghost btn-sm cart-btn" href="cart.html">
+        Koszyk
+        <span class="cart-count" data-cart-count hidden>0</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="container" data-account-root>
+  <div class="account-head">
+    <span class="avatar avatar-lg" data-user-initials></span>
+    <div>
+      <h1 data-user-name></h1>
+      <span data-user-email></span> <span class="pill" data-role-badge></span>
+    </div>
+  </div>
+
+  <div class="account-layout">
+    <nav class="side-nav" aria-label="Sekcje konta">
+      <button type="button" data-panel-tab="overview" data-role="admin" aria-selected="true"><span data-icon="user"></span> Przegląd</button>
+      <button type="button" data-panel-tab="orders" data-role="admin" aria-selected="false"><span data-icon="box"></span> Zamówienia</button>
+      <button type="button" data-panel-tab="customers" data-role="admin" aria-selected="false"><span data-icon="pin"></span> Klienci i adresy</button>
+      <button type="button" data-panel-tab="wishlist" data-role="all" aria-selected="false"><span data-icon="heart"></span> Lista życzeń</button>
+      <button type="button" data-panel-tab="settings" data-role="all" aria-selected="false"><span data-icon="shield"></span> Dane i hasło</button>
+      <div class="menu-sep"></div>
+      <a class="admin-link" href="admin.html" data-role="admin"><span data-icon="grid"></span> Panel produktów</a>
+      <button type="button" data-signout><span data-icon="logout"></span> Wyloguj</button>
+    </nav>
+
+    <div>
+      <!-- ADMIN -->
+      <section class="panel" data-panel="overview" data-role="admin">
+        <h2>Przegląd sklepu</h2>
+        <p class="lede">Podsumowanie zamówień i kosztów wszystkich klientów.</p>
+        <div class="stat-row">
+          <div class="stat"><strong class="num" data-stat-orders></strong><span>zamówień</span></div>
+          <div class="stat"><strong class="num" data-stat-spent></strong><span>obrót</span></div>
+          <div class="stat"><strong class="num" data-stat-shipping></strong><span>koszty dostawy</span></div>
+        </div>
+        <div class="card-box">
+          <h3>Do obsłużenia</h3>
+          <p class="muted" data-pending></p>
+          <p style="margin-top:14px"><a class="arrow-link" href="#orders" data-panel-tab="orders">Przejdź do zamówień</a></p>
+        </div>
+        <div class="card-box">
+          <h3>Katalog</h3>
+          <p class="muted"><span class="num" data-catalog-count></span> produktów w sklepie.</p>
+          <p style="margin-top:14px"><a class="arrow-link" href="admin.html">Dodaj lub edytuj produkty</a></p>
+        </div>
+      </section>
+
+      <section class="panel" data-panel="orders" data-role="admin" hidden>
+        <h2>Zamówienia</h2>
+        <p class="lede">Wszystkie zamówienia z danymi klienta, adresem i kosztami.</p>
+        <div data-orders></div>
+      </section>
+
+      <section class="panel" data-panel="customers" data-role="admin" hidden>
+        <h2>Klienci i adresy</h2>
+        <p class="lede">Dane kontaktowe z zamówień.</p>
+        <div data-customers></div>
+      </section>
+
+      <!-- KLIENT + ADMIN -->
+      <section class="panel" data-panel="wishlist" data-role="all" hidden>
+        <h2>Lista życzeń</h2>
+        <p class="lede">Produkty odłożone na później.</p>
+        <div class="grid" data-grid="wishlist"></div>
+      </section>
+
+      <section class="panel" data-panel="settings" data-role="all" hidden>
+        <h2>Dane i hasło</h2>
+        <p class="lede">Dane logowania, kontakt i adres dostawy.</p>
+
+        <div class="card-box">
+          <h3>Dane konta</h3>
+          <form data-profile-form>
+            <div class="field-row">
+              <div class="field">
+                <label for="set-name">Imię i nazwisko</label>
+                <input id="set-name" name="name" type="text" autocomplete="name">
+              </div>
+              <div class="field">
+                <label for="set-phone">Telefon</label>
+                <input id="set-phone" name="phone" type="tel" autocomplete="tel" placeholder="+48 600 000 000">
+              </div>
+            </div>
+            <div class="field">
+              <label for="set-email">E-mail</label>
+              <input id="set-email" name="email" type="email" autocomplete="email">
+            </div>
+
+            <h3 style="margin:28px 0 14px">Adres dostawy</h3>
+            <div class="field">
+              <label for="set-street">Ulica i numer</label>
+              <input id="set-street" name="street" type="text" autocomplete="street-address" placeholder="Krucza 12/4">
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="set-zip">Kod pocztowy</label>
+                <input id="set-zip" name="zip" type="text" autocomplete="postal-code" placeholder="00-001">
+              </div>
+              <div class="field">
+                <label for="set-city">Miasto</label>
+                <input id="set-city" name="city" type="text" autocomplete="address-level2" placeholder="Warszawa">
+              </div>
+            </div>
+            <label class="check" style="margin-top:18px">
+              <input type="checkbox" name="newsletter"> Newsletter z promocjami
+            </label>
+            <button class="btn" type="submit" style="margin-top:22px">Zapisz dane</button>
+          </form>
+        </div>
+
+        <div class="card-box">
+          <h3>Hasło</h3>
+          <p class="muted">Zmianę hasła obsługuje backend — ten szablon nie przyjmuje ani nie przechowuje haseł.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom" style="margin-top:0">
+      <span>© 2026 Nordo</span>
+      <a href="shop.html">Kontynuuj zakupy</a>
+    </div>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/backend.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

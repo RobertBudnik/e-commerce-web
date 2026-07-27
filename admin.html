@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="noindex">
+  <meta name="description" content="Panel produktów Nordo — dodawanie i edycja katalogu.">
+  <title>Panel produktów — Nordo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="index.html">Nordo</a>
+    <nav class="nav">
+      <a href="index.html">Start</a>
+      <a href="shop.html">Sklep</a>
+      <a href="account.html">Konto</a>
+    </nav>
+    <div class="header-actions">
+      <div class="account-menu" data-account></div>
+      <a class="btn btn-ghost btn-sm cart-btn" href="cart.html">
+        Koszyk
+        <span class="cart-count" data-cart-count hidden>0</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="container section" data-admin-root>
+  <div class="section-head">
+    <div>
+      <span class="label">Organizacja</span>
+      <h1>Panel produktów</h1>
+    </div>
+    <div class="admin-toolbar">
+      <span class="muted"><span class="num" data-admin-count></span> pozycji w katalogu</span>
+      <button class="btn btn-ghost btn-sm" type="button" data-reset-catalog>Przywróć katalog startowy</button>
+    </div>
+  </div>
+
+  <div class="notice">
+    <span data-icon="info"></span>
+    <span>Katalog trzymany jest w <code>localStorage</code> tej przeglądarki. Zmiany widzi tylko to
+      urządzenie — po podpięciu backendu formularz powinien uderzać w <code>POST /api/products</code>
+      i <code>PUT /api/products/:id</code>, a uprawnienia sprawdzać serwer.</span>
+  </div>
+
+  <div class="admin-layout">
+    <section>
+      <h2 data-form-title>Nowy produkt</h2>
+      <div class="card-box">
+        <form data-admin-form>
+          <input type="hidden" name="id">
+
+          <div class="field">
+            <label for="a-name">Nazwa</label>
+            <input id="a-name" name="name" type="text" required placeholder="Słuchawki bezprzewodowe Aura X">
+          </div>
+
+          <div class="field">
+            <label for="a-short">Krótki opis</label>
+            <textarea id="a-short" name="short" rows="2" required placeholder="Aktywna redukcja szumów, 40 h pracy."></textarea>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="a-category">Kategoria</label>
+              <select id="a-category" name="category"></select>
+            </div>
+            <div class="field">
+              <label for="a-icon">Ikona</label>
+              <select id="a-icon" name="icon"></select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="a-price">Cena (zł)</label>
+              <input id="a-price" name="price" type="number" step="0.01" min="0" required placeholder="649">
+            </div>
+            <div class="field">
+              <label for="a-oldprice">Cena przed obniżką</label>
+              <input id="a-oldprice" name="oldPrice" type="number" step="0.01" min="0" placeholder="puste = brak">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="a-stock">Stan magazynowy</label>
+              <input id="a-stock" name="stock" type="number" min="0" required placeholder="12">
+            </div>
+            <div class="field">
+              <label for="a-badge">Plakietka</label>
+              <input id="a-badge" name="badge" type="text" placeholder="-19% albo Nowość">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="a-rating">Ocena (0–5)</label>
+              <input id="a-rating" name="rating" type="number" step="0.1" min="0" max="5" placeholder="4.6">
+            </div>
+            <div class="field">
+              <label for="a-reviews">Liczba opinii</label>
+              <input id="a-reviews" name="reviews" type="number" min="0" placeholder="218">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="a-specs">Specyfikacja</label>
+            <textarea id="a-specs" name="specs" rows="6" placeholder="Typ: Nauszne, zamknięte&#10;Czas pracy: 40 h"></textarea>
+            <span class="field-hint">Jedna linia = jeden wiersz tabeli, format <code>Klucz: wartość</code>.</span>
+          </div>
+
+          <div class="buy-row" style="margin-top:24px">
+            <button class="btn" type="submit">Zapisz produkt</button>
+            <button class="btn btn-ghost" type="button" data-cancel-edit hidden>Anuluj edycję</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section>
+      <h2>Katalog</h2>
+      <div data-admin-list></div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom" style="margin-top:0">
+      <span>© 2026 Nordo</span>
+      <a href="account.html">Wróć do konta</a>
+    </div>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/backend.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
