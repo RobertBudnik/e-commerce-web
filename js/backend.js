@@ -313,6 +313,37 @@ const Backend = {
   },
 
   /**
+   * Zmiana statusu zamówienia. Wpuszcza wyłącznie polityka „zamówienia: obsługa",
+   * czyli konto z uprawnieniem `orders.write` — klient dostanie zero wierszy,
+   * a nie błąd, bo RLS na UPDATE po prostu nie widzi cudzego zamówienia.
+   */
+  async setOrderStatus(orderId, status) {
+    if (!(await this.init())) return null;
+
+    const { data, error } = await this.client
+      .from('orders')
+      .update({ status })
+      .eq('id', orderId)
+      .select('*, order_items(*)');
+
+    if (error) throw new Error(error.message);
+    if (!data.length) throw new Error('Brak uprawnień do zmiany statusu tego zamówienia');
+    return this.toOrder(data[0]);
+  },
+
+  /**
+   * Anulowanie. Idzie przez funkcję, nie przez UPDATE, bo poza statusem musi
+   * wrócić towar na magazyn — a tego przeglądarce zrobić nie wolno.
+   */
+  async cancelOrder(orderId) {
+    if (!(await this.init())) return null;
+
+    const { data, error } = await this.client.rpc('cancel_order', { p_order_id: orderId });
+    if (error) throw new Error(error.message);
+    return data ? this.toOrder(Array.isArray(data) ? data[0] : data) : null;
+  },
+
+  /**
    * Jedno zamówienie po numerze. RLS oddaje je właścicielowi zamówienia
    * albo zapleczu — zamówienie gościa nie jest widoczne dla nikogo innego,
    * więc strona potwierdzenia musi umieć pokazać sam numer.

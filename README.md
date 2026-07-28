@@ -84,6 +84,18 @@ Zakładka „Zamówienia" jest ta sama dla obu ról — różnicę robi baza, ni
 dopiero kontu z uprawnieniem `orders.read_all`. Dane kontaktowe klienta dokłada widok tylko
 wtedy, gdy pyta o nie zaplecze.
 
+### Obsługa zamówień
+
+Zaplecze przestawia status stosem przy zamówieniu (`nowe → w realizacji → wysłane →
+dostarczone`), a nad listą ma filtry z licznikiem na każdy status. Zapis przepuszcza
+polityka `zamówienia: obsługa`, czyli uprawnienie `orders.write` — klient dostanie zero
+zmienionych wierszy, nie błąd, bo RLS na `UPDATE` po prostu nie widzi takiego zamówienia.
+
+Anulowanie nie jest zwykłą zmianą statusu: idzie przez funkcję `cancel_order()`, bo poza
+statusem musi wrócić towar na magazyn (`return_stock`). Ta sama funkcja pozwala klientowi
+wycofać **własne** zamówienie — w panelu przycisk pojawia się przy statusie `nowe`.
+Anulowane zamówienia wypadają z obrotu i liczby zamówień w przeglądzie sklepu.
+
 Rolę nadaje się wpisem w bazie, nie zmianą w kodzie frontu:
 
 ```sql
@@ -245,6 +257,5 @@ Kolory, promienie, cienie i szerokość kolumny: zmienne CSS w `:root` w `css/st
 - Klucze operatora płatności: bez `STRIPE_SECRET_KEY` i `STRIPE_WEBHOOK_SECRET`
   zamówienie powstaje, ale nikt go nie opłaci — ścieżka ze Stripe nieprzeklikana
 - Prawdziwe zdjęcia zamiast ikon
-- Zmiana statusu zamówienia z panelu zaplecza — polityka `zamówienia: obsługa` na to pozwala,
-  interfejsu nie ma
-- Powiadomienia e-mail o zamówieniu i wysyłce
+- Powiadomienia e-mail o zamówieniu, wysyłce i anulowaniu
+- Faktury, integracja z kurierem i numer przesyłki przy zamówieniu

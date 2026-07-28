@@ -316,9 +316,34 @@ const Profile = {
  * Zakres wycina RLS, nie przeglądarka: klient dostaje z bazy wyłącznie swoje
  * zamówienia, konto zaplecza wszystkie. Bez backendu zostaje atrapa z data.js.
  */
+const ORDER_STATUSES = ['nowe', 'w realizacji', 'wysłane', 'dostarczone', 'anulowane'];
+
 const Orders = {
   source: 'localStorage',
   list: [],
+
+  /**
+   * Zmiana statusu z panelu zaplecza. Anulowanie idzie przez `cancel_order`,
+   * bo poza statusem musi wrócić towar na magazyn; reszta to zwykły UPDATE,
+   * który i tak przepuści dopiero polityka „zamówienia: obsługa".
+   */
+  async setStatus(order, status) {
+    if (Orders.source !== 'baza') {
+      order.status = status;
+      return order;
+    }
+
+    const updated = status === 'anulowane'
+      ? await Backend.cancelOrder(order.uuid)
+      : await Backend.setOrderStatus(order.uuid, status);
+
+    const i = Orders.list.findIndex((o) => o.uuid === order.uuid);
+    // cancel_order oddaje samo zamówienie, bez pozycji — zostawiamy stare
+    if (i >= 0 && updated) {
+      Orders.list[i] = { ...Orders.list[i], ...updated, items: updated.items.length ? updated.items : Orders.list[i].items };
+    }
+    return Orders.list[i] ?? updated;
+  },
 
   async load() {
     if (Auth.source === 'baza' && Auth.user()) {
@@ -771,6 +796,26 @@ function initLogin() {
   );
 }
 
+/** Stos statusów przy zamówieniu — ten sam komponent co sortowanie w sklepie. */
+function statusStack(o) {
+  return `
+    <div class="sortbox sortbox-sm" data-status-stack data-order="${escapeHtml(o.id)}">
+      <span class="sr-only" id="status-label-${escapeHtml(o.id)}">Status zamówienia ${escapeHtml(o.id)}</span>
+      <button class="sortbox-btn" type="button" data-stack-toggle aria-haspopup="listbox"
+        aria-expanded="false" aria-labelledby="status-label-${escapeHtml(o.id)}">
+        <span data-stack-value>${escapeHtml(o.status)}</span>
+        <span class="sortbox-chevron" aria-hidden="true"></span>
+      </button>
+      <ul class="sortbox-menu" role="listbox" data-stack-menu tabindex="-1" hidden
+        aria-labelledby="status-label-${escapeHtml(o.id)}">
+        ${ORDER_STATUSES.map(
+          (s) => `<li role="option" data-value="${s}" tabindex="-1"
+            aria-selected="${String(s === o.status)}">${s}</li>`
+        ).join('')}
+      </ul>
+    </div>`;
+}
+
 /** Kafelek zamówienia. `withCustomer` dokłada dane kontaktowe — tylko zaplecze. */
 function orderRow(o, withCustomer) {
   const names = o.items
@@ -799,6 +844,30 @@ function orderRow(o, withCustomer) {
       <div class="order-items muted">
         Dostawa ${o.shipping === 0 ? 'gratis' : money(o.shipping)}${o.discount ? ` · rabat −${money(o.discount)}` : ''}
       </div>`}
+      ${orderActions(o, withCustomer)}
+    </div>`;
+}
+
+/**
+ * Akcje przy zamówieniu. Zaplecze przestawia status stosem, klient może
+ * wycofać zamówienie, którego jeszcze nikt nie ruszył. Jedno i drugie
+ * dopuszcza baza — front tylko nie proponuje tego, co i tak dostanie odmowę.
+ */
+function orderActions(o, isStaff) {
+  if (isStaff) {
+    return `
+      <div class="order-actions">
+        <span class="label">Status</span>
+        ${statusStack(o)}
+      </div>`;
+  }
+
+  if (o.status !== 'nowe') return '';
+  return `
+    <div class="order-actions">
+      <button class="btn-link" type="button" data-cancel-order="${escapeHtml(o.id)}">
+        Anuluj zamówienie
+      </button>
     </div>`;
 }
 
@@ -837,13 +906,19 @@ async function initAccountPage() {
     root.querySelectorAll('[data-role="admin"]').forEach((el) => el.remove());
   }
 
-  if (isAdmin) {
+  // Przegląd przeliczamy też po każdej zmianie statusu — obrót i lista
+  // „do obsłużenia" muszą nadążać za tym, co robi zaplecze w zakładce obok.
+  function renderOverview() {
+    if (!isAdmin) return;
+
     const list = Orders.list;
-    const spent = list.reduce((s, o) => s + o.total, 0);
-    const shippingCost = list.reduce((s, o) => s + o.shipping, 0);
+    // Anulowane zamówienia nie liczą się do obrotu — towar wrócił na magazyn
+    const billable = list.filter((o) => o.status !== 'anulowane');
+    const spent = billable.reduce((s, o) => s + o.total, 0);
+    const shippingCost = billable.reduce((s, o) => s + o.shipping, 0);
     const pending = list.filter((o) => o.status !== 'dostarczone' && o.status !== 'anulowane');
 
-    root.querySelector('[data-stat-orders]').textContent = list.length;
+    root.querySelector('[data-stat-orders]').textContent = billable.length;
     root.querySelector('[data-stat-spent]').textContent = money(spent);
     root.querySelector('[data-stat-shipping]').textContent = money(shippingCost);
     root.querySelector('[data-catalog-count]').textContent = PRODUCTS.length;
@@ -873,19 +948,90 @@ async function initAccountPage() {
       : '<p class="muted">Brak klientów — nikt jeszcze nie złożył zamówienia.</p>';
   }
 
+  renderOverview();
+
   // Zamówienia: zaplecze widzi wszystkie z danymi klienta, klient wyłącznie swoje
   const ordersBox = root.querySelector('[data-orders]');
   const ordersLede = root.querySelector('[data-orders-lede]');
   if (ordersLede) {
     ordersLede.textContent = isAdmin
-      ? 'Wszystkie zamówienia z danymi klienta, adresem i kosztami.'
+      ? 'Wszystkie zamówienia z danymi klienta, adresem i kosztami. Status przestawiasz stosem przy zamówieniu.'
       : 'Twoje zamówienia — status, pozycje i koszt dostawy.';
   }
-  if (ordersBox) {
-    ordersBox.innerHTML = Orders.list.length
-      ? Orders.list.map((o) => orderRow(o, isAdmin)).join('')
-      : `<p class="muted">${isAdmin ? 'Brak zamówień w sklepie.' : 'Nie masz jeszcze żadnych zamówień.'}</p>`;
+
+  let statusFilter = 'all';
+
+  function renderOrders() {
+    if (!ordersBox) return;
+
+    const list = statusFilter === 'all'
+      ? Orders.list
+      : Orders.list.filter((o) => o.status === statusFilter);
+
+    const chips = isAdmin
+      ? `<div class="chips chips-tight">
+          ${['all', ...ORDER_STATUSES]
+            .map((s) => {
+              const n = s === 'all' ? Orders.list.length : Orders.list.filter((o) => o.status === s).length;
+              return `<button class="chip" type="button" data-status-filter="${s}"
+                aria-pressed="${String(s === statusFilter)}">${s === 'all' ? 'Wszystkie' : s} <span class="num">${n}</span></button>`;
+            })
+            .join('')}
+        </div>`
+      : '';
+
+    ordersBox.innerHTML =
+      chips +
+      (list.length
+        ? list.map((o) => orderRow(o, isAdmin)).join('')
+        : `<p class="muted">${
+            Orders.list.length
+              ? 'Brak zamówień w tym statusie.'
+              : isAdmin ? 'Brak zamówień w sklepie.' : 'Nie masz jeszcze żadnych zamówień.'
+          }</p>`);
+
+    // Każdy stos statusu dostaje obsługę po przerysowaniu listy
+    ordersBox.querySelectorAll('[data-status-stack]').forEach((box) => {
+      const order = Orders.list.find((o) => o.id === box.dataset.order);
+      stackSelect(box, (status) => changeStatus(order, status));
+    });
   }
+
+  async function changeStatus(order, status) {
+    if (!order || order.status === status) return;
+    const previous = order.status;
+
+    try {
+      await Orders.setStatus(order, status);
+      toast(status === 'anulowane'
+        ? `Zamówienie ${order.id} anulowane — towar wrócił na magazyn`
+        : `Status ${order.id}: ${status}`);
+    } catch (err) {
+      order.status = previous;
+      toast(`Nie udało się zmienić statusu: ${err.message}`);
+    }
+    renderOrders();
+    renderOverview();
+  }
+
+  ordersBox?.addEventListener('click', async (e) => {
+    const chip = e.target.closest('[data-status-filter]');
+    if (chip) {
+      statusFilter = chip.dataset.statusFilter;
+      renderOrders();
+      return;
+    }
+
+    const cancelBtn = e.target.closest('[data-cancel-order]');
+    if (cancelBtn) {
+      const order = Orders.list.find((o) => o.id === cancelBtn.dataset.cancelOrder);
+      if (order && confirm(`Anulować zamówienie ${order.id}? Towar wróci na magazyn.`)) {
+        await changeStatus(order, 'anulowane');
+      }
+    }
+  });
+
+  renderOrders();
 
   // Lista życzeń — produkty z tabeli wishlists (albo z localStorage bez bazy)
   const wish = root.querySelector('[data-grid="wishlist"]');
@@ -1091,9 +1237,30 @@ function initAdmin() {
 
   cancelBtn.addEventListener('click', resetForm);
 
-  root.querySelector('[data-reset-catalog]').addEventListener('click', () => {
-    if (confirm('Przywrócić katalog startowy? Wszystkie dodane produkty znikną.')) Catalog.reset();
-  });
+  // Notka i przycisk resetu zależą od źródła katalogu. Z bazą „przywrócenie
+  // katalogu startowego" nie miałoby czego kasować — ziarno siedzi w seedzie.
+  const note = root.querySelector('[data-catalog-note]');
+  const resetBtn = root.querySelector('[data-reset-catalog]');
+
+  if (Catalog.source === 'baza') {
+    if (note) {
+      note.innerHTML =
+        'Katalog jedzie z bazy — zmiany widzą wszyscy od razu. Zapis przepuszcza dopiero ' +
+        'polityka RLS <code>produkty: edycja</code>, więc konto bez uprawnienia ' +
+        '<code>products.write</code> dostanie odmowę niezależnie od tego, co pokazuje ten formularz.';
+    }
+    resetBtn?.remove();
+  } else {
+    if (note) {
+      note.innerHTML =
+        'Tryb bez bazy: katalog trzyma <code>localStorage</code> tej przeglądarki, więc zmiany ' +
+        'widzi tylko to urządzenie. Ustaw dane Supabase w <code>js/config.js</code>, żeby ' +
+        'katalog był wspólny dla wszystkich.';
+    }
+    resetBtn?.addEventListener('click', () => {
+      if (confirm('Przywrócić katalog startowy? Wszystkie dodane produkty znikną.')) Catalog.reset();
+    });
+  }
 
   list.addEventListener('click', (e) => {
     const edit = e.target.closest('[data-edit]');
@@ -1195,18 +1362,19 @@ function initHome() {
   Recent.render();
 }
 
-/* ---------- Wysuwany stos sortowania ----------
+/* ---------- Wysuwany stos wyboru ----------
  * Zachowuje się jak natywny listbox: strzałki chodzą po opcjach, Home/End
  * skacze na krańce, Enter wybiera, Escape zamyka i oddaje ostrość przyciskowi.
- * Natywnego <select> nie da się animować, stąd własny.
+ * Natywnego <select> nie da się animować, stąd własny — używa go sortowanie
+ * w sklepie i zmiana statusu zamówienia w panelu.
  */
-function initSortBox(onPick) {
-  const box = document.querySelector('[data-sortbox]');
-  if (!box) return;
+function stackSelect(box, onPick) {
+  if (!box || box.dataset.stackReady) return;
+  box.dataset.stackReady = '1';
 
-  const btn = box.querySelector('[data-sort-toggle]');
-  const menu = box.querySelector('[data-sort-menu]');
-  const value = box.querySelector('[data-sort-value]');
+  const btn = box.querySelector('[data-stack-toggle]');
+  const menu = box.querySelector('[data-stack-menu]');
+  const value = box.querySelector('[data-stack-value]');
   const options = [...menu.querySelectorAll('[role="option"]')];
   let cursor = options.findIndex((o) => o.getAttribute('aria-selected') === 'true');
 
@@ -1314,7 +1482,7 @@ function initShop() {
     });
   });
 
-  initSortBox((value) => {
+  stackSelect(document.querySelector('[data-sortbox]'), (value) => {
     state.sort = value;
     apply();
   });

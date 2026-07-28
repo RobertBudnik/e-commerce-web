@@ -1599,10 +1599,33 @@ code {
   background: var(--ink);
 }
 
+/* Wariant przy zamówieniu — ten sam komponent, mniejsza skala */
+.sortbox-sm { margin-left: 0; }
+.sortbox-sm .sortbox-btn { height: 34px; padding-inline: 14px; font-size: .8125rem; }
+.sortbox-sm .sortbox-menu { left: 0; right: auto; min-width: 190px; }
+.sortbox-sm .sortbox-menu li { padding: 8px 11px; font-size: .875rem; }
+
+.order-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+.order-actions .label { color: var(--ink-faint); }
+
+/* Filtry statusów nad listą zamówień */
+.chips-tight { margin-bottom: 8px; gap: 8px; }
+.chips-tight .chip { height: 32px; padding-inline: 13px; font-size: .8125rem; }
+.chips-tight .chip .num { color: var(--ink-faint); margin-left: 4px; }
+.chips-tight .chip[aria-pressed="true"] .num { color: inherit; }
+
 @media (max-width: 560px) {
   .sortbox { width: 100%; }
   .sortbox-btn { width: 100%; justify-content: space-between; }
   .sortbox-menu { left: 0; right: 0; min-width: 0; }
+  .sortbox-sm { width: auto; }
+  .sortbox-sm .sortbox-btn { width: auto; }
 }
 
 /* ---------- Pasek zakupu przyklejony na karcie produktu ---------- */

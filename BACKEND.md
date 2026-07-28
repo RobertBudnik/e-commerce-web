@@ -32,7 +32,7 @@ npm run db:test
 ```
 
 Odpala Postgres 16 skompilowany do WebAssembly, wgrywa migracje i seed, po czym
-sprawdza 72 przypadki: uprawnienia ról, liczenie cen, wycenę koszyka, rezerwację
+sprawdza 76 przypadków: uprawnienia ról, liczenie cen, wycenę koszyka, rezerwację
 stanu, RLS oraz dane panelu konta.
 Nie zastępuje pełnego stosu (brak Auth, PostgREST, Realtime), ale weryfikuje
 wszystko, co jest w SQL.
@@ -107,6 +107,11 @@ unieważnienia sesji (`auth.admin.signOut(user_id)`), samo skasowanie wiersza ni
   Sprawdzone testem.
 - **Płatność** — `mark_order_paid()` woła wyłącznie webhook z kluczem `service_role`,
   a funkcja jest idempotentna, więc powtórka zdarzenia niczego nie psuje.
+- **Status zamówienia** — zwykły `UPDATE`, przepuszczany przez politykę
+  `zamówienia: obsługa` (uprawnienie `orders.write`). Klient nie dostaje błędu,
+  tylko zero trafionych wierszy.
+- **Anulowanie** — `cancel_order()`, bo poza statusem musi wrócić towar na magazyn.
+  Funkcja sama sprawdza, czy woła ją zaplecze, czy właściciel zamówienia.
 
 ## Przejście na domenę
 
@@ -132,8 +137,6 @@ lokalnej — `db push` go nie wysyła, ale nie wolno go uruchamiać na produkcji
 
 ## Czego jeszcze nie ma
 
-- Panelu obsługi zamówień — polityka `zamówienia: obsługa` pozwala zapleczu zmieniać
-  status, ale interfejsu do tego nie ma
 - Faktur, integracji z kurierem, powiadomień e-mail o statusie
 - Aplikacji magazynowej (PWA) — następny etap
 - Wariantów produktów (rozmiar, kolor) i wielu magazynów

@@ -465,6 +465,47 @@ await throws(
 );
 
 // ---------------------------------------------------------------------------
+// Obsługa zamówień z panelu zaplecza
+// ---------------------------------------------------------------------------
+console.log('\nObsługa zamówień');
+await asService();
+const { rows: [handled] } = await db.query(
+  `select id, status from public.orders where status <> 'anulowane' order by created_at limit 1`
+);
+
+// Klient nie dostaje błędu, tylko zero trafionych wierszy — RLS nie widzi
+// cudzego zamówienia, więc UPDATE nie ma czego zmienić.
+await asUser(other.id);
+const foreignUpdate = await db.query(
+  `update public.orders set status = 'wysłane' where id = $1`, [handled.id]
+);
+check('klient nie przestawi cudzego statusu', foreignUpdate.affectedRows === 0, `${foreignUpdate.affectedRows}`);
+
+// Własnego też nie: polityka „zamówienia: obsługa" wymaga orders.write
+await asUser(customer.id);
+const ownUpdate = await db.query(
+  `update public.orders set status = 'dostarczone' where id = $1`, [handled.id]
+);
+check('klient nie przestawi własnego statusu', ownUpdate.affectedRows === 0, `${ownUpdate.affectedRows}`);
+
+await asUser(owner.id);
+const staffUpdate = await db.query(
+  `update public.orders set status = 'wysłane' where id = $1 returning status`, [handled.id]
+);
+check('zaplecze przestawia status', staffUpdate.rows[0]?.status === 'wysłane', `${staffUpdate.rows[0]?.status}`);
+
+// Klient wycofuje własne zamówienie — cancel_order sprawdza właściciela sam,
+// bo pod spodem musi ruszyć magazyn, czego RLS na orders nie obejmuje.
+await asService();
+const { rows: [ownFresh] } = await db.query(
+  `insert into public.orders (user_id, email, status) values ($1, 'klient@example.com', 'nowe') returning id`,
+  [customer.id]
+);
+await asUser(customer.id);
+const cancelledByOwner = await db.query(`select status from public.cancel_order($1)`, [ownFresh.id]);
+check('klient anuluje własne zamówienie', cancelledByOwner.rows[0].status === 'anulowane', `${cancelledByOwner.rows[0].status}`);
+
+// ---------------------------------------------------------------------------
 // Panel konta: lista życzeń i adresy
 // ---------------------------------------------------------------------------
 console.log('\nPanel konta');
