@@ -36,7 +36,20 @@ listy życzeń. Zieleń i czerwień z palety systemowej są zakazane.
 - **Mikroetykiety**: `.label` — uppercase, `letter-spacing: .14em`, `--ink-faint`.
 - **Liczby**: `font-variant-numeric: tabular-nums` (klasa `.num`) wszędzie, gdzie
   wartość się zmienia — ceny, liczniki, sumy.
-- **Typografia**: nagłówki 500 z `letter-spacing: -.028em`, `clamp()` do skalowania.
+
+## Typografia — dwa kroje
+
+| rola | krój | zmienna | gdzie |
+|---|---|---|---|
+| display | **Fraunces** (zmienny, `opsz` 9–144) | `--display` | `h1`, `h2`, `.logo` |
+| interfejs | **Inter** | `--sans` | reszta: `h3`, tabele, przyciski, pola, ceny |
+
+- Nagłówki szeryfowe: waga 400, `letter-spacing: -.012em`, `line-height: 1.08`.
+  Nie ściskaj trackingu mocniej — serif zlepia się na zakończeniach liter.
+- Nagłówki użytkowe (panel konta, podsumowanie, szuflada, karta w modalu)
+  zostają przy Interze: w rozmiarach ~1 rem serif tylko szumi.
+- Podmiana kroju = zmiana `--display` w `:root` plus `<link>` w plikach HTML.
+  Wymóg twardy: subset **latin-ext** (polskie znaki ą ć ę ł ń ó ś ź ż).
 
 ## Ruch
 
@@ -46,12 +59,19 @@ Animujemy **wyłącznie `transform` i `opacity`** (oraz kolor). Nigdy `width`,
 | rodzaj | czas | krzywa |
 |---|---|---|
 | hover, stan przycisku | 160–200 ms | `ease` |
-| wejście elementu (karta, sekcja) | 260–320 ms | `cubic-bezier(.2, .7, .3, 1)` |
+| wejście przy przewijaniu | 500 ms opacity / 660 ms ruch | `cubic-bezier(.16, .84, .34, 1)` |
+| rozwinięcie listy (sortowanie) | 200–300 ms | `cubic-bezier(.2, .7, .3, 1)` |
 | szuflada, modal | 280–360 ms | `cubic-bezier(.2, .7, .3, 1)` |
 | wyjście | ~⅔ czasu wejścia | `ease-in` |
 
-- Dystans wejścia: 8–16 px. Ruch ma być zauważalny, nie teatralny.
-- Stagger w siatkach: 40–60 ms na kafelek, maksymalnie ~8 kroków.
+- Dystans wejścia: 16–26 px plus `scale(.982)`. Ruch ma być zauważalny, nie teatralny.
+- Kaskada w siatkach: `70 × √index` ms (0, 70, 99, 121…) — początek wyraźny,
+  a ósmy kafelek nie każe czekać pół sekundy.
+- Wejście animujemy **tylko od dołu**. Element wjeżdżający od góry (powrót,
+  skok do kotwicy) dostaje klasę bez opóźnienia — animowanie go wygląda jak usterka.
+- Ujawnianie jedzie na osobnych właściwościach `translate` i `scale`, nie na
+  zbiorczym `transform` — inaczej kłóci się z uniesieniem kafelka na hover.
+  Selektor `[data-reveal][data-reveal]` podbija swoistość ponad `.card`.
 - Bez odbić i sprężyn poza jednym akcentem (serce listy życzeń) — reszta jedzie
   spokojnie, zgodnie z charakterem sklepu.
 
@@ -78,6 +98,12 @@ Modal i szuflada:
 
 Stany przełączane: `aria-pressed` (serce), `aria-expanded` (menu), `role="status"`
 dla komunikatów (toast, licznik pozycji).
+
+Własna lista wyboru (jak `.sortbox` w sklepie) zastępuje `<select>` tylko wtedy,
+gdy naprawdę potrzebna jest animacja. Wymagane wtedy: `role="listbox"`,
+`role="option"` + `aria-selected`, `aria-haspopup="listbox"` i `aria-expanded`
+na przycisku, strzałki góra/dół, Home/End, Enter, Escape oraz zamykanie klikiem
+poza obszarem.
 
 ## Konwencje kodu
 

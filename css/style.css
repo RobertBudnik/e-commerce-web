@@ -42,8 +42,13 @@
   --gutter: 28px;
   --header-h: 72px;
 
-  /* typografia */
+  /* typografia
+     Fraunces w nagłówkach: serif o zmiennej wielkości optycznej, ciepły
+     w tej palecie beży i terakoty. Inter zostaje wszędzie, gdzie liczy się
+     czytelność w małych rozmiarach — interfejs, ceny, tabele.
+     Podmiana kroju to jedna zmienna niżej i jeden <link> w plikach HTML. */
   --sans: "Inter", ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --display: "Fraunces", "Iowan Old Style", Georgia, "Times New Roman", serif;
 }
 
 /* ---------- Reset / base ---------- */
@@ -79,9 +84,27 @@ h1, h2, h3, h4 {
   letter-spacing: -.028em;
   line-height: 1.1;
 }
+
+/* Duże nagłówki idą szeryfem. Trackingu prawie nie ściskamy — serif ma
+   własny rytm, ujemny odstęp zlepiałby mu zakończenia liter. */
+h1, h2 {
+  font-family: var(--display);
+  font-weight: 400;
+  font-optical-sizing: auto;
+  letter-spacing: -.012em;
+  line-height: 1.08;
+}
 h1 { font-size: clamp(2rem, 1.3rem + 2.6vw, 3.25rem); }
 h2 { font-size: clamp(1.4rem, 1.1rem + 1.1vw, 1.9rem); }
 h3 { font-size: 1.05rem; letter-spacing: -.015em; }
+
+/* Nagłówki użytkowe — panele, karty, szuflada — zostają przy grotesku:
+   w tych rozmiarach serif tylko szumi. */
+.panel h2, .summary h2, .drawer-head h2, .card-box h3, .quick h2 {
+  font-family: var(--sans);
+  font-weight: 500;
+  letter-spacing: -.015em;
+}
 p { margin: 0 0 1em; }
 p:last-child { margin-bottom: 0; }
 
@@ -211,9 +234,10 @@ p:last-child { margin-bottom: 0; }
 }
 
 .logo {
-  font-size: 1.0625rem;
+  font-family: var(--display);
+  font-size: 1.1875rem;
   font-weight: 500;
-  letter-spacing: -.04em;
+  letter-spacing: -.01em;
 }
 .logo::after {
   content: "";
@@ -1233,17 +1257,55 @@ code {
    a JS przy wyłączonym ruchu ustawia stany końcowe od razu.
    ========================================================================== */
 
-/* ---------- Ujawnianie przy przewijaniu ---------- */
-[data-reveal] {
+/* ---------- Ujawnianie przy przewijaniu ----------
+ * Element wchodzi z dołu, z ledwie wyczuwalnym powiększeniem — ruch ma być
+ * miękki, nie skokowy. Krzywa jest mocno wyhamowana na końcu, więc kafelek
+ * „dojeżdża" na miejsce zamiast się zatrzymywać.
+ */
+/* Wejście jedzie na osobnych właściwościach `translate` i `scale`, nie na
+   zbiorczym `transform` — dzięki temu nie kłóci się z uniesieniem kafelka
+   na hover, które transformę ma dla siebie. */
+/* Atrybut powtórzony w selektorze podbija swoistość ponad `.card` — inaczej
+   skrót `transition` z reguły kafelka kasowałby czasy wejścia. Opóźnienie
+   kaskady siedzi przy poszczególnych właściwościach, więc hover zostaje
+   natychmiastowy. */
+[data-reveal][data-reveal] {
   opacity: 0;
-  transform: translateY(14px);
-  transition: opacity .42s ease, transform .42s cubic-bezier(.2, .7, .3, 1);
+  translate: 0 26px;
+  scale: .982;
+  transition:
+    opacity .5s cubic-bezier(.22, .61, .36, 1) var(--reveal-delay, 0ms),
+    translate .66s cubic-bezier(.16, .84, .34, 1) var(--reveal-delay, 0ms),
+    scale .66s cubic-bezier(.16, .84, .34, 1) var(--reveal-delay, 0ms),
+    transform .26s cubic-bezier(.2, .7, .3, 1);
+  will-change: opacity, translate, scale;
+}
+[data-reveal][data-reveal].is-in {
+  opacity: 1;
+  translate: none;
+  scale: none;
+  will-change: auto;
+}
+
+/* Nagłówek sekcji jedzie krócej niż siatka pod nim — inaczej cała strona
+   kołysze się w tym samym rytmie. */
+.section-head[data-reveal][data-reveal] { translate: 0 16px; scale: 1; }
+
+/* Ikona w kafelku osiada chwilę po samym kafelku. Reguła znika razem
+   z klasą, więc nie wchodzi w drogę powiększeniu na hover. */
+.card[data-reveal]:not(.is-in) .card-media-link svg {
+  transform: scale(1.05);
+  transition: transform .8s cubic-bezier(.16, .84, .34, 1);
   transition-delay: var(--reveal-delay, 0ms);
 }
-[data-reveal].is-in { opacity: 1; transform: none; }
+
+/* Element widoczny od pierwszej klatki (nad zgięciem albo przy powrocie
+   w górę) nie ma czego zapowiadać — pokazujemy go bez opóźnienia. */
+[data-reveal][data-reveal].is-instant { transition-duration: .01ms; transition-delay: 0ms; }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-reveal] { opacity: 1; transform: none; }
+  [data-reveal][data-reveal] { opacity: 1; translate: none; scale: none; }
+  .card[data-reveal]:not(.is-in) .card-media-link svg { transform: none; }
 }
 
 /* ---------- Kafelek: uniesienie na hover ---------- */
@@ -1444,6 +1506,103 @@ code {
 /* Dotyk nie ma hovera — tam przycisk widoczny od razu */
 @media (hover: none) {
   .card-quick { opacity: 1; transform: none; }
+}
+
+/* ---------- Sortowanie: wysuwany stos opcji ----------
+ * Zamiast natywnego <select>, którego nie da się animować. Panel rozwija się
+ * spod przycisku, a pozycje wjeżdżają jedna po drugiej.
+ */
+.sortbox { position: relative; margin-left: auto; }
+
+.sortbox-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding-inline: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  font-size: .875rem;
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease;
+}
+.sortbox-btn:hover { border-color: var(--line-strong); }
+.sortbox-btn[aria-expanded="true"] { border-color: var(--ink); background: var(--bg-soft); }
+
+/* Strzałka rysowana bordurami — jeden element mniej do pobrania */
+.sortbox-chevron {
+  width: 7px; height: 7px;
+  margin-top: -3px;
+  border-right: 1.5px solid var(--ink-faint);
+  border-bottom: 1.5px solid var(--ink-faint);
+  rotate: 45deg;
+  transition: rotate .28s cubic-bezier(.2, .7, .3, 1), border-color .18s ease;
+}
+.sortbox-btn[aria-expanded="true"] .sortbox-chevron {
+  rotate: -135deg;
+  margin-top: 3px;
+  border-color: var(--ink);
+}
+
+.sortbox-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  min-width: 220px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  transform-origin: top right;
+  opacity: 0;
+  translate: 0 -6px;
+  scale: .97;
+  transition: opacity .2s ease, translate .26s cubic-bezier(.2, .7, .3, 1), scale .26s cubic-bezier(.2, .7, .3, 1);
+}
+.sortbox-menu.is-open { opacity: 1; translate: none; scale: none; }
+
+.sortbox-menu li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  font-size: .9375rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+  /* Stos: każda pozycja dojeżdża chwilę po poprzedniej */
+  opacity: 0;
+  translate: 0 -8px;
+  transition: opacity .22s ease, translate .3s cubic-bezier(.2, .7, .3, 1), background .16s ease, color .16s ease;
+}
+.sortbox-menu.is-open li { opacity: 1; translate: none; }
+.sortbox-menu.is-open li:nth-child(1) { transition-delay: 30ms; }
+.sortbox-menu.is-open li:nth-child(2) { transition-delay: 60ms; }
+.sortbox-menu.is-open li:nth-child(3) { transition-delay: 90ms; }
+.sortbox-menu.is-open li:nth-child(4) { transition-delay: 115ms; }
+.sortbox-menu.is-open li:nth-child(5) { transition-delay: 140ms; }
+
+.sortbox-menu li:hover,
+.sortbox-menu li.is-active { background: var(--bg-soft); color: var(--ink); }
+.sortbox-menu li[aria-selected="true"] { color: var(--ink); font-weight: 500; }
+/* Znacznik wyboru: kreska zamiast ptaszka, w duchu reszty interfejsu */
+.sortbox-menu li[aria-selected="true"]::after {
+  content: "";
+  width: 14px;
+  height: 1.5px;
+  background: var(--ink);
+}
+
+@media (max-width: 560px) {
+  .sortbox { width: 100%; }
+  .sortbox-btn { width: 100%; justify-content: space-between; }
+  .sortbox-menu { left: 0; right: 0; min-width: 0; }
 }
 
 /* ---------- Pasek zakupu przyklejony na karcie produktu ---------- */

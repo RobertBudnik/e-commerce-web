@@ -38,13 +38,15 @@ Nawigacja w nagłówku to Start i Sklep — kategorie żyją wyłącznie w filtr
 | element | decyzja |
 |---|---|
 | paleta | biel `#fff` jako baza, jasny beż `#f7f5f0` / `#f2ede4` jako drugi ton, grafit `#1a1815`, przygaszona terakota `#a2603f` na przecenach |
-| typografia | Inter (Google Fonts) z fallbackiem systemowym; nagłówki 500 z trackingiem `-.028em`, mikroetykiety uppercase `.14em` |
+| typografia | **Fraunces** (zmienny serif, `opsz` 9–144) w `h1`, `h2` i logo — waga 400, tracking `-.012em`; **Inter** w całym interfejsie: `h3`, tabele, ceny, przyciski, pola. Oba z Google Fonts, subset latin-ext ze względu na polskie znaki |
 | linie | 1 px `#e9e4da`, siatki rozdzielane hairline'ami zamiast ramek |
 | kształt | promienie 8/14/20 px, przyciski i pola w pigułkach |
 | ruch | tylko transform i kolor, 180–320 ms; pełne wyciszenie przy `prefers-reduced-motion` |
 
-Font ładuje się z Google Fonts. Offline albo bez CDN — strona spada na systemowy grotesk;
-żeby wyciąć zewnętrzny request, wrzuć plik woff2 lokalnie i podmień `<link>` na `@font-face`.
+Fonty lecą z Google Fonts. Offline albo bez CDN — nagłówki spadają na Georgię,
+reszta na systemowy grotesk; żeby wyciąć zewnętrzny request, wrzuć pliki woff2
+lokalnie i podmień `<link>` na `@font-face`. Zmiana kroju nagłówków to jedna
+zmienna `--display` w `:root` plus adres w `<link>` (wymagany subset latin-ext).
 
 ## Podmiana danych
 
@@ -182,7 +184,8 @@ demonstracyjnych zamówień dla `scripts/gen-seed.mjs`.
 | **pasek darmowej dostawy** | w szufladzie i w podsumowaniu koszyka; wypełnienie animowane, próg z `store_settings` |
 | **ostatnio oglądane** | sekcja na stronie głównej i pod kartą produktu, historia w `localStorage` |
 | **pasek zakupu** | przyklejony na dole karty produktu, gdy właściwy przycisk zjedzie za ekran |
-| **wejście przy przewijaniu** | kafelki i nagłówki sekcji wjeżdżają kaskadą (45 ms na kafelek) |
+| **sortowanie** | wysuwany stos opcji zamiast `<select>`: pozycje wjeżdżają jedna po drugiej, obsługa strzałkami, Enter, Escape |
+| **wejście przy przewijaniu** | kafelki, nagłówki i pasek korzyści wjeżdżają kaskadą (`70 × √index` ms), wyłącznie od dołu |
 | **szkielety** | siatki na czas odpowiedzi bazy zamiast pustego miejsca, które podskakuje |
 | **mikroakcenty** | skok licznika koszyka, „pop" serca listy życzeń, uniesienie kafelka pod kursorem |
 

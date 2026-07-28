@@ -1195,6 +1195,86 @@ function initHome() {
   Recent.render();
 }
 
+/* ---------- Wysuwany stos sortowania ----------
+ * Zachowuje się jak natywny listbox: strzałki chodzą po opcjach, Home/End
+ * skacze na krańce, Enter wybiera, Escape zamyka i oddaje ostrość przyciskowi.
+ * Natywnego <select> nie da się animować, stąd własny.
+ */
+function initSortBox(onPick) {
+  const box = document.querySelector('[data-sortbox]');
+  if (!box) return;
+
+  const btn = box.querySelector('[data-sort-toggle]');
+  const menu = box.querySelector('[data-sort-menu]');
+  const value = box.querySelector('[data-sort-value]');
+  const options = [...menu.querySelectorAll('[role="option"]')];
+  let cursor = options.findIndex((o) => o.getAttribute('aria-selected') === 'true');
+
+  const highlight = (i) => {
+    cursor = (i + options.length) % options.length;
+    options.forEach((o, idx) => o.classList.toggle('is-active', idx === cursor));
+    options[cursor].scrollIntoView({ block: 'nearest' });
+  };
+
+  function open() {
+    menu.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(() => menu.classList.add('is-open'));
+    highlight(Math.max(cursor, 0));
+    menu.focus();
+  }
+
+  function close({ focusBtn = true } = {}) {
+    if (menu.hidden) return;
+    menu.classList.remove('is-open');
+    btn.setAttribute('aria-expanded', 'false');
+    const done = () => (menu.hidden = true);
+    if (stillMode()) done();
+    else setTimeout(done, 220);
+    if (focusBtn) btn.focus();
+  }
+
+  function pick(option) {
+    options.forEach((o) => o.setAttribute('aria-selected', String(o === option)));
+    value.textContent = option.textContent;
+    cursor = options.indexOf(option);
+    close();
+    onPick(option.dataset.value);
+  }
+
+  btn.addEventListener('click', () => (menu.hidden ? open() : close()));
+  menu.addEventListener('click', (e) => {
+    const option = e.target.closest('[role="option"]');
+    if (option) pick(option);
+  });
+
+  menu.addEventListener('keydown', (e) => {
+    switch (e.key) {
+      case 'ArrowDown': e.preventDefault(); highlight(cursor + 1); break;
+      case 'ArrowUp': e.preventDefault(); highlight(cursor - 1); break;
+      case 'Home': e.preventDefault(); highlight(0); break;
+      case 'End': e.preventDefault(); highlight(options.length - 1); break;
+      case 'Enter':
+      case ' ': e.preventDefault(); pick(options[cursor]); break;
+      case 'Escape': e.preventDefault(); close(); break;
+      case 'Tab': close({ focusBtn: false }); break;
+      default: break;
+    }
+  });
+
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      open();
+    }
+  });
+
+  // Klik poza stosem zamyka; Escape obsługuje już listener na menu
+  document.addEventListener('click', (e) => {
+    if (!box.contains(e.target)) close({ focusBtn: false });
+  });
+}
+
 /* ---------- Lista produktów: filtry, sortowanie, szukanie ---------- */
 function initShop() {
   const grid = document.querySelector('[data-grid="shop"]');
@@ -1234,8 +1314,8 @@ function initShop() {
     });
   });
 
-  document.querySelector('[data-sort]')?.addEventListener('change', (e) => {
-    state.sort = e.target.value;
+  initSortBox((value) => {
+    state.sort = value;
     apply();
   });
 
@@ -1677,21 +1757,33 @@ const Reveal = {
         (entries) => {
           entries.forEach((entry) => {
             if (!entry.isIntersecting) return;
+
+            // Wejście animujemy tylko od dołu. Element, który wjechał od góry
+            // (powrót na stronie, skok do kotwicy), pojawia się bez zapowiedzi —
+            // animowanie go wyglądałoby jak usterka, nie jak efekt.
+            if (entry.boundingClientRect.top < 0) entry.target.classList.add('is-instant');
+
             entry.target.classList.add('is-in');
             this.io.unobserve(entry.target);
           });
         },
-        { rootMargin: '0px 0px -8% 0px', threshold: 0.06 }
+        // Dolny margines ujemny: kafelek rusza dopiero, gdy wejdzie na dobre
+        // w okno, a nie gdy dotknie jego krawędzi.
+        { rootMargin: '0px 0px -12% 0px', threshold: 0.08 }
       );
     }
 
     targets.forEach((el) => this.io.observe(el));
   },
 
-  /** Kaskada w siatce: kolejne kafelki wchodzą co 45 ms, ale nie w nieskończoność. */
+  /**
+   * Kaskada w siatce. Opóźnienie rośnie pierwiastkowo, więc początek jest
+   * wyraźny, a ósmy kafelek nie każe czekać pół sekundy.
+   */
   stagger(container) {
     [...container.children].forEach((el, i) => {
-      el.style.setProperty('--reveal-delay', `${Math.min(i, 7) * 45}ms`);
+      const step = Math.round(70 * Math.sqrt(Math.min(i, 11)));
+      el.style.setProperty('--reveal-delay', `${step}ms`);
     });
   },
 };
@@ -2187,9 +2279,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const hash = location.hash.slice(1);
   if (hash) document.querySelector(`[data-filter="${CSS.escape(hash)}"]`)?.click();
 
-  // Nagłówki sekcji wchodzą tak samo jak kafelki pod nimi
-  document.querySelectorAll('.section-head, .hero-copy, .promo-inner').forEach((el) => {
-    el.setAttribute('data-reveal', '');
-  });
+  // Reszta treści wchodzi tym samym ruchem co kafelki: nagłówki sekcji,
+  // pasek korzyści (kaskadą), newsletter i kolumna opisu produktu.
+  document
+    .querySelectorAll('.section-head, .newsletter-inner, .product-info, .order, .card-box')
+    .forEach((el) => el.setAttribute('data-reveal', ''));
+
+  const features = document.querySelector('.features');
+  if (features) {
+    [...features.children].forEach((el) => el.setAttribute('data-reveal', ''));
+    Reveal.stagger(features);
+  }
+
   Reveal.scan();
 });
