@@ -686,11 +686,12 @@ function initAccountMenu() {
       return;
     }
     if (e.target.closest('[data-signout]')) {
-      // Strony za logowaniem odsyłamy do formularza — bez sesji nie mają co pokazać
+      // Wylogowanie ze strony za logowaniem odsyła na stronę główną, nie na
+      // formularz: klient kończy zakupy, a nie zaczyna kolejne logowanie.
       const guarded = document.querySelector('[data-account-root], [data-admin-root]');
       Auth.signOut().then(() => {
         toast('Wylogowano');
-        if (guarded) location.href = 'login.html';
+        if (guarded) location.href = 'index.html';
       });
       return;
     }
