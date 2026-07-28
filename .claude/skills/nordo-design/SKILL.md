@@ -115,6 +115,10 @@ poza obszarem.
   na każdym kafelku.
 - Markup generujesz przez `escapeHtml()` dla wszystkiego, co pochodzi z danych.
 - Ikony wyłącznie z `ICON_PATHS` w `js/icons.js` (`icon('nazwa')`), stroke 1.1.
+- Zdjęcie produktu zawsze przez `productMedia(p)` — sam decyduje, czy pokazać plik
+  z kubełka, czy ikonę zastępczą. Nigdy nie wstawiaj `<img>` z ręki: kafle mediów
+  mają swoje proporcje, `object-fit: cover` i wejście `media-in`, a ikona musi
+  zostać dla produktów bez zdjęcia.
 - Komentarz po polsku tłumaczy **dlaczego**, nie co robi linijka.
 
 ## Czego nie robić

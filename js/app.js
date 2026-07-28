@@ -1164,7 +1164,7 @@ function initAdmin() {
     list.innerHTML = PRODUCTS.map(
       (p) => `
       <div class="admin-row">
-        <div class="admin-thumb">${icon(p.icon)}</div>
+        <div class="admin-thumb">${productMedia(p, { sizes: '52px' })}</div>
         <div>
           <div class="admin-name">${escapeHtml(p.name)}</div>
           <div class="order-meta">${escapeHtml(p.slug ?? p.id)} · ${escapeHtml(categoryName(p.category))} ·
@@ -1194,14 +1194,64 @@ function initAdmin() {
     form.elements.badge.value = p.badge ?? '';
     form.elements.short.value = p.short;
     form.elements.specs.value = specsToText(p.specs);
+    currentImagePath = p.imagePath ?? null;
+    dropImage = false;
+    if (imageInput) imageInput.value = '';
+    showPreview(p.image ?? null);
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  /* --- Zdjęcie produktu --- */
+  const imageInput = form.elements.image;
+  const preview = root.querySelector('[data-image-preview]');
+  const clearImageBtn = root.querySelector('[data-image-clear]');
+  const imageHint = root.querySelector('[data-image-hint]');
+  // Stan formularza: ścieżka zdjęcia edytowanego produktu i decyzja o jej skasowaniu
+  let currentImagePath = null;
+  let dropImage = false;
+
+  function showPreview(src) {
+    if (!preview) return;
+    preview.innerHTML = src
+      ? `<img class="media-img" src="${escapeHtml(src)}" alt="">`
+      : `<span class="uploader-empty">${icon('camera')}</span>`;
+    if (clearImageBtn) clearImageBtn.hidden = !src;
+  }
+
+  imageInput?.addEventListener('change', () => {
+    const file = imageInput.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast('Zdjęcie waży ponad 5 MB — kubełek go nie przyjmie');
+      imageInput.value = '';
+      return;
+    }
+
+    dropImage = false;
+    // Podgląd z pliku, zanim cokolwiek poleci na serwer
+    showPreview(URL.createObjectURL(file));
+    if (imageHint) imageHint.textContent = `Do wgrania: ${file.name}`;
+  });
+
+  clearImageBtn?.addEventListener('click', () => {
+    imageInput.value = '';
+    dropImage = Boolean(currentImagePath);
+    showPreview(null);
+    if (imageHint) imageHint.textContent = 'Zdjęcie zniknie po zapisaniu produktu.';
+  });
 
   function resetForm() {
     form.reset();
     idField.value = '';
     formTitle.textContent = 'Nowy produkt';
     cancelBtn.hidden = true;
+    currentImagePath = null;
+    dropImage = false;
+    showPreview(null);
+    if (imageHint) {
+      imageHint.textContent = 'JPG, PNG, WebP lub AVIF, do 5 MB. Bez zdjęcia kafelek pokazuje ikonę.';
+    }
   }
 
   form.addEventListener('submit', async (e) => {
@@ -1209,8 +1259,12 @@ function initAdmin() {
     const f = form.elements;
     const editing = Boolean(idField.value);
     const submitBtn = form.querySelector('button[type="submit"]');
+    const edited = editing ? findProduct(idField.value) : null;
     const product = {
       id: idField.value || Catalog.nextId(),
+      // Slug jest w bazie NOT NULL i nie ma go w formularzu — przy edycji
+      // niesie go edytowany produkt, przy nowym składa go warstwa Backend
+      slug: edited?.slug,
       name: f.name.value.trim(),
       category: f.category.value,
       price: Number(f.price.value),
@@ -1222,16 +1276,38 @@ function initAdmin() {
       badge: f.badge.value.trim() || null,
       short: f.short.value.trim(),
       specs: textToSpecs(f.specs.value),
+      imagePath: dropImage ? null : currentImagePath,
     };
+
+    const file = imageInput?.files?.[0];
     submitBtn.disabled = true;
+    const label = submitBtn.textContent;
+
     try {
+      // Najpierw plik: gdyby wgranie padło, produkt nie zapisze się z martwą ścieżką
+      if (file) {
+        if (Catalog.source !== 'baza') {
+          throw new Error('Zdjęcia wymagają bazy — ustaw dane Supabase w js/config.js');
+        }
+        submitBtn.textContent = 'Wgrywam zdjęcie…';
+        product.imagePath = await Backend.uploadProductImage(file);
+      }
+
+      submitBtn.textContent = 'Zapisuję…';
       await Catalog.upsert(product);
+
+      // Stary plik kasujemy dopiero po udanym zapisie; osierocony plik
+      // w kubełku jest mniej szkodliwy niż produkt bez zdjęcia
+      const replaced = currentImagePath && currentImagePath !== product.imagePath;
+      if (replaced && Catalog.source === 'baza') await Backend.removeProductImage(currentImagePath);
+
       toast(editing ? 'Produkt zaktualizowany' : 'Produkt dodany');
       resetForm();
     } catch (err) {
       toast(`Nie zapisano: ${err.message}`);
     } finally {
       submitBtn.disabled = false;
+      submitBtn.textContent = label;
     }
   });
 
@@ -1274,7 +1350,9 @@ function initAdmin() {
       const p = findProduct(del.dataset.delete);
       if (p && confirm(`Usunąć „${p.name}"?`)) {
         Catalog.remove(p.id)
-          .then(() => {
+          .then(async () => {
+            // Wiersz zniknął, więc plik nie ma już do czego należeć
+            if (p.imagePath && Catalog.source === 'baza') await Backend.removeProductImage(p.imagePath);
             toast('Produkt usunięty');
             if (idField.value === p.id) resetForm();
           })
@@ -1288,6 +1366,18 @@ function initAdmin() {
   renderList();
 }
 
+/* ---------- Zdjęcie produktu ----------
+ * Jedno miejsce decyduje, czy leci prawdziwe zdjęcie z kubełka, czy ikona
+ * zastępcza. Produkt bez `image` wygląda jak dotąd — katalog może mieć
+ * zdjęcia tylko przy części pozycji.
+ */
+function productMedia(p, { sizes = '(max-width: 700px) 92vw, 300px', eager = false } = {}) {
+  if (!p?.image) return icon(p?.icon);
+
+  return `<img class="media-img" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}"
+    loading="${eager ? 'eager' : 'lazy'}" decoding="async" sizes="${sizes}">`;
+}
+
 /* ---------- Kafelek produktu ---------- */
 function productCard(p) {
   const out = p.stock === 0;
@@ -1295,7 +1385,7 @@ function productCard(p) {
     <article class="card" data-reveal>
       <div class="card-media">
         <a class="card-media-link" href="product.html?id=${encodeURIComponent(p.id)}" aria-label="${escapeHtml(p.name)}">
-          ${icon(p.icon)}
+          ${productMedia(p, { sizes: '(max-width: 700px) 46vw, 270px' })}
         </a>
         ${p.badge ? `<span class="badge ${/^-/.test(p.badge) ? '' : 'badge-neutral'}">${escapeHtml(p.badge)}</span>` : ''}
         <button class="wish-btn" type="button" data-wish="${p.id}"
@@ -1509,7 +1599,7 @@ function initProduct() {
   document.title = `${p.name} — Nordo`;
 
   root.innerHTML = `
-    <div class="product-media">${icon(p.icon)}</div>
+    <div class="product-media">${productMedia(p, { sizes: '(max-width: 900px) 92vw, 560px', eager: true })}</div>
     <div class="product-info">
       <span class="label">${escapeHtml(categoryName(p.category))}</span>
       <h1>${escapeHtml(p.name)}</h1>
@@ -1629,7 +1719,7 @@ async function initCart() {
               const p = findProduct(i.id);
               return `
               <div class="cart-item">
-                <div class="cart-item-media">${icon(p.icon)}</div>
+                <div class="cart-item-media">${productMedia(p, { sizes: '96px' })}</div>
                 <div>
                   <a class="cart-item-title" href="product.html?id=${encodeURIComponent(p.id)}">${escapeHtml(p.name)}</a>
                   <div class="cart-item-meta">${escapeHtml(categoryName(p.category))} · ${money(p.price)} / szt.</div>
@@ -2149,7 +2239,7 @@ const MiniCart = {
           if (!p) return '';
           return `
           <div class="drawer-item">
-            <div class="drawer-item-media">${icon(p.icon)}</div>
+            <div class="drawer-item-media">${productMedia(p, { sizes: '56px' })}</div>
             <div>
               <a class="drawer-item-name" href="product.html?id=${encodeURIComponent(p.id)}">${escapeHtml(p.name)}</a>
               <div class="drawer-item-meta">${i.qty} × ${money(p.price)}</div>
@@ -2218,7 +2308,7 @@ const QuickView = {
         ${icon('close')}
       </button>
       <div class="quick-grid">
-        <div class="quick-media">${icon(p.icon)}</div>
+        <div class="quick-media">${productMedia(p, { sizes: '(max-width: 700px) 92vw, 280px', eager: true })}</div>
         <div>
           <span class="label">${escapeHtml(categoryName(p.category))}</span>
           <h2 id="quick-title">${escapeHtml(p.name)}</h2>

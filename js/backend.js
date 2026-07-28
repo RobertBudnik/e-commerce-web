@@ -35,11 +35,25 @@ const Backend = {
   // Katalog
   // -------------------------------------------------------------------------
 
+  /** Nazwa kubełka ze zdjęciami produktów. */
+  bucket: 'product-images',
+
+  /**
+   * Ścieżka z bazy → publiczny adres pliku. W tabeli trzymamy samą ścieżkę,
+   * bo adres projektu zmienia się przy przejściu na domenę, a ścieżka nie.
+   */
+  imageUrl(path) {
+    if (!path || !this.client) return null;
+    return this.client.storage.from(this.bucket).getPublicUrl(path).data.publicUrl;
+  },
+
   /** Wiersz z bazy → kształt, którego używa reszta frontu. */
   toProduct(row) {
     return {
       id: row.id,
       slug: row.slug,
+      imagePath: row.image_path ?? null,
+      image: this.imageUrl(row.image_path),
       name: row.name,
       short: row.short ?? '',
       category: row.category_id,
@@ -55,10 +69,23 @@ const Backend = {
     };
   },
 
+  /** Nazwa → slug bez polskich znaków. Kolumna jest NOT NULL i unikalna. */
+  slugify(name) {
+    return String(name ?? '')
+      .toLowerCase()
+      .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l')
+      .replace(/ń/g, 'n').replace(/ó/g, 'o').replace(/ś/g, 's').replace(/[żź]/g, 'z')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'produkt';
+  },
+
   /** Odwrotna zamiana — do zapisu z panelu produktów. */
   toRow(product) {
     return {
-      slug: product.slug || null,
+      // Formularz panelu nie zna slugów, a kolumna jest NOT NULL — przy edycji
+      // niesie go edytowany produkt, przy nowym składamy go z nazwy.
+      slug: product.slug || this.slugify(product.name),
+      image_path: product.imagePath ?? null,
       name: product.name,
       short: product.short,
       category_id: product.category,
@@ -101,11 +128,19 @@ const Backend = {
     if (!(await this.init())) return null;
 
     const row = this.toRow(product);
-    const query = product.id
-      ? this.client.from('products').update(row).eq('id', product.id).select().single()
-      : this.client.from('products').insert(row).select().single();
+    const save = (r) =>
+      product.id
+        ? this.client.from('products').update(r).eq('id', product.id).select().single()
+        : this.client.from('products').insert(r).select().single();
 
-    const { data, error } = await query;
+    let { data, error } = await save(row);
+
+    // Dwa produkty o tej samej nazwie dają ten sam slug — druga próba
+    // z krótką końcówką zamiast błędu w twarz
+    if (error?.code === '23505') {
+      ({ data, error } = await save({ ...row, slug: `${row.slug}-${Math.random().toString(36).slice(2, 6)}` }));
+    }
+
     if (error) throw new Error(error.message);
     return this.toProduct(data);
   },
@@ -114,6 +149,33 @@ const Backend = {
     if (!(await this.init())) return null;
     const { error } = await this.client.from('products').delete().eq('id', id);
     if (error) throw new Error(error.message);
+    return true;
+  },
+
+  /**
+   * Wgrywa zdjęcie produktu i oddaje ścieżkę w kubełku. Nazwa pliku jest
+   * losowa: nazwy od klienta bywają zajęte, mają spacje i polskie znaki.
+   * Uprawnienia sprawdza polityka na `storage.objects`, nie ten kod.
+   */
+  async uploadProductImage(file) {
+    if (!(await this.init())) return null;
+
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const path = `${crypto.randomUUID()}.${ext}`;
+
+    const { error } = await this.client.storage
+      .from(this.bucket)
+      .upload(path, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
+
+    if (error) throw new Error(error.message);
+    return path;
+  },
+
+  /** Kasuje plik po podmianie zdjęcia. Błąd tu nie może wywrócić zapisu produktu. */
+  async removeProductImage(path) {
+    if (!path || !(await this.init())) return null;
+    const { error } = await this.client.storage.from(this.bucket).remove([path]);
+    if (error) console.warn('Nie udało się skasować starego zdjęcia:', error.message);
     return true;
   },
 

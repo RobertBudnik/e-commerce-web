@@ -93,6 +93,30 @@ create table auth.identities (
   primary key (provider, provider_id)
 );
 
+-- Storage: tyle, ile potrzeba migracji ze zdjęciami produktów. Prawdziwe
+-- tabele mają więcej kolumn, ale polityki dotykają wyłącznie bucket_id.
+create schema if not exists storage;
+
+create table storage.buckets (
+  id text primary key,
+  name text not null,
+  public boolean not null default false,
+  file_size_limit bigint,
+  allowed_mime_types text[],
+  created_at timestamptz default now()
+);
+
+create table storage.objects (
+  id uuid primary key default gen_random_uuid(),
+  bucket_id text references storage.buckets,
+  name text,
+  owner uuid,
+  metadata jsonb,
+  created_at timestamptz default now()
+);
+
+alter table storage.objects enable row level security;
+
 create or replace function auth.jwt() returns jsonb language sql stable as $fn$
   select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb;
 $fn$;
@@ -108,6 +132,12 @@ do $do$ begin
 end $do$;
 
 grant usage on schema auth to anon, authenticated, service_role;
+
+-- Uprawnienia na Storage: na Supabase są fabryczne, tu trzeba je dołożyć,
+-- inaczej polityki nie mają czego pilnować. Muszą iść po utworzeniu ról.
+grant usage on schema storage to anon, authenticated, service_role;
+grant select on storage.buckets to anon, authenticated;
+grant select, insert, update, delete on storage.objects to anon, authenticated;
 
 -- crypt/gen_salt są w pgcrypto; na potrzeby testu wystarczą atrapy
 create or replace function crypt(text, text) returns text language sql immutable as $fn$ select md5($1) $fn$;
@@ -504,6 +534,44 @@ const { rows: [ownFresh] } = await db.query(
 await asUser(customer.id);
 const cancelledByOwner = await db.query(`select status from public.cancel_order($1)`, [ownFresh.id]);
 check('klient anuluje własne zamówienie', cancelledByOwner.rows[0].status === 'anulowane', `${cancelledByOwner.rows[0].status}`);
+
+// ---------------------------------------------------------------------------
+// Zdjęcia produktów w Storage
+// ---------------------------------------------------------------------------
+console.log('\nZdjęcia produktów');
+await asService();
+const bucket = await db.query(`select public, allowed_mime_types from storage.buckets where id = 'product-images'`);
+check('kubełek publiczny do odczytu', bucket.rows[0]?.public === true);
+check('dopuszczone tylko obrazy', (bucket.rows[0]?.allowed_mime_types ?? []).every((t) => t.startsWith('image/')));
+
+await asUser(other.id);
+await throws(
+  'klient nie wgra zdjęcia produktu',
+  () =>
+    db.query(
+      `insert into storage.objects (bucket_id, name, owner) values ('product-images', 'lewe.png', $1)`,
+      [other.id]
+    ),
+  'policy'
+);
+
+await asUser(owner.id);
+const uploaded = await db.query(
+  `insert into storage.objects (bucket_id, name, owner) values ('product-images', 'aura.png', $1) returning name`,
+  [owner.id]
+);
+check('zaplecze wgrywa zdjęcie', uploaded.rows[0]?.name === 'aura.png');
+
+await asUser(null, 'anon');
+const publicRead = await db.query(`select count(*) as n from storage.objects where bucket_id = 'product-images'`);
+check('gość widzi zdjęcia', Number(publicRead.rows[0].n) === 1, `${publicRead.rows[0].n}`);
+
+// Ścieżka zdjęcia wisi przy produkcie; brak zdjęcia to zwykły NULL
+await asService();
+await db.query(`update public.products set image_path = 'aura.png' where id = $1`, [headphones.id]);
+await asUser(null, 'anon');
+const withImage = await db.query(`select image_path from public.products where id = $1`, [headphones.id]);
+check('ścieżka zdjęcia czytelna publicznie', withImage.rows[0].image_path === 'aura.png');
 
 // ---------------------------------------------------------------------------
 // Panel konta: lista życzeń i adresy

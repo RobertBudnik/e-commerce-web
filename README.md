@@ -23,7 +23,7 @@ login.html      logowanie i rejestracja (zakładki, panel beżowy z korzyściami
 account.html    panel konta — zawartość zależy od roli
 admin.html      panel produktów: dodawanie, edycja, usuwanie (tylko organizacja)
 css/style.css   style — tokeny w :root, motyw wyłącznie jasny
-js/icons.js     cienkie ikony liniowe SVG (placeholdery zdjęć)
+js/icons.js     cienkie ikony liniowe SVG (zastępniki zdjęć, ikony interfejsu)
 js/data.js      ziarno katalogu (CATEGORIES, PRODUCTS) i atrapa zamówień (ORDERS)
 js/config.js    adres i klucz Supabase, przełącznik BACKEND_ENABLED
 js/backend.js   jedyne miejsce, które wie o bazie — sesja, katalog, zamówienia
@@ -60,12 +60,30 @@ Wszystko czyta z `js/data.js`. Zastąp `PRODUCTS` odpowiedzią z API — wymagan
 | `price`, `oldPrice` | cena bieżąca i przekreślona (`null` = brak) |
 | `rating`, `reviews` | ocena 0–5 i liczba opinii |
 | `stock` | stan magazynowy; `0` blokuje przycisk zakupu |
-| `icon` | klucz z `ICON_PATHS` w `js/icons.js` — placeholder zdjęcia |
+| `icon` | klucz z `ICON_PATHS` w `js/icons.js` — ikona zastępcza, gdy produkt nie ma zdjęcia |
 | `badge` | plakietka; zaczyna się od `-` → wariant przeceny, inaczej neutralna |
 | `specs` | obiekt klucz→wartość do tabeli specyfikacji |
+| `imagePath` | ścieżka pliku w kubełku `product-images`; front składa z niej adres publiczny |
 
-Prawdziwe zdjęcia: podmień wywołania `icon(p.icon)` w `js/app.js` na `<img>` —
-punkty to `productCard()`, `initProduct()` i render koszyka.
+## Zdjęcia produktów
+
+Zdjęcie wgrywa się w panelu produktów — plik ląduje w kubełku `product-images`
+w Supabase Storage, a w tabeli zostaje sama **ścieżka**. URL-a nie zapisujemy:
+adres projektu zmienia się przy przejściu na domenę, ścieżka nie.
+
+- kubełek jest publiczny do odczytu (zdjęcia mają być widoczne bez logowania),
+  a zapis wpuszcza polityka wymagająca `products.write` — ta sama, co edycję katalogu
+- limit 5 MB, dozwolone `image/jpeg`, `image/png`, `image/webp`, `image/avif`
+- nazwa pliku jest losowa (UUID), bo nazwy od użytkownika bywają zajęte,
+  mają spacje i polskie znaki
+- podmiana zdjęcia kasuje stary plik dopiero **po** udanym zapisie produktu;
+  osierocony plik w kubełku jest mniej szkodliwy niż produkt bez zdjęcia
+- usunięcie produktu kasuje też jego plik
+
+Produkt bez zdjęcia wygląda jak dotąd — kafelek pokazuje ikonę z `js/icons.js`,
+więc katalog może mieć zdjęcia tylko przy części pozycji. Decyduje o tym jedna
+funkcja `productMedia()` w `js/app.js`, używana przez kafelek, kartę produktu,
+koszyk, mini-koszyk, szybki podgląd i listę w panelu.
 
 ## Role i uprawnienia
 
@@ -115,10 +133,11 @@ robi RLS: właściciel liczy trzy zamówienia, klient jedno. Hasła żyją wył�
 lokalnym — na produkcji rolę nadaje się istniejącemu użytkownikowi zapytaniem powyżej.
 
 Panel produktów (`admin.html`) pozwala kontu organizacji dodawać, edytować i usuwać dowolne
-pozycje: nazwa, opis, kategoria, ikona, cena i cena przed obniżką, stan magazynowy, plakietka,
-ocena, liczba opinii oraz specyfikacja (jedna linia = `Klucz: wartość`). Zmiany trafiają od razu
-na `shop.html`, stronę produktu i do koszyka. Przycisk „Przywróć katalog startowy" kasuje
-`shop.catalog.v1` i wraca do ziarna z `js/data.js`.
+pozycje: nazwa, opis, kategoria, **zdjęcie**, ikona zastępcza, cena i cena przed obniżką, stan
+magazynowy, plakietka, ocena, liczba opinii oraz specyfikacja (jedna linia = `Klucz: wartość`).
+Zmiany trafiają od razu na `shop.html`, stronę produktu i do koszyka. Przycisk „Przywróć katalog
+startowy" pojawia się wyłącznie w trybie bez bazy — kasuje `shop.catalog.v1` i wraca do ziarna
+z `js/data.js`.
 
 ### Co realnie pilnuje dostępu, a co jest tylko UX
 
@@ -256,6 +275,5 @@ Kolory, promienie, cienie i szerokość kolumny: zmienne CSS w `:root` w `css/st
 
 - Klucze operatora płatności: bez `STRIPE_SECRET_KEY` i `STRIPE_WEBHOOK_SECRET`
   zamówienie powstaje, ale nikt go nie opłaci — ścieżka ze Stripe nieprzeklikana
-- Prawdziwe zdjęcia zamiast ikon
 - Powiadomienia e-mail o zamówieniu, wysyłce i anulowaniu
 - Faktury, integracja z kurierem i numer przesyłki przy zamówieniu

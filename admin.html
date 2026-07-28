@@ -73,8 +73,21 @@
               <select id="a-category" name="category"></select>
             </div>
             <div class="field">
-              <label for="a-icon">Ikona</label>
+              <label for="a-icon">Ikona zastępcza</label>
               <select id="a-icon" name="icon"></select>
+            </div>
+          </div>
+
+          <!-- Zdjęcie leci do kubełka product-images; w tabeli zostaje ścieżka -->
+          <div class="field">
+            <label for="a-image">Zdjęcie produktu</label>
+            <div class="uploader">
+              <div class="uploader-preview" data-image-preview></div>
+              <div class="uploader-body">
+                <input id="a-image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/avif">
+                <p class="field-hint" data-image-hint>JPG, PNG, WebP lub AVIF, do 5 MB. Bez zdjęcia kafelek pokazuje ikonę.</p>
+                <button class="btn-link" type="button" data-image-clear hidden>Usuń zdjęcie</button>
+              </div>
             </div>
           </div>
 

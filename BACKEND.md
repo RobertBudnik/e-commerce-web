@@ -16,6 +16,7 @@ supabase/
     20260727090200_rls_policies.sql        polityki RLS i GRANT-y
     20260727090300_auth_hook_grants.sql    hook roli w tokenie
     20260728120000_quote_order.sql         wycena koszyka przed zamówieniem
+    20260729090000_product_images.sql      kubełek na zdjęcia i polityki Storage
   seed.sql                                 dane startowe, konto właściciela i klienta demo
   functions/
     create-checkout/                       zamówienie + sesja płatności
@@ -32,7 +33,7 @@ npm run db:test
 ```
 
 Odpala Postgres 16 skompilowany do WebAssembly, wgrywa migracje i seed, po czym
-sprawdza 76 przypadków: uprawnienia ról, liczenie cen, wycenę koszyka, rezerwację
+sprawdza 83 przypadki: uprawnienia ról, liczenie cen, wycenę koszyka, rezerwację
 stanu, RLS oraz dane panelu konta.
 Nie zastępuje pełnego stosu (brak Auth, PostgREST, Realtime), ale weryfikuje
 wszystko, co jest w SQL.
@@ -112,6 +113,10 @@ unieważnienia sesji (`auth.admin.signOut(user_id)`), samo skasowanie wiersza ni
   tylko zero trafionych wierszy.
 - **Anulowanie** — `cancel_order()`, bo poza statusem musi wrócić towar na magazyn.
   Funkcja sama sprawdza, czy woła ją zaplecze, czy właściciel zamówienia.
+- **Zdjęcia produktów** — kubełek `product-images` w Storage: odczyt publiczny,
+  zapis wyłącznie dla `products.write`. W tabeli `products.image_path` siedzi sama
+  ścieżka, adres publiczny składa front — przy przejściu na domenę nic nie trzeba
+  migrować. Limit 5 MB i lista dozwolonych typów MIME pilnuje sam kubełek.
 
 ## Przejście na domenę
 
