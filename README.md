@@ -173,6 +173,27 @@ osobną operacją z potwierdzeniem mailem.
 `ORDERS` w `js/data.js` zostaje w dwóch rolach: jako atrapa dla trybu offline i jako źródło
 demonstracyjnych zamówień dla `scripts/gen-seed.mjs`.
 
+## Wzorce sklepowe i ruch
+
+| element | co robi |
+|---|---|
+| **mini-koszyk** | szuflada z prawej po dodaniu produktu i po kliknięciu ikony koszyka; ilości, usuwanie i podsumowanie bez opuszczania listy |
+| **szybki podgląd** | modal z kafelka: opis, cena, stan, ilość, dodanie do koszyka i specyfikacja |
+| **pasek darmowej dostawy** | w szufladzie i w podsumowaniu koszyka; wypełnienie animowane, próg z `store_settings` |
+| **ostatnio oglądane** | sekcja na stronie głównej i pod kartą produktu, historia w `localStorage` |
+| **pasek zakupu** | przyklejony na dole karty produktu, gdy właściwy przycisk zjedzie za ekran |
+| **wejście przy przewijaniu** | kafelki i nagłówki sekcji wjeżdżają kaskadą (45 ms na kafelek) |
+| **szkielety** | siatki na czas odpowiedzi bazy zamiast pustego miejsca, które podskakuje |
+| **mikroakcenty** | skok licznika koszyka, „pop" serca listy życzeń, uniesienie kafelka pod kursorem |
+
+Animujemy wyłącznie `transform` i `opacity`. Przy `prefers-reduced-motion: reduce`
+globalna reguła ścina czasy, a JS ustawia stany końcowe od razu — nic nie zostaje
+niewidoczne. Nakładki (szuflada, modal) zamyka Escape i klik w tło, ostrość wraca
+na element, z którego je otwarto.
+
+Reguły motywu i ruchu — tokeny, czasy, krzywe, czego nie robić — siedzą
+w [.claude/skills/nordo-design/SKILL.md](.claude/skills/nordo-design/SKILL.md).
+
 ## Zamówienie i płatność
 
 Koszyk kończy się formularzem danych i przyciskiem „Zamawiam i płacę". Przeglądarka

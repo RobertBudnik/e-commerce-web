@@ -592,8 +592,17 @@ function refreshCartBadge() {
   const badge = document.querySelector('[data-cart-count]');
   if (!badge) return;
   const n = Cart.count();
+  const changed = badge.textContent !== String(n);
   badge.textContent = n;
   badge.hidden = n === 0;
+
+  // Skok licznika przy każdej zmianie — jedyny sygnał, że coś doszło,
+  // gdy szuflada jest zamknięta
+  if (changed && n > 0) {
+    badge.classList.remove('is-bump');
+    void badge.offsetWidth; // restart animacji
+    badge.classList.add('is-bump');
+  }
 }
 
 /* ---------- Menu konta w nagłówku ---------- */
@@ -1116,7 +1125,7 @@ function initAdmin() {
 function productCard(p) {
   const out = p.stock === 0;
   return `
-    <article class="card">
+    <article class="card" data-reveal>
       <div class="card-media">
         <a class="card-media-link" href="product.html?id=${encodeURIComponent(p.id)}" aria-label="${escapeHtml(p.name)}">
           ${icon(p.icon)}
@@ -1125,6 +1134,9 @@ function productCard(p) {
         <button class="wish-btn" type="button" data-wish="${p.id}"
           aria-pressed="${Wish.has(p.id)}" title="Lista życzeń" aria-label="Dodaj do listy życzeń">
           ${icon('heart')}
+        </button>
+        <button class="card-quick" type="button" data-quick="${p.id}">
+          ${icon('eye')} Szybki podgląd
         </button>
       </div>
       <div class="card-body">
@@ -1151,6 +1163,10 @@ function renderGrid(target, list) {
   el.innerHTML = list.length
     ? list.map(productCard).join('')
     : `<p class="muted">Brak produktów spełniających kryteria.</p>`;
+
+  // Kafelki wchodzą kaskadą, gdy siatka pojawi się w oknie
+  Reveal.stagger(el);
+  Reveal.scan(el);
 }
 
 /* ---------- Strona główna ---------- */
@@ -1164,14 +1180,19 @@ function initHome() {
   if (cats) {
     cats.innerHTML = CATEGORIES.map(
       (c) => `
-      <a class="category" href="shop.html#${c.id}">
+      <a class="category" href="shop.html#${c.id}" data-reveal>
         ${icon(c.icon)}
         <strong>${escapeHtml(c.name)}</strong>
         <span>${escapeHtml(c.desc)}</span>
         <span class="muted">${PRODUCTS.filter((p) => p.category === c.id).length} produktów</span>
       </a>`
     ).join('');
+    Reveal.stagger(cats);
+    Reveal.scan(cats);
   }
+
+  // Wracającemu klientowi pokazujemy, co oglądał ostatnio
+  Recent.render();
 }
 
 /* ---------- Lista produktów: filtry, sortowanie, szukanie ---------- */
@@ -1289,7 +1310,7 @@ function initProduct() {
 
   root.querySelector('[data-add-detail]')?.addEventListener('click', () => {
     Cart.add(p.id, parseInt(input.value, 10) || 1);
-    toast('Dodano do koszyka');
+    MiniCart.open();
   });
 
   const related = document.querySelector('[data-grid="related"]');
@@ -1299,6 +1320,12 @@ function initProduct() {
       PRODUCTS.filter((x) => x.category === p.category && x.id !== p.id).slice(0, 4)
     );
   }
+
+  // Historia oglądania: najpierw render (bez bieżącej pozycji), potem zapis,
+  // żeby na własnej karcie nie pokazywać jej samej
+  Recent.render(p.id);
+  Recent.push(p.id);
+  initBuyBar(p);
 }
 
 /* ---------- Koszyk ---------- */
@@ -1338,7 +1365,6 @@ async function initCart() {
     const discountValue = quote?.discount ?? 0;
     const shipping = quote?.shipping ?? 0;
     const total = quote?.total ?? subtotal;
-    const missing = quote?.freeShippingMissing ?? 0;
     const shortages = (quote?.lines ?? []).filter((l) => !l.inStock);
     const user = Auth.user();
     const profile = Profile.read();
@@ -1434,7 +1460,7 @@ async function initCart() {
           <div class="summary-row"><span>Wartość produktów</span><span>${money(subtotal)}</span></div>
           ${discountValue ? `<div class="summary-row"><span>Rabat · ${escapeHtml(quote?.coupon ?? couponCode)}</span><span>−${money(discountValue)}</span></div>` : ''}
           <div class="summary-row"><span>Dostawa</span><span>${shipping === 0 ? 'Gratis' : money(shipping)}</span></div>
-          ${shipping > 0 ? `<p class="summary-note">Do darmowej dostawy brakuje ${money(missing)}.</p>` : ''}
+          ${shipBar(subtotal - discountValue)}
           <form class="coupon" data-coupon>
             <input type="text" placeholder="Kod rabatowy" aria-label="Kod rabatowy" value="${escapeHtml(couponCode)}">
             <button class="btn btn-ghost btn-sm" type="submit">Zastosuj</button>
@@ -1623,12 +1649,466 @@ function checkoutMessage(err) {
   return `Nie udało się złożyć zamówienia: ${msg}`;
 }
 
+/* ==========================================================================
+   Ruch i wzorce sklepowe
+   ========================================================================== */
+
+/** Czy użytkownik prosi o spokój — wtedy zamiast animacji od razu stan końcowy. */
+const stillMode = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- Ujawnianie treści przy przewijaniu ----------
+ * Jeden obserwator na całą stronę; element po wejściu przestaje być śledzony.
+ * Przy wyłączonym ruchu nic nie chowamy — treść musi być widoczna od razu.
+ */
+const Reveal = {
+  io: null,
+
+  scan(root = document) {
+    const targets = root.querySelectorAll('[data-reveal]:not(.is-in)');
+    if (!targets.length) return;
+
+    if (stillMode()) {
+      targets.forEach((el) => el.classList.add('is-in'));
+      return;
+    }
+
+    if (!this.io) {
+      this.io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('is-in');
+            this.io.unobserve(entry.target);
+          });
+        },
+        { rootMargin: '0px 0px -8% 0px', threshold: 0.06 }
+      );
+    }
+
+    targets.forEach((el) => this.io.observe(el));
+  },
+
+  /** Kaskada w siatce: kolejne kafelki wchodzą co 45 ms, ale nie w nieskończoność. */
+  stagger(container) {
+    [...container.children].forEach((el, i) => {
+      el.style.setProperty('--reveal-delay', `${Math.min(i, 7) * 45}ms`);
+    });
+  },
+};
+
+/* ---------- Ostatnio oglądane ----------
+ * Lista identyfikatorów w localStorage, najnowsze z przodu. Świadomie tylko
+ * lokalnie: to podpowiedź nawigacyjna, nie dane konta.
+ */
+const RECENT_KEY = 'shop.recent.v1';
+const RECENT_MAX = 8;
+const Recent = {
+  read() {
+    try {
+      const list = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+      return Array.isArray(list) ? list.filter((id) => findProduct(id)) : [];
+    } catch {
+      return [];
+    }
+  },
+  push(id) {
+    const list = [id, ...Recent.read().filter((x) => x !== id)].slice(0, RECENT_MAX);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+  },
+  /** Wypełnia sekcję albo zostawia ją ukrytą, gdy nie ma czego pokazać. */
+  render(skipId) {
+    const section = document.querySelector('[data-recent-section]');
+    const grid = document.querySelector('[data-grid="recent"]');
+    if (!section || !grid) return;
+
+    const items = Recent.read()
+      .filter((id) => id !== skipId)
+      .map((id) => findProduct(id))
+      .filter(Boolean)
+      .slice(0, 4);
+
+    section.hidden = items.length === 0;
+    if (items.length) {
+      renderGrid(grid, items);
+      Reveal.stagger(grid);
+      Reveal.scan(grid);
+    }
+  },
+};
+
+/* ---------- Pasek do darmowej dostawy ----------
+ * Ten sam kawałek w mini-koszyku i w podsumowaniu: ile brakuje do progu.
+ */
+function shipBar(afterDiscount) {
+  const goal = Store.freeFrom;
+  const done = afterDiscount >= goal;
+  const percent = goal > 0 ? Math.min(100, Math.round((afterDiscount / goal) * 100)) : 100;
+
+  return `
+    <div class="ship-bar ${done ? 'is-free' : ''}">
+      <p>${done
+        ? 'Dostawa gratis — próg osiągnięty.'
+        : `Do darmowej dostawy brakuje <strong class="num">${money(goal - afterDiscount)}</strong>.`}</p>
+      <div class="ship-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+        aria-valuenow="${percent}" aria-label="Postęp do darmowej dostawy">
+        <div class="ship-bar-fill" style="width:${percent}%"></div>
+      </div>
+    </div>`;
+}
+
+/* ---------- Wspólna obsługa nakładek ----------
+ * Escape, klik w tło, blokada przewijania i powrót ostrości na element,
+ * z którego nakładkę otwarto.
+ */
+const Overlay = {
+  active: null,
+  lastFocus: null,
+  backdrop: null,
+
+  show(panel, onClose) {
+    if (!this.backdrop) {
+      this.backdrop = document.createElement('div');
+      this.backdrop.className = 'overlay';
+      this.backdrop.hidden = true;
+      this.backdrop.addEventListener('click', () => Overlay.hide());
+      document.body.appendChild(this.backdrop);
+    }
+
+    // Nakładka potrafi otworzyć następną (podgląd → mini-koszyk). Domykanie
+    // poprzedniej jest opóźnione o czas animacji, więc trzeba je odwołać —
+    // inaczej jego timer schowałby tło już pod nową nakładką.
+    clearTimeout(this.timer);
+
+    this.lastFocus = document.activeElement;
+    this.active = { panel, onClose };
+
+    this.backdrop.hidden = false;
+    panel.hidden = false;
+    // Dwie klatki: przeglądarka musi zdążyć policzyć stan początkowy,
+    // inaczej przejście nie ma z czego wystartować.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        this.backdrop.classList.add('is-open');
+        panel.classList.add('is-open');
+      })
+    );
+
+    document.body.style.overflow = 'hidden';
+    panel.querySelector('[data-autofocus]')?.focus();
+  },
+
+  hide() {
+    if (!this.active) return;
+    const { panel, onClose } = this.active;
+    this.active = null;
+
+    panel.classList.remove('is-open');
+    this.backdrop.classList.remove('is-open');
+    document.body.style.overflow = '';
+
+    const done = () => {
+      // W międzyczasie mogła otworzyć się kolejna nakładka — wtedy zostawiamy
+      // jej tło w spokoju i chowamy wyłącznie swój panel.
+      panel.hidden = true;
+      if (!this.active) this.backdrop.hidden = true;
+      onClose?.();
+    };
+    if (stillMode()) done();
+    else this.timer = setTimeout(done, 280);
+
+    this.lastFocus?.focus?.();
+  },
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') Overlay.hide();
+});
+
+/* ---------- Mini-koszyk ----------
+ * Szuflada zamiast skoku na osobną stronę po każdym „do koszyka".
+ * Kwoty bierze z tej samej wyceny co koszyk, więc nic się nie rozjeżdża.
+ */
+const MiniCart = {
+  el: null,
+
+  build() {
+    if (this.el) return this.el;
+
+    const el = document.createElement('aside');
+    el.className = 'drawer';
+    el.hidden = true;
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-modal', 'true');
+    el.setAttribute('aria-labelledby', 'minicart-title');
+    el.innerHTML = `
+      <div class="drawer-head">
+        <h2 id="minicart-title">Koszyk</h2>
+        <button class="icon-close" type="button" data-minicart-close aria-label="Zamknij koszyk" data-autofocus>
+          ${icon('close')}
+        </button>
+      </div>
+      <div class="drawer-body" data-minicart-body></div>
+      <div class="drawer-foot" data-minicart-foot></div>`;
+
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('[data-minicart-close]')) Overlay.hide();
+    });
+
+    document.body.appendChild(el);
+    this.el = el;
+    return el;
+  },
+
+  async open() {
+    const el = this.build();
+    await this.render();
+    Overlay.show(el);
+  },
+
+  async render() {
+    const el = this.build();
+    const body = el.querySelector('[data-minicart-body]');
+    const foot = el.querySelector('[data-minicart-foot]');
+    const items = Cart.read();
+
+    if (!items.length) {
+      body.innerHTML = `
+        <p class="muted">Koszyk jest pusty.</p>
+        <p style="margin-top:14px"><a class="arrow-link" href="shop.html">Przejdź do sklepu</a></p>`;
+      foot.innerHTML = '';
+      return;
+    }
+
+    const quote = await Quote.forCart(null);
+
+    body.innerHTML =
+      shipBar(quote.subtotal - quote.discount) +
+      items
+        .map((i) => {
+          const p = findProduct(i.id);
+          if (!p) return '';
+          return `
+          <div class="drawer-item">
+            <div class="drawer-item-media">${icon(p.icon)}</div>
+            <div>
+              <a class="drawer-item-name" href="product.html?id=${encodeURIComponent(p.id)}">${escapeHtml(p.name)}</a>
+              <div class="drawer-item-meta">${i.qty} × ${money(p.price)}</div>
+              <div class="cart-item-actions" style="margin-top:8px">
+                <div class="qty">
+                  <button type="button" data-qty="${p.id}" data-step="-1" aria-label="Zmniejsz ilość">−</button>
+                  <input type="number" value="${i.qty}" min="1" max="${p.stock}" data-qty-input="${p.id}" aria-label="Ilość">
+                  <button type="button" data-qty="${p.id}" data-step="1" aria-label="Zwiększ ilość">+</button>
+                </div>
+                <button class="btn-link" data-remove="${p.id}">Usuń</button>
+              </div>
+            </div>
+            <div class="drawer-item-total num">${money(p.price * i.qty)}</div>
+          </div>`;
+        })
+        .join('');
+
+    foot.innerHTML = `
+      <div class="summary-row"><span>Wartość produktów</span><span class="num">${money(quote.subtotal)}</span></div>
+      ${quote.discount ? `<div class="summary-row"><span>Rabat</span><span class="num">−${money(quote.discount)}</span></div>` : ''}
+      <div class="summary-row"><span>Dostawa</span><span class="num">${quote.shipping === 0 ? 'Gratis' : money(quote.shipping)}</span></div>
+      <div class="summary-row total"><span>Razem</span><span class="num">${money(quote.total)}</span></div>
+      <a class="btn btn-block" href="cart.html" style="margin-top:16px">Przejdź do kasy</a>
+      <button class="btn btn-ghost btn-block" type="button" data-minicart-close style="margin-top:10px">
+        Kontynuuj zakupy
+      </button>`;
+  },
+};
+
+/* ---------- Szybki podgląd ----------
+ * Karta produktu bez opuszczania listy: specyfikacja, ilość, dodanie do koszyka.
+ */
+const QuickView = {
+  el: null,
+
+  build() {
+    if (this.el) return this.el;
+
+    const el = document.createElement('div');
+    el.className = 'quick';
+    el.hidden = true;
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-modal', 'true');
+    el.setAttribute('aria-labelledby', 'quick-title');
+    el.innerHTML = '<div class="quick-panel" data-quick-panel></div>';
+
+    el.addEventListener('click', (e) => {
+      // Klik obok panelu zamyka — tło pod nakładką nie łapie tych zdarzeń
+      if (e.target === el || e.target.closest('[data-quick-close]')) Overlay.hide();
+    });
+
+    document.body.appendChild(el);
+    this.el = el;
+    return el;
+  },
+
+  open(id) {
+    const p = findProduct(id);
+    if (!p) return;
+
+    const el = this.build();
+    const out = p.stock === 0;
+
+    el.querySelector('[data-quick-panel]').innerHTML = `
+      <button class="icon-close quick-close" type="button" data-quick-close aria-label="Zamknij podgląd" data-autofocus>
+        ${icon('close')}
+      </button>
+      <div class="quick-grid">
+        <div class="quick-media">${icon(p.icon)}</div>
+        <div>
+          <span class="label">${escapeHtml(categoryName(p.category))}</span>
+          <h2 id="quick-title">${escapeHtml(p.name)}</h2>
+          <p class="rating"><span class="stars" aria-hidden="true">${stars(p.rating)}</span>
+            <span class="sr-only">Ocena ${p.rating} na 5.</span> ${p.reviews} opinii</p>
+          <p class="lede" style="margin-top:12px">${escapeHtml(p.short)}</p>
+          <div class="price-row">
+            <span class="product-price">${money(p.price)}</span>
+            ${p.oldPrice ? `<span class="price-old">${money(p.oldPrice)}</span>` : ''}
+          </div>
+          <p class="stock ${out ? 'out' : ''}">${out ? 'Chwilowo niedostępny' : `Dostępny — ${p.stock} szt.`}</p>
+          <div class="buy-row">
+            <div class="qty">
+              <button type="button" data-quick-step="-1" aria-label="Zmniejsz ilość">−</button>
+              <input type="number" id="quick-qty" value="1" min="1" max="${p.stock || 1}" aria-label="Ilość">
+              <button type="button" data-quick-step="1" aria-label="Zwiększ ilość">+</button>
+            </div>
+            <button class="btn" type="button" data-quick-add="${p.id}" ${out ? 'disabled' : ''}>
+              ${out ? 'Niedostępny' : 'Do koszyka'}
+            </button>
+            <button class="btn btn-ghost" type="button" data-wish="${p.id}" aria-pressed="${Wish.has(p.id)}">
+              ${icon('heart')} Zapisz
+            </button>
+          </div>
+          <p><a class="arrow-link" href="product.html?id=${encodeURIComponent(p.id)}">Pełna karta produktu</a></p>
+          <table class="specs">
+            <tbody>
+              ${Object.entries(p.specs)
+                .slice(0, 4)
+                .map(([k, v]) => `<tr><th scope="row">${escapeHtml(k)}</th><td>${escapeHtml(v)}</td></tr>`)
+                .join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+
+    const input = el.querySelector('#quick-qty');
+    el.querySelectorAll('[data-quick-step]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const next = (parseInt(input.value, 10) || 1) + Number(btn.dataset.quickStep);
+        input.value = Math.max(1, Math.min(next, p.stock || 1));
+      });
+    });
+
+    el.querySelector('[data-quick-add]')?.addEventListener('click', () => {
+      Cart.add(p.id, parseInt(input.value, 10) || 1);
+      Overlay.hide();
+      MiniCart.open();
+    });
+
+    Overlay.show(el);
+  },
+};
+
+/* ---------- Pasek zakupu na karcie produktu ----------
+ * Pokazuje się dopiero, gdy właściwy przycisk zjedzie za ekran.
+ */
+function initBuyBar(product) {
+  const anchor = document.querySelector('[data-product] .buy-row');
+  if (!anchor || product.stock === 0) return;
+
+  const bar = document.createElement('div');
+  bar.className = 'buy-bar';
+  bar.innerHTML = `
+    <div class="container buy-bar-inner">
+      <div class="buy-bar-info">
+        <div class="buy-bar-name">${escapeHtml(product.name)}</div>
+        <div class="buy-bar-price num">${money(product.price)}</div>
+      </div>
+      <button class="btn" type="button" data-add="${product.id}">Do koszyka</button>
+    </div>`;
+  document.body.appendChild(bar);
+
+  new IntersectionObserver(
+    ([entry]) => bar.classList.toggle('is-open', !entry.isIntersecting && entry.boundingClientRect.top < 0),
+    { threshold: 0 }
+  ).observe(anchor);
+}
+
+/* ---------- Szkielety na czas ładowania katalogu ---------- */
+function paintSkeletons() {
+  document.querySelectorAll('[data-grid]').forEach((grid) => {
+    if (grid.children.length) return;
+    grid.innerHTML = Array.from({ length: 4 })
+      .map(
+        () => `
+        <div class="skeleton">
+          <div class="skeleton-box skeleton-media"></div>
+          <div class="skeleton-box skeleton-line w-40"></div>
+          <div class="skeleton-box skeleton-line w-70"></div>
+          <div class="skeleton-box skeleton-line w-40"></div>
+        </div>`
+      )
+      .join('');
+  });
+}
+
 /* ---------- Spięcie globalne ---------- */
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-add]');
   if (!btn) return;
   Cart.add(btn.dataset.add, 1);
-  toast('Dodano do koszyka');
+  // Zamiast samego toasta: szuflada pokazuje, co jest w koszyku i ile brakuje
+  // do darmowej dostawy. Na stronie koszyka byłaby zasłoną na to samo.
+  if (document.querySelector('[data-cart-root]')) toast('Dodano do koszyka');
+  else MiniCart.open();
+});
+
+// Szybki podgląd z kafelka
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-quick]');
+  if (!btn) return;
+  e.preventDefault();
+  QuickView.open(btn.dataset.quick);
+});
+
+// Ikona koszyka w nagłówku otwiera szufladę zamiast przeładowywać stronę
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('.cart-btn');
+  if (!link || document.querySelector('[data-cart-root]')) return;
+  if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  MiniCart.open();
+});
+
+// Ilości i usuwanie działają też w szufladzie
+document.addEventListener('click', (e) => {
+  const drawer = e.target.closest('.drawer');
+  if (!drawer) return;
+
+  const stepBtn = e.target.closest('[data-qty]');
+  if (stepBtn) {
+    const id = stepBtn.dataset.qty;
+    const current = Cart.read().find((i) => i.id === id)?.qty ?? 1;
+    Cart.setQty(id, current + Number(stepBtn.dataset.step));
+    return;
+  }
+
+  const removeBtn = e.target.closest('[data-remove]');
+  if (removeBtn) Cart.remove(removeBtn.dataset.remove);
+});
+
+document.addEventListener('change', (e) => {
+  const input = e.target.closest('.drawer [data-qty-input]');
+  if (input) Cart.setQty(input.dataset.qtyInput, parseInt(input.value, 10) || 0);
+});
+
+// Zawartość szuflady nadąża za koszykiem, ale tylko gdy jest otwarta
+document.addEventListener('cart:change', () => {
+  if (MiniCart.el && !MiniCart.el.hidden) MiniCart.render();
 });
 
 // Serce na kafelku i na karcie produktu. Zapis leci do tabeli wishlists,
@@ -1645,6 +2125,11 @@ document.addEventListener('click', async (e) => {
     if (on === null) {
       toast('Zaloguj się, żeby zapisać listę życzeń');
       return;
+    }
+    if (on) {
+      btn.classList.remove('is-added');
+      void btn.offsetWidth;
+      btn.classList.add('is-added');
     }
     toast(on ? 'Dodano do listy życzeń' : 'Usunięto z listy życzeń');
   } catch (err) {
@@ -1667,6 +2152,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('[data-icon]').forEach((el) => {
     el.innerHTML = icon(el.dataset.icon);
   });
+
+  // Katalog leci z bazy — do czasu odpowiedzi siatki trzymają szkielety
+  // zamiast pustego miejsca, które podskakuje przy pojawieniu się kart.
+  paintSkeletons();
 
   // Sesja przed katalogiem: klient Supabase powstaje raz, a zapytania
   // o produkty lecą już z tokenem — RLS widzi rolę zalogowanego konta.
@@ -1697,4 +2186,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // preselekcja kategorii z #hash (linki z kafelków na stronie głównej)
   const hash = location.hash.slice(1);
   if (hash) document.querySelector(`[data-filter="${CSS.escape(hash)}"]`)?.click();
+
+  // Nagłówki sekcji wchodzą tak samo jak kafelki pod nimi
+  document.querySelectorAll('.section-head, .hero-copy, .promo-inner').forEach((el) => {
+    el.setAttribute('data-reveal', '');
+  });
+  Reveal.scan();
 });

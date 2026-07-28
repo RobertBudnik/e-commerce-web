@@ -40,6 +40,12 @@ const ICON_PATHS = {
     '<circle cx="24" cy="24" r="18"/><path d="M24 22v11M24 15.5v.5"/>',
   shield:
     '<path d="M24 6l15 6v13c0 9.5-6.4 15.9-15 18-8.6-2.1-15-8.5-15-18V12z"/><path d="M17 24l5 5 10-10"/>',
+  close:
+    '<path d="M12 12l24 24M36 12L12 36"/>',
+  eye:
+    '<path d="M4 24s7-12 20-12 20 12 20 12-7 12-20 12S4 24 4 24z"/><circle cx="24" cy="24" r="6"/>',
+  cart:
+    '<path d="M6 8h6l5 22h20l4-15H15"/><circle cx="20" cy="39" r="2.5"/><circle cx="36" cy="39" r="2.5"/>',
 };
 
 function icon(name, size) {
