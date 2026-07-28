@@ -8,6 +8,8 @@ const CART_KEY = 'shop.cart.v1';
 const USER_KEY = 'shop.user.v1';
 const CATALOG_KEY = 'shop.catalog.v1';
 
+// Wartości zapasowe dla trybu bez bazy. Z włączonym backendem prawdą są
+// `store_settings` i tabela `coupons` — patrz obiekt Store i Backend.quote().
 const SHIPPING_FLAT = 19.99;
 const FREE_SHIPPING_FROM = 300;
 const COUPONS = { NOWY10: 0.10, LATO20: 0.20 };
@@ -332,6 +334,98 @@ const Orders = {
     Orders.source = 'localStorage';
     Orders.list = ORDERS;
     return Orders.list;
+  },
+};
+
+/* ---------- Ustawienia sklepu ----------
+ * Koszt dostawy i próg darmowej wysyłki trzyma `store_settings` (odczyt
+ * publiczny). Stałe z góry pliku zostają wyłącznie dla trybu bez bazy.
+ */
+const Store = {
+  source: 'localStorage',
+  shippingFlat: SHIPPING_FLAT,
+  freeFrom: FREE_SHIPPING_FROM,
+
+  async load() {
+    if (typeof BACKEND_ENABLED !== 'undefined' && BACKEND_ENABLED) {
+      const s = await Backend.storeSettings();
+      if (s) {
+        Store.source = 'baza';
+        Store.shippingFlat = s.shipping_flat_cents / 100;
+        Store.freeFrom = s.free_shipping_threshold_cents / 100;
+        return Store;
+      }
+    }
+    Store.source = 'localStorage';
+    return Store;
+  },
+};
+
+/* ---------- Wycena koszyka ----------
+ * Kwoty liczy baza (`quote_order`) tymi samymi regułami, których użyje
+ * `create_order` przy składaniu zamówienia — dzięki temu podsumowanie
+ * w koszyku i kwota na zamówieniu nie mają jak się rozjechać.
+ * Kody rabatowe sprawdza tabela `coupons`; front żadnej listy kodów nie zna.
+ */
+const Quote = {
+  source: 'localStorage',
+
+  async forCart(coupon) {
+    const items = Cart.read();
+
+    if (typeof BACKEND_ENABLED !== 'undefined' && BACKEND_ENABLED && items.length) {
+      const q = await Backend.quote({ items, coupon });
+      if (q) {
+        Quote.source = 'baza';
+        return q;
+      }
+      console.warn('Backend nie wycenił koszyka — liczymy lokalnie.');
+    }
+
+    Quote.source = 'localStorage';
+    return Quote.local(items, coupon);
+  },
+
+  /** Ta sama arytmetyka co w bazie: grosze jako liczby całkowite. */
+  local(items, coupon) {
+    const code = String(coupon ?? '').trim().toUpperCase();
+    const percent = COUPONS[code] ? Math.round(COUPONS[code] * 100) : 0;
+
+    const lines = items
+      .map((i) => {
+        const p = findProduct(i.id);
+        if (!p) return null;
+        return {
+          id: p.id,
+          name: p.name,
+          qty: i.qty,
+          price: p.price,
+          total: p.price * i.qty,
+          stock: p.stock,
+          inStock: p.stock >= i.qty,
+        };
+      })
+      .filter(Boolean);
+
+    const subtotal = lines.reduce((s, l) => s + Math.round(l.price * 100) * l.qty, 0);
+    const discount = Math.floor((subtotal * percent) / 100);
+    const freeFrom = Math.round(Store.freeFrom * 100);
+    const shipping = subtotal === 0 || subtotal - discount >= freeFrom
+      ? 0
+      : Math.round(Store.shippingFlat * 100);
+
+    return {
+      subtotal: subtotal / 100,
+      discount: discount / 100,
+      shipping: shipping / 100,
+      total: (subtotal - discount + shipping) / 100,
+      coupon: code || null,
+      couponValid: percent > 0,
+      percentOff: percent,
+      freeShippingFrom: Store.freeFrom,
+      freeShippingMissing: shipping === 0 ? 0 : Math.max(freeFrom - (subtotal - discount), 0) / 100,
+      lines,
+    };
   },
 };
 
@@ -1208,12 +1302,24 @@ function initProduct() {
 }
 
 /* ---------- Koszyk ---------- */
-function initCart() {
+async function initCart() {
   const root = document.querySelector('[data-cart-root]');
   if (!root) return;
 
-  let discount = 0;
+  const online = typeof BACKEND_ENABLED !== 'undefined' && BACKEND_ENABLED;
+
   let couponCode = '';
+  let quote = null;
+  let sending = false;
+  let checkoutError = '';
+
+  // Dane do formularza: profil zalogowanego konta, inaczej puste pola
+  await Profile.load();
+
+  async function refresh() {
+    quote = await Quote.forCart(couponCode);
+    render();
+  }
 
   function render() {
     const items = Cart.read();
@@ -1228,10 +1334,14 @@ function initCart() {
       return;
     }
 
-    const subtotal = Cart.subtotal();
-    const discountValue = subtotal * discount;
-    const afterDiscount = subtotal - discountValue;
-    const shipping = afterDiscount >= FREE_SHIPPING_FROM ? 0 : SHIPPING_FLAT;
+    const subtotal = quote?.subtotal ?? Cart.subtotal();
+    const discountValue = quote?.discount ?? 0;
+    const shipping = quote?.shipping ?? 0;
+    const total = quote?.total ?? subtotal;
+    const missing = quote?.freeShippingMissing ?? 0;
+    const shortages = (quote?.lines ?? []).filter((l) => !l.inStock);
+    const user = Auth.user();
+    const profile = Profile.read();
 
     root.innerHTML = `
       <div class="cart-layout">
@@ -1266,27 +1376,121 @@ function initCart() {
             <a class="arrow-link" href="shop.html">Kontynuuj zakupy</a>
             <button class="btn-link" data-clear>Wyczyść koszyk</button>
           </div>
+
+          <form class="card-box checkout" data-checkout-form>
+            <h2>Dane do zamówienia</h2>
+            <p class="lede">Ceny, rabat i dostawę przelicza serwer przy składaniu zamówienia.</p>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="co-name">Imię i nazwisko</label>
+                <input id="co-name" name="name" type="text" autocomplete="name" required
+                  value="${escapeHtml(profile.name || user?.name || '')}">
+              </div>
+              <div class="field">
+                <label for="co-phone">Telefon</label>
+                <input id="co-phone" name="phone" type="tel" autocomplete="tel"
+                  placeholder="+48 600 000 000" value="${escapeHtml(profile.phone || '')}">
+              </div>
+            </div>
+            <div class="field">
+              <label for="co-email">E-mail</label>
+              <input id="co-email" name="email" type="email" autocomplete="email" required
+                value="${escapeHtml(profile.email || user?.email || '')}">
+            </div>
+            <div class="field">
+              <label for="co-street">Ulica i numer</label>
+              <input id="co-street" name="street" type="text" autocomplete="street-address" required
+                placeholder="Krucza 12/4" value="${escapeHtml(profile.street || '')}">
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="co-zip">Kod pocztowy</label>
+                <input id="co-zip" name="zip" type="text" autocomplete="postal-code" required
+                  placeholder="00-001" value="${escapeHtml(profile.zip || '')}">
+              </div>
+              <div class="field">
+                <label for="co-city">Miasto</label>
+                <input id="co-city" name="city" type="text" autocomplete="address-level2" required
+                  placeholder="Warszawa" value="${escapeHtml(profile.city || '')}">
+              </div>
+            </div>
+
+            ${checkoutError ? `<p class="notice notice-error" role="alert">${escapeHtml(checkoutError)}</p>` : ''}
+            ${online ? '' : '<p class="summary-note">Tryb bez bazy — zamówienia nie da się złożyć. Ustaw dane Supabase w <code>js/config.js</code>.</p>'}
+
+            <button class="btn btn-block" type="submit" style="margin-top:20px"
+              ${!online || sending || shortages.length ? 'disabled' : ''}>
+              ${sending ? 'Składam zamówienie…' : `Zamawiam i płacę · ${money(total)}`}
+            </button>
+            <p class="summary-note" style="text-align:center">
+              Zamówienie rezerwuje towar; płatność potwierdza operator.
+            </p>
+          </form>
         </section>
 
         <aside class="summary">
           <h2>Podsumowanie</h2>
           <div class="summary-row"><span>Wartość produktów</span><span>${money(subtotal)}</span></div>
-          ${discount ? `<div class="summary-row"><span>Rabat · ${escapeHtml(couponCode)}</span><span>−${money(discountValue)}</span></div>` : ''}
+          ${discountValue ? `<div class="summary-row"><span>Rabat · ${escapeHtml(quote?.coupon ?? couponCode)}</span><span>−${money(discountValue)}</span></div>` : ''}
           <div class="summary-row"><span>Dostawa</span><span>${shipping === 0 ? 'Gratis' : money(shipping)}</span></div>
-          ${
-            shipping > 0
-              ? `<p class="summary-note">Do darmowej dostawy brakuje ${money(FREE_SHIPPING_FROM - afterDiscount)}.</p>`
-              : ''
-          }
+          ${shipping > 0 ? `<p class="summary-note">Do darmowej dostawy brakuje ${money(missing)}.</p>` : ''}
           <form class="coupon" data-coupon>
             <input type="text" placeholder="Kod rabatowy" aria-label="Kod rabatowy" value="${escapeHtml(couponCode)}">
             <button class="btn btn-ghost btn-sm" type="submit">Zastosuj</button>
           </form>
-          <div class="summary-row total"><span>Razem</span><span>${money(afterDiscount + shipping)}</span></div>
-          <button class="btn btn-block" style="margin-top:18px" data-checkout>Do kasy</button>
-          <p class="summary-note" style="text-align:center">Darmowy zwrot w 30 dni</p>
+          <div class="summary-row total"><span>Razem</span><span>${money(total)}</span></div>
+          ${shortages.length
+            ? `<p class="notice notice-error" role="alert">Brakuje sztuk: ${shortages
+                .map((l) => `${escapeHtml(l.name)} (zostało ${l.stock})`)
+                .join(', ')}.</p>`
+            : ''}
+          <p class="summary-note" style="text-align:center">
+            ${Quote.source === 'baza' ? 'Kwoty policzone w bazie' : 'Kwoty policzone lokalnie'} ·
+            darmowy zwrot w 30 dni
+          </p>
         </aside>
       </div>`;
+  }
+
+  /** Składa zamówienie przez Edge Function. Kwoty liczy baza, nie ten formularz. */
+  async function submitOrder(form) {
+    const f = form.elements;
+    checkoutError = '';
+    sending = true;
+    render();
+
+    try {
+      const res = await Backend.checkout({
+        items: Cart.read(),
+        email: f.email.value.trim(),
+        phone: f.phone.value.trim() || null,
+        coupon: quote?.couponValid ? quote.coupon : null,
+        address: {
+          recipient: f.name.value.trim(),
+          street: f.street.value.trim(),
+          postal_code: f.zip.value.trim(),
+          city: f.city.value.trim(),
+          country: 'PL',
+          phone: f.phone.value.trim() || null,
+        },
+      });
+
+      if (!res?.order_number) throw new Error('Serwer nie zwrócił numeru zamówienia');
+
+      // Zamówienie stoi w bazie, towar zarezerwowany — koszyk może odejść
+      Cart.clear();
+
+      // Z kluczem operatora idziemy na jego stronę płatności; bez niego
+      // (praca lokalna) zostaje potwierdzenie z numerem zamówienia.
+      location.href = res.checkout_url
+        ? res.checkout_url
+        : `order-confirmed.html?order=${encodeURIComponent(res.order_number)}`;
+    } catch (err) {
+      checkoutError = checkoutMessage(err);
+      sending = false;
+      render();
+    }
   }
 
   root.addEventListener('click', (e) => {
@@ -1307,9 +1511,6 @@ function initCart() {
       Cart.clear();
       return;
     }
-    if (e.target.closest('[data-checkout]')) {
-      toast('Podłącz tu swój checkout / bramkę płatności');
-    }
   });
 
   root.addEventListener('change', (e) => {
@@ -1317,25 +1518,109 @@ function initCart() {
     if (input) Cart.setQty(input.dataset.qtyInput, parseInt(input.value, 10) || 0);
   });
 
-  root.addEventListener('submit', (e) => {
-    const form = e.target.closest('[data-coupon]');
-    if (!form) return;
-    e.preventDefault();
-    const code = form.querySelector('input').value.trim().toUpperCase();
-    if (COUPONS[code]) {
-      discount = COUPONS[code];
-      couponCode = code;
-      toast(`Kod ${code} zastosowany`);
-    } else {
-      discount = 0;
-      couponCode = '';
-      toast('Nieprawidłowy kod rabatowy');
+  root.addEventListener('submit', async (e) => {
+    const couponForm = e.target.closest('[data-coupon]');
+    if (couponForm) {
+      e.preventDefault();
+      couponCode = couponForm.querySelector('input').value.trim().toUpperCase();
+      await refresh();
+      // Kod sprawdza baza, nie front — stąd komunikat dopiero po wycenie
+      if (couponCode) toast(quote?.couponValid ? `Kod ${couponCode} zastosowany` : 'Nieprawidłowy kod rabatowy');
+      if (couponCode && !quote?.couponValid) couponCode = '';
+      return;
     }
-    render();
+
+    const checkoutForm = e.target.closest('[data-checkout-form]');
+    if (checkoutForm) {
+      e.preventDefault();
+      if (sending) return;
+      await submitOrder(checkoutForm);
+    }
   });
 
-  document.addEventListener('cart:change', render);
-  render();
+  document.addEventListener('cart:change', refresh);
+  await refresh();
+}
+
+/* ---------- Potwierdzenie zamówienia ----------
+ * Strona powrotu z płatności. Sam powrót niczego nie potwierdza — status
+ * płatności ustawia webhook operatora, więc tu pokazujemy stan z bazy.
+ * Zamówienia gościa nie widzi nikt poza zapleczem, stąd wariant z samym numerem.
+ */
+async function initOrderConfirmed() {
+  const root = document.querySelector('[data-order-root]');
+  if (!root) return;
+
+  const number = new URLSearchParams(location.search).get('order');
+
+  if (!number) {
+    root.innerHTML = `
+      <div class="empty">
+        <h1>Brak numeru zamówienia</h1>
+        <p>Ten adres otwiera się po złożeniu zamówienia.</p>
+        <a class="btn" href="shop.html">Przejdź do sklepu</a>
+      </div>`;
+    return;
+  }
+
+  const order = (typeof BACKEND_ENABLED !== 'undefined' && BACKEND_ENABLED)
+    ? await Backend.orderByNumber(number)
+    : null;
+
+  const head = `
+    <div class="order-done">
+      <span class="order-done-mark">${icon('check')}</span>
+      <h1>Zamówienie przyjęte</h1>
+      <p class="lede">Numer <strong>${escapeHtml(number)}</strong> — potwierdzenie idzie na e-mail.</p>
+    </div>`;
+
+  if (!order) {
+    root.innerHTML = `
+      ${head}
+      <div class="card-box">
+        <p class="muted">Szczegóły zamówienia widzi konto, na które zostało złożone.
+          Zaloguj się tym adresem e-mail, żeby śledzić status w panelu konta.</p>
+        <p style="margin-top:14px"><a class="arrow-link" href="shop.html">Wróć do sklepu</a></p>
+      </div>`;
+    return;
+  }
+
+  const paid = order.paymentStatus === 'opłacone';
+  root.innerHTML = `
+    ${head}
+    <div class="card-box">
+      <div class="summary-row"><span>Status zamówienia</span><span>${escapeHtml(order.status)}</span></div>
+      <div class="summary-row"><span>Płatność</span><span>${escapeHtml(order.paymentStatus)}</span></div>
+      <div class="summary-row"><span>Wartość produktów</span><span>${money(order.subtotal)}</span></div>
+      ${order.discount ? `<div class="summary-row"><span>Rabat</span><span>−${money(order.discount)}</span></div>` : ''}
+      <div class="summary-row"><span>Dostawa</span><span>${order.shipping === 0 ? 'Gratis' : money(order.shipping)}</span></div>
+      <div class="summary-row total"><span>Razem</span><span>${money(order.total)}</span></div>
+      <p class="summary-note">${paid
+        ? 'Płatność potwierdzona przez operatora.'
+        : 'Czekamy na potwierdzenie płatności — status zmieni się automatycznie.'}</p>
+    </div>
+    <div class="card-box">
+      <h3>Pozycje</h3>
+      ${order.items
+        .map((i) => `<div class="summary-row"><span>${escapeHtml(i.name)} × ${i.qty}</span><span>${money(i.price * i.qty)}</span></div>`)
+        .join('')}
+      ${order.address ? `<p class="summary-note">Dostawa: ${escapeHtml(order.customer)}, ${escapeHtml(order.address)}</p>` : ''}
+      <p style="margin-top:14px"><a class="arrow-link" href="account.html#orders">Moje zamówienia</a></p>
+    </div>`;
+}
+
+/** Błąd z create_order / Edge Function → jedno zdanie dla klienta. */
+function checkoutMessage(err) {
+  const msg = String(err?.message ?? err ?? '');
+  const stock = msg.match(/Za mało sztuk: (.+?) \(dostępne (\d+)\)/);
+
+  if (stock) return `Zabrakło towaru: ${stock[1]} — zostało ${stock[2]} szt.`;
+  if (/Kod rabatowy .* nieprawidłowy|wygasł/i.test(msg)) return 'Kod rabatowy jest nieprawidłowy lub wygasł.';
+  if (/Nieprawidłowy adres e-mail/i.test(msg)) return 'Sprawdź adres e-mail.';
+  if (/Puste zamówienie|Koszyk jest pusty/i.test(msg)) return 'Koszyk jest pusty.';
+  if (/niedostępny/i.test(msg)) return 'Któryś z produktów zniknął z katalogu — odśwież koszyk.';
+  if (/failed to fetch|networkerror|load failed/i.test(msg)) return 'Brak połączenia z serwerem — spróbuj za chwilę.';
+  return `Nie udało się złożyć zamówienia: ${msg}`;
 }
 
 /* ---------- Spięcie globalne ---------- */
@@ -1390,15 +1675,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   await Catalog.load();
   // Lista życzeń przed renderem kafelków — serca mają od razu znać swój stan
   await Wish.load();
+  // Próg darmowej dostawy z bazy; bez niej zostają stałe z góry pliku
+  await Store.load();
   refreshCartBadge();
   initAccountMenu();
   initAdmin();
   initHome();
   initShop();
   initProduct();
-  initCart();
+  await initCart();
   initLogin();
   await initAccountPage();
+  await initOrderConfirmed();
 
   document.querySelector('[data-newsletter]')?.addEventListener('submit', (e) => {
     e.preventDefault();

@@ -17,7 +17,8 @@ python3 -m http.server 8000
 index.html      strona główna (hero, statystyki, kategorie, polecane, newsletter)
 shop.html       lista produktów (filtry kategorii, sortowanie, szukajka)
 product.html    karta produktu (?id=p-001) + podobne produkty
-cart.html       koszyk (ilości, kody rabatowe, dostawa, podsumowanie)
+cart.html       koszyk (ilości, kody rabatowe, dane do zamówienia, podsumowanie)
+order-confirmed.html  potwierdzenie zamówienia (?order=NOR-2026-1000)
 login.html      logowanie i rejestracja (zakładki, panel beżowy z korzyściami)
 account.html    panel konta — zawartość zależy od roli
 admin.html      panel produktów: dodawanie, edycja, usuwanie (tylko organizacja)
@@ -172,14 +173,43 @@ osobną operacją z potwierdzeniem mailem.
 `ORDERS` w `js/data.js` zostaje w dwóch rolach: jako atrapa dla trybu offline i jako źródło
 demonstracyjnych zamówień dla `scripts/gen-seed.mjs`.
 
+## Zamówienie i płatność
+
+Koszyk kończy się formularzem danych i przyciskiem „Zamawiam i płacę". Przeglądarka
+wysyła wyłącznie identyfikatory produktów i ilości — resztę robi serwer:
+
+1. `Backend.quote()` → funkcja `quote_order()` w bazie liczy podsumowanie: ceny z katalogu,
+   rabat z tabeli `coupons`, dostawę z `store_settings`. Front nie zna żadnego kodu
+   rabatowego; wpisany kod sprawdza baza i odsyła sam wynik.
+2. „Zamawiam i płacę" → `Backend.checkout()` → Edge Function `create-checkout` woła
+   `create_order()`. Ta funkcja przelicza wszystko jeszcze raz, rezerwuje towar
+   (`take_stock`) i zapisuje pozycje ze snapshotem nazwy i ceny.
+3. Z ustawionym `STRIPE_SECRET_KEY` przeglądarka leci na stronę płatności operatora.
+   Bez klucza (praca lokalna) zamówienie zostaje w stanie „oczekuje", a klient ląduje
+   na `order-confirmed.html?order=NOR-…`.
+4. Opłacenie potwierdza wyłącznie webhook (`stripe-webhook` → `mark_order_paid`).
+   Powrót klienta na stronę sukcesu nie zmienia statusu — to tylko widok.
+
+Braki magazynowe widać dwa razy: wycena oznacza pozycję ponad stan i blokuje przycisk,
+a gdyby ktoś obszedł formularz, `create_order()` odrzuca całe zamówienie i nic nie
+zapisuje. Komunikat z bazy („Za mało sztuk: …") tłumaczy na polski `checkoutMessage()`.
+
+Zamówienie może złożyć gość — wtedy `user_id` zostaje pusty i takiego zamówienia nie
+widzi w panelu nikt poza zapleczem. Strona potwierdzenia pokazuje wtedy sam numer,
+bo RLS nie wypuści szczegółów do niezalogowanej przeglądarki.
+
+Kody rabatowe zmienia się w tabeli `coupons`, próg darmowej dostawy i stawkę
+w `store_settings` — bez dotykania kodu frontu.
+
 ## Konfiguracja
 
-W `js/app.js`, u góry pliku:
+Z włączoną bazą kwoty ustawia się w bazie: `store_settings` (dostawa i próg) oraz
+`coupons` (kody). Stałe w `js/app.js` obowiązują wyłącznie w trybie bez backendu:
 
 - `SHIPPING_FLAT` — koszt dostawy (19,99 zł)
 - `FREE_SHIPPING_FROM` — próg darmowej dostawy (300 zł)
 - `COUPONS` — kody rabatowe; domyślnie `NOWY10` (10%) i `LATO20` (20%)
-- `CART_KEY`, `USER_KEY`, `CATALOG_KEY`, `PROFILE_KEY` — klucze w `localStorage`
+- `CART_KEY`, `USER_KEY`, `CATALOG_KEY`, `PROFILE_KEY`, `WISHLIST_KEY` — klucze w `localStorage`
 
 Połączenie z bazą: `js/config.js` — `SUPABASE_URL`, `SUPABASE_ANON_KEY` oraz `BACKEND_ENABLED`
 (ustaw na `false`, żeby kliknąć szablon na samych danych lokalnych).
@@ -188,10 +218,9 @@ Kolory, promienie, cienie i szerokość kolumny: zmienne CSS w `:root` w `css/st
 
 ## Czego brakuje do produkcji
 
-- Checkout i płatności: koszyk nadal kończy się na podsumowaniu, `Backend.checkout()`
-  i funkcja `create-checkout` czekają na spięcie z formularzem zamówienia
+- Klucze operatora płatności: bez `STRIPE_SECRET_KEY` i `STRIPE_WEBHOOK_SECRET`
+  zamówienie powstaje, ale nikt go nie opłaci — ścieżka ze Stripe nieprzeklikana
 - Prawdziwe zdjęcia zamiast ikon
-- Rabaty i ceny liczone na serwerze — obecna logika koszyka jest tylko po stronie klienta
-  (baza liczy je już w `create_order`, front jeszcze z tego nie korzysta)
 - Zmiana statusu zamówienia z panelu zaplecza — polityka `zamówienia: obsługa` na to pozwala,
   interfejsu nie ma
+- Powiadomienia e-mail o zamówieniu i wysyłce

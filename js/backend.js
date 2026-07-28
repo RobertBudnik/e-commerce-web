@@ -233,6 +233,58 @@ const Backend = {
     return data.map((row) => this.toOrder(row));
   },
 
+  /** Ustawienia sklepu — próg darmowej dostawy i koszt wysyłki z bazy. */
+  async storeSettings() {
+    if (!(await this.init())) return null;
+    const { data, error } = await this.client
+      .from('store_settings')
+      .select('shipping_flat_cents, free_shipping_threshold_cents, currency')
+      .maybeSingle();
+    if (error) return null;
+    return data;
+  },
+
+  /**
+   * Podgląd sumy koszyka policzony w bazie: ceny z katalogu, rabat z tabeli
+   * kuponów, dostawa z ustawień sklepu. Nic nie zapisuje — te same reguły
+   * zastosuje potem create_order, więc kwota na podsumowaniu i na zamówieniu
+   * nie mają prawa się rozjechać.
+   */
+  async quote({ items, coupon }) {
+    if (!(await this.init())) return null;
+
+    const { data, error } = await this.client.rpc('quote_order', {
+      p_items: items.map((i) => ({ product_id: i.id, qty: i.qty })),
+      p_coupon: coupon ?? null,
+    });
+
+    if (error) {
+      console.warn('Błąd wyceny koszyka:', error.message);
+      return null;
+    }
+
+    return {
+      subtotal: data.subtotal_cents / 100,
+      discount: data.discount_cents / 100,
+      shipping: data.shipping_cents / 100,
+      total: data.total_cents / 100,
+      coupon: data.coupon,
+      couponValid: data.coupon_valid,
+      percentOff: data.percent_off,
+      freeShippingFrom: data.free_shipping_threshold_cents / 100,
+      freeShippingMissing: data.free_shipping_missing_cents / 100,
+      lines: (data.lines ?? []).map((l) => ({
+        id: l.product_id,
+        name: l.name,
+        qty: l.qty,
+        price: l.unit_price_cents / 100,
+        total: l.line_total_cents / 100,
+        stock: l.stock,
+        inStock: l.in_stock,
+      })),
+    };
+  },
+
   /**
    * Składa zamówienie. Ceny, rabat i dostawę liczy baza — stąd lecą
    * wyłącznie identyfikatory i ilości.
@@ -250,9 +302,32 @@ const Backend = {
       },
     });
 
-    if (error) throw new Error(error.message);
+    // FunctionsHttpError chowa treść odpowiedzi w `context` — bez tego do
+    // klienta dociera samo „non-2xx status code" zamiast powodu odmowy.
+    if (error) {
+      const body = await error.context?.json?.().catch(() => null);
+      throw new Error(body?.error ?? error.message);
+    }
     if (data?.error) throw new Error(data.error);
     return data;
+  },
+
+  /**
+   * Jedno zamówienie po numerze. RLS oddaje je właścicielowi zamówienia
+   * albo zapleczu — zamówienie gościa nie jest widoczne dla nikogo innego,
+   * więc strona potwierdzenia musi umieć pokazać sam numer.
+   */
+  async orderByNumber(orderNumber) {
+    if (!(await this.init())) return null;
+
+    const { data, error } = await this.client
+      .from('orders')
+      .select('*, order_items(*)')
+      .eq('order_number', orderNumber)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return this.toOrder(data);
   },
 
   // -------------------------------------------------------------------------

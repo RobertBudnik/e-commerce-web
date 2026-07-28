@@ -281,6 +281,64 @@ await throws(
 );
 
 // ---------------------------------------------------------------------------
+console.log('\nWycena koszyka');
+await asUser(customer.id);
+
+const quote = (
+  await db.query(`select public.quote_order($1::jsonb, null) as q`, [
+    JSON.stringify([{ product_id: bulb.id, qty: 2 }]),
+  ])
+).rows[0].q;
+check('wycena liczy sumę z cen w bazie', quote.subtotal_cents === bulb.price_cents * 2, `${quote.subtotal_cents}`);
+check('dostawa doliczona poniżej progu', quote.shipping_cents === 1999, `${quote.shipping_cents}`);
+check('brakująca kwota do darmowej dostawy', quote.free_shipping_missing_cents === 30000 - bulb.price_cents * 2, `${quote.free_shipping_missing_cents}`);
+check('pozycja w stanie', quote.lines[0].in_stock === true);
+
+const quoteCoupon = (
+  await db.query(`select public.quote_order($1::jsonb, $2) as q`, [
+    JSON.stringify([{ product_id: bulb.id, qty: 2 }]),
+    'nowy10',
+  ])
+).rows[0].q;
+check('kupon uznany niezależnie od wielkości liter', quoteCoupon.coupon_valid === true);
+check('rabat z wyceny jak w create_order', quoteCoupon.discount_cents === Math.trunc((bulb.price_cents * 2) / 10), `${quoteCoupon.discount_cents}`);
+
+const quoteBadCoupon = (
+  await db.query(`select public.quote_order($1::jsonb, $2) as q`, [
+    JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
+    'LEWY99',
+  ])
+).rows[0].q;
+check('zły kod nie daje rabatu', quoteBadCoupon.coupon_valid === false && quoteBadCoupon.discount_cents === 0);
+
+const quoteBig = (
+  await db.query(`select public.quote_order($1::jsonb, null) as q`, [
+    JSON.stringify([{ product_id: headphones.id, qty: 1 }]),
+  ])
+).rows[0].q;
+check('dostawa gratis powyżej progu', quoteBig.shipping_cents === 0, `${quoteBig.shipping_cents}`);
+
+// Wycena musi widzieć braki, zanim klient kliknie „zamawiam"
+const quoteShort = (
+  await db.query(`select public.quote_order($1::jsonb, null) as q`, [
+    JSON.stringify([{ product_id: bulb.id, qty: 100000 }]),
+  ])
+).rows[0].q;
+check('wycena oznacza brak towaru', quoteShort.lines[0].in_stock === false);
+
+// Kupony zostają zamknięte — wycena oddaje wynik, nie listę kodów
+const couponPeek = await db.query(`select count(*) as n from public.coupons`);
+check('klient nie wylistuje kuponów', Number(couponPeek.rows[0].n) === 0, `${couponPeek.rows[0].n}`);
+
+await asUser(null, 'anon');
+const anonQuote = (
+  await db.query(`select public.quote_order($1::jsonb, null) as q`, [
+    JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
+  ])
+).rows[0].q;
+check('gość wycenia koszyk bez logowania', anonQuote.total_cents === bulb.price_cents + 1999, `${anonQuote.total_cents}`);
+
+// ---------------------------------------------------------------------------
 console.log('\nStany magazynowe');
 await asService();
 const { rows: [camera] } = await db.query(

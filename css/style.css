@@ -709,6 +709,27 @@ select:hover { border-color: var(--line-strong); }
 .empty h1 { margin-bottom: .3em; }
 .empty p { color: var(--ink-soft); margin-bottom: 28px; }
 
+/* ---------- Dane do zamówienia ---------- */
+.checkout { margin-top: 32px; }
+.checkout h2 { font-size: 1.0625rem; letter-spacing: -.015em; margin-bottom: 4px; }
+.checkout .lede { margin-bottom: 22px; }
+.checkout .notice { margin-top: 20px; }
+
+/* ---------- Potwierdzenie zamówienia ---------- */
+.order-done { text-align: center; margin-bottom: 36px; }
+.order-done-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 52px; height: 52px;
+  margin-bottom: 18px;
+  border-radius: var(--r-pill);
+  background: var(--beige);
+  color: var(--ink);
+}
+.order-done-mark svg { width: 22px; height: 22px; }
+.order-done h1 { margin-bottom: .25em; }
+.order-done .lede { margin: 0 auto; max-width: 44ch; }
+
 @media (max-width: 900px) {
   .cart-layout { grid-template-columns: 1fr; gap: 40px; }
   .summary { position: static; }

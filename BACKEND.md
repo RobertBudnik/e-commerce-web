@@ -14,7 +14,9 @@ supabase/
     20260727090000_init_schema.sql         tabele, typy, triggery
     20260727090100_auth_and_commerce_...   role, uprawnienia, zamówienia, magazyn
     20260727090200_rls_policies.sql        polityki RLS i GRANT-y
-  seed.sql                                 dane startowe + konto właściciela
+    20260727090300_auth_hook_grants.sql    hook roli w tokenie
+    20260728120000_quote_order.sql         wycena koszyka przed zamówieniem
+  seed.sql                                 dane startowe, konto właściciela i klienta demo
   functions/
     create-checkout/                       zamówienie + sesja płatności
     stripe-webhook/                        potwierdzenie płatności (weryfikacja podpisu)
@@ -30,7 +32,8 @@ npm run db:test
 ```
 
 Odpala Postgres 16 skompilowany do WebAssembly, wgrywa migracje i seed, po czym
-sprawdza 51 przypadków: uprawnienia ról, liczenie cen, rezerwację stanu, RLS.
+sprawdza 72 przypadki: uprawnienia ról, liczenie cen, wycenę koszyka, rezerwację
+stanu, RLS oraz dane panelu konta.
 Nie zastępuje pełnego stosu (brak Auth, PostgREST, Realtime), ale weryfikuje
 wszystko, co jest w SQL.
 
@@ -92,7 +95,12 @@ unieważnienia sesji (`auth.admin.signOut(user_id)`), samo skasowanie wiersza ni
 
 - **Ceny** — `create_order()` czyta je z tabeli `products`. Przeglądarka przysyła
   wyłącznie `product_id` i `qty`.
+- **Podsumowanie koszyka** — `quote_order()` liczy je tymi samymi regułami co
+  `create_order()`, tyle że bez zapisu. Front nie ma własnej arytmetyki cen,
+  więc kwota z koszyka i kwota na zamówieniu nie mają jak się rozjechać.
 - **Rabaty** — kupon sprawdzany w bazie przed powstaniem zamówienia, licznik użyć rośnie tam samo.
+  Tabela `coupons` jest zamknięta dla przeglądarki: `quote_order()` (security definer)
+  oddaje wynik dla wpisanego kodu, nigdy listy kodów.
 - **Dostawa** — próg darmowej dostawy i stawka w tabeli `store_settings`.
 - **Stany magazynowe** — `take_stock()` robi warunkowy `UPDATE ... WHERE stock >= qty`.
   Dwa równoległe zamówienia na ostatnią sztukę: jedno przechodzi, drugie dostaje błąd.
@@ -124,7 +132,8 @@ lokalnej — `db push` go nie wysyła, ale nie wolno go uruchamiać na produkcji
 
 ## Czego jeszcze nie ma
 
-- Podpięcia frontendu do bazy — strona nadal czyta `js/data.js` i `localStorage`
+- Panelu obsługi zamówień — polityka `zamówienia: obsługa` pozwala zapleczu zmieniać
+  status, ale interfejsu do tego nie ma
 - Faktur, integracji z kurierem, powiadomień e-mail o statusie
 - Aplikacji magazynowej (PWA) — następny etap
 - Wariantów produktów (rozmiar, kolor) i wielu magazynów
