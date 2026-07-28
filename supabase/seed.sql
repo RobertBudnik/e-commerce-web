@@ -109,3 +109,128 @@ begin
   on conflict (user_id, role) do nothing;
 end $$;
 
+-- ---------------------------------------------------------------------------
+-- Konto klienta demo + historia zamówień (wyłącznie do pracy lokalnej).
+-- Zamówienia z pierwszego wiersza należą do klienta, pozostałe to zakupy gościa —
+-- klient ich nie zobaczy, bo polityka "zamówienia: odczyt własnych" tnie po user_id.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  customer_id uuid;
+  order_id uuid;
+begin
+  select id into customer_id from auth.users where email = 'klient@nordo.pl';
+
+  if customer_id is null then
+    customer_id := gen_random_uuid();
+
+    insert into auth.users (
+      instance_id, id, aud, role, email, encrypted_password,
+      email_confirmed_at, created_at, updated_at,
+      raw_app_meta_data, raw_user_meta_data,
+      confirmation_token, recovery_token,
+      email_change, email_change_token_new, email_change_token_current,
+      phone_change, phone_change_token, reauthentication_token
+    ) values (
+      '00000000-0000-0000-0000-000000000000', customer_id, 'authenticated', 'authenticated',
+      'klient@nordo.pl', crypt('nordo-local-dev', gen_salt('bf')),
+      now(), now(), now(),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      '{"full_name":"Robert Kowalski"}'::jsonb,
+      '', '', '', '', '', '', '', ''
+    );
+
+    insert into auth.identities (
+      provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+    ) values (
+      customer_id, customer_id,
+      jsonb_build_object('sub', customer_id::text, 'email', 'klient@nordo.pl', 'email_verified', true),
+      'email', now(), now(), now()
+    )
+    on conflict do nothing;
+  end if;
+
+  -- Adres dostawy klienta
+  insert into public.addresses (user_id, recipient, street, postal_code, city, phone, is_default)
+  select customer_id, 'Robert Kowalski', 'Krucza 12/4',
+         '00-001', 'Warszawa',
+         '+48 600 100 200', true
+  where not exists (select 1 from public.addresses where user_id = customer_id);
+
+  -- Lista życzeń klienta
+  insert into public.wishlists (user_id, product_id)
+  select customer_id, p.id from public.products p
+  where p.slug in ('laptop-nova-14-pro', 'obiektyw-lumen-35-mm-f-1-8')
+  on conflict do nothing;
+
+  -- Zamówienia. Numery są stałe, więc powtórzony seed nic nie dubluje.
+  if not exists (select 1 from public.orders) then
+    insert into public.orders (
+      order_number, user_id, email, phone, status, payment_status,
+      subtotal_cents, discount_cents, shipping_cents, total_cents,
+      shipping_address, created_at
+    ) values (
+      'NOR-2026-0418', customer_id, 'klient@nordo.pl', '+48 600 100 200',
+      'wysłane', 'opłacone',
+      72800, 0, 0, 72800,
+      jsonb_build_object(
+        'recipient', 'Robert Kowalski', 'street', 'Krucza 12/4',
+        'postal_code', '00-001', 'city', 'Warszawa',
+        'country', 'PL', 'phone', '+48 600 100 200'
+      ),
+      '2026-07-14'::timestamptz
+    ) returning id into order_id;
+
+    insert into public.order_items (order_id, product_id, name, unit_price_cents, qty, line_total_cents)
+    select order_id, p.id, p.name, p.price_cents, 1, p.price_cents * 1
+    from public.products p where p.slug = 'sluchawki-bezprzewodowe-aura-x';
+    insert into public.order_items (order_id, product_id, name, unit_price_cents, qty, line_total_cents)
+    select order_id, p.id, p.name, p.price_cents, 1, p.price_cents * 1
+    from public.products p where p.slug = 'zarowka-smart-glow-e27';
+
+    insert into public.orders (
+      order_number, user_id, email, phone, status, payment_status,
+      subtotal_cents, discount_cents, shipping_cents, total_cents,
+      shipping_address, created_at
+    ) values (
+      'NOR-2026-0311', null, 'marta.k@example.com', '+48 601 300 400',
+      'dostarczone', 'opłacone',
+      179900, 0, 0, 179900,
+      jsonb_build_object(
+        'recipient', 'Marta Kwiatkowska', 'street', 'Lipowa 3',
+        'postal_code', '31-002', 'city', 'Kraków',
+        'country', 'PL', 'phone', '+48 601 300 400'
+      ),
+      '2026-05-02'::timestamptz
+    ) returning id into order_id;
+
+    insert into public.order_items (order_id, product_id, name, unit_price_cents, qty, line_total_cents)
+    select order_id, p.id, p.name, p.price_cents, 1, p.price_cents * 1
+    from public.products p where p.slug = 'monitor-vision-27-4k';
+
+    insert into public.orders (
+      order_number, user_id, email, phone, status, payment_status,
+      subtotal_cents, discount_cents, shipping_cents, total_cents,
+      shipping_address, created_at
+    ) values (
+      'NOR-2025-1187', null, 'p.nowak@example.com', '+48 602 500 600',
+      'dostarczone', 'opłacone',
+      45800, 0, 1999, 47799,
+      jsonb_build_object(
+        'recipient', 'Paweł Nowak', 'street', 'Morska 88/2',
+        'postal_code', '81-225', 'city', 'Gdynia',
+        'country', 'PL', 'phone', '+48 602 500 600'
+      ),
+      '2025-11-23'::timestamptz
+    ) returning id into order_id;
+
+    insert into public.order_items (order_id, product_id, name, unit_price_cents, qty, line_total_cents)
+    select order_id, p.id, p.name, p.price_cents, 2, p.price_cents * 2
+    from public.products p where p.slug = 'glosnik-przenosny-boom-mini';
+  end if;
+
+  -- Profil zakłada trigger handle_new_user; tu dochodzi telefon do panelu konta
+  update public.profiles set full_name = 'Robert Kowalski', phone = '+48 600 100 200'
+  where id = customer_id;
+end $$;
+

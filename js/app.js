@@ -227,19 +227,169 @@ function authError(err) {
 }
 
 /* ---------- Profil klienta ----------
- * Dane kontaktowe i adres wpisane przez klienta. Docelowo PUT /api/me.
+ * Dane kontaktowe z `public.profiles`, adres dostawy z `public.addresses`.
+ * Formularz widzi jeden płaski obiekt — sklejanie i rozbijanie na dwie tabele
+ * siedzi tutaj. Bez backendu zostaje dotychczasowy wpis w localStorage.
  */
 const PROFILE_KEY = 'shop.profile.v1';
 const Profile = {
+  /** Skąd przyszły dane — 'baza' albo 'localStorage'. */
+  source: 'localStorage',
+  cached: {},
+
+  async load() {
+    if (Auth.source === 'baza' && Auth.user()) {
+      const [prof, addr] = await Promise.all([Backend.profile(), Backend.defaultAddress()]);
+      if (prof) {
+        Profile.source = 'baza';
+        Profile.cached = {
+          name: prof.full_name ?? '',
+          email: prof.email ?? '',
+          phone: prof.phone ?? '',
+          street: addr?.street ?? '',
+          zip: addr?.postal_code ?? '',
+          city: addr?.city ?? '',
+          newsletter: Boolean(prof.newsletter),
+        };
+        return Profile.cached;
+      }
+      console.warn('Backend nie oddał profilu — dane z localStorage.');
+    }
+
+    Profile.source = 'localStorage';
+    Profile.cached = Profile.readLocal();
+    return Profile.cached;
+  },
+
+  /** Synchroniczny odczyt dla renderu — stan z ostatniego load()/save(). */
   read() {
+    return Profile.cached;
+  },
+
+  /**
+   * Zapis. W trybie 'baza' idzie w dwa miejsca: dane kontaktowe do `profiles`,
+   * adres do `addresses`. E-mail należy do sesji Supabase i tu się nie zmienia.
+   */
+  async save(data) {
+    if (Profile.source === 'baza') {
+      await Backend.saveProfile({
+        name: data.name,
+        phone: data.phone,
+        newsletter: data.newsletter,
+      });
+
+      if (data.street || data.zip || data.city) {
+        await Backend.saveAddress({
+          recipient: data.name,
+          street: data.street,
+          zip: data.zip,
+          city: data.city,
+          phone: data.phone,
+        });
+      }
+
+      Profile.cached = { ...Profile.cached, ...data };
+      return;
+    }
+
+    Profile.writeLocal(data);
+    Profile.cached = Profile.readLocal();
+  },
+
+  /* --- Ścieżka offline --- */
+
+  readLocal() {
     try {
       return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
     } catch {
       return {};
     }
   },
-  write(data) {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify({ ...Profile.read(), ...data }));
+  writeLocal(data) {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify({ ...Profile.readLocal(), ...data }));
+  },
+};
+
+/* ---------- Zamówienia ----------
+ * Zakres wycina RLS, nie przeglądarka: klient dostaje z bazy wyłącznie swoje
+ * zamówienia, konto zaplecza wszystkie. Bez backendu zostaje atrapa z data.js.
+ */
+const Orders = {
+  source: 'localStorage',
+  list: [],
+
+  async load() {
+    if (Auth.source === 'baza' && Auth.user()) {
+      const rows = await Backend.myOrders();
+      if (rows) {
+        Orders.source = 'baza';
+        Orders.list = rows;
+        return Orders.list;
+      }
+      console.warn('Backend nie oddał zamówień — atrapa z data.js.');
+    }
+
+    Orders.source = 'localStorage';
+    Orders.list = ORDERS;
+    return Orders.list;
+  },
+};
+
+/* ---------- Lista życzeń ----------
+ * W bazie tabela `wishlists` (RLS: wyłącznie własne wpisy, zaplecze też
+ * nie zagląda). Bez backendu — lista identyfikatorów w localStorage.
+ */
+const WISHLIST_KEY = 'shop.wishlist.v1';
+const Wish = {
+  source: 'localStorage',
+  ids: [],
+
+  async load() {
+    if (Auth.source === 'baza' && Auth.user()) {
+      const items = await Backend.wishlist();
+      if (items) {
+        Wish.source = 'baza';
+        Wish.ids = items.map((p) => p.id);
+        return Wish.ids;
+      }
+      console.warn('Backend nie oddał listy życzeń — dane z localStorage.');
+    }
+
+    Wish.source = 'localStorage';
+    Wish.ids = Wish.readLocal();
+    return Wish.ids;
+  },
+
+  has(id) {
+    return Wish.ids.includes(id);
+  },
+
+  /** Zwraca stan po przełączeniu albo null, gdy operacja wymaga logowania. */
+  async toggle(id) {
+    if (Auth.source === 'baza' && !Auth.user()) return null;
+
+    const on = !Wish.has(id);
+
+    if (Auth.source === 'baza') {
+      if (on) await Backend.addToWishlist(id);
+      else await Backend.removeFromWishlist(id);
+      Wish.source = 'baza';
+    }
+
+    Wish.ids = on ? [...Wish.ids, id] : Wish.ids.filter((x) => x !== id);
+    if (Wish.source !== 'baza') localStorage.setItem(WISHLIST_KEY, JSON.stringify(Wish.ids));
+
+    document.dispatchEvent(new CustomEvent('wishlist:change', { detail: Wish.ids }));
+    return on;
+  },
+
+  readLocal() {
+    try {
+      const list = JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]');
+      return Array.isArray(list) ? list : [];
+    } catch {
+      return [];
+    }
   },
 };
 
@@ -518,15 +668,47 @@ function initLogin() {
   );
 }
 
+/** Kafelek zamówienia. `withCustomer` dokłada dane kontaktowe — tylko zaplecze. */
+function orderRow(o, withCustomer) {
+  const names = o.items
+    .map((i) => `${i.name ?? findProduct(i.id)?.name ?? i.id} × ${i.qty}`)
+    .join(', ');
+  const done = o.status === 'dostarczone';
+  const dead = o.status === 'anulowane';
+  const pill = dead ? 'pill' : done ? 'pill pill-done' : 'pill pill-way';
+  const date = new Date(o.date).toLocaleDateString('pl-PL', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+
+  return `
+    <div class="order">
+      <div>
+        <div class="order-id">${escapeHtml(o.id)}</div>
+        <div class="order-meta">${date} · <span class="${pill}">${escapeHtml(o.status)}</span></div>
+      </div>
+      <div class="order-total">${money(o.total)}</div>
+      <div class="order-items">${escapeHtml(names)}</div>
+      ${withCustomer ? `
+      <div class="order-items">
+        ${escapeHtml(o.customer)}${o.phone ? ` · ${escapeHtml(o.phone)}` : ''}${o.address ? ` · ${escapeHtml(o.address)}` : ''}
+        <span class="muted">— dostawa ${o.shipping === 0 ? 'gratis' : money(o.shipping)}</span>
+      </div>` : `
+      <div class="order-items muted">
+        Dostawa ${o.shipping === 0 ? 'gratis' : money(o.shipping)}${o.discount ? ` · rabat −${money(o.discount)}` : ''}
+      </div>`}
+    </div>`;
+}
+
 /* ---------- Panel konta ----------
  * Widok zależy od roli:
  *  - admin      — przegląd sklepu, wszystkie zamówienia z kosztami, klienci i adresy
- *  - klient     — lista życzeń oraz własne dane, kontakt i adres
- * Filtrowanie po stronie klienta jest tylko kosmetyką. Dane wrażliwe
- * (cudze zamówienia, adresy) w prawdziwym sklepie nie mogą trafić do przeglądarki
- * klienta — endpoint musi je odciąć po sprawdzeniu roli w sesji.
+ *  - klient     — własne zamówienia, lista życzeń, dane kontaktowe i adres
+ *
+ * Ukrywanie sekcji w przeglądarce to wyłącznie UX. O zakresie danych decyduje
+ * RLS: `orders` oddaje klientowi wyłącznie wiersze z jego `user_id`, a dane
+ * kontaktowe innych kont wymagają uprawnienia `customers.read`.
  */
-function initAccountPage() {
+async function initAccountPage() {
   const root = document.querySelector('[data-account-root]');
   if (!root) return;
 
@@ -536,6 +718,8 @@ function initAccountPage() {
     return;
   }
   const isAdmin = user.role === 'admin';
+
+  await Promise.all([Orders.load(), Profile.load()]);
 
   // Nagłówek
   root.querySelector('[data-user-initials]').textContent = Auth.initials(user);
@@ -551,91 +735,114 @@ function initAccountPage() {
   }
 
   if (isAdmin) {
-    const spent = ORDERS.reduce((s, o) => s + o.total, 0);
-    const shippingCost = ORDERS.reduce((s, o) => s + o.shipping, 0);
-    const pending = ORDERS.filter((o) => o.status !== 'dostarczone');
+    const list = Orders.list;
+    const spent = list.reduce((s, o) => s + o.total, 0);
+    const shippingCost = list.reduce((s, o) => s + o.shipping, 0);
+    const pending = list.filter((o) => o.status !== 'dostarczone' && o.status !== 'anulowane');
 
-    root.querySelector('[data-stat-orders]').textContent = ORDERS.length;
+    root.querySelector('[data-stat-orders]').textContent = list.length;
     root.querySelector('[data-stat-spent]').textContent = money(spent);
     root.querySelector('[data-stat-shipping]').textContent = money(shippingCost);
     root.querySelector('[data-catalog-count]').textContent = PRODUCTS.length;
     root.querySelector('[data-pending]').textContent = pending.length
-      ? `${pending.length} zamówienie w drodze — ${pending.map((o) => o.id).join(', ')}.`
-      : 'Wszystkie zamówienia dostarczone.';
+      ? `${pending.length} w realizacji — ${pending.map((o) => o.id).join(', ')}.`
+      : 'Wszystkie zamówienia zamknięte.';
 
-    root.querySelector('[data-orders]').innerHTML = ORDERS.map((o) => {
-      const names = o.items
-        .map((i) => `${findProduct(i.id)?.name ?? i.id} × ${i.qty}`)
-        .join(', ');
-      const done = o.status === 'dostarczone';
-      return `
-        <div class="order">
-          <div>
-            <div class="order-id">${escapeHtml(o.id)}</div>
-            <div class="order-meta">${new Date(o.date).toLocaleDateString('pl-PL', {
-              day: 'numeric', month: 'long', year: 'numeric',
-            })} · <span class="pill ${done ? 'pill-done' : 'pill-way'}">${escapeHtml(o.status)}</span></div>
-          </div>
-          <div class="order-total">${money(o.total)}</div>
-          <div class="order-items">${escapeHtml(names)}</div>
-          <div class="order-items">
-            ${escapeHtml(o.customer)} · ${escapeHtml(o.phone)} · ${escapeHtml(o.address)}
-            <span class="muted">— dostawa ${o.shipping === 0 ? 'gratis' : money(o.shipping)}</span>
-          </div>
-        </div>`;
-    }).join('');
-
+    // Klienci: jeden wiersz na adres e-mail, sumowany po jego zamówieniach
     const seen = new Map();
-    ORDERS.forEach((o) => seen.set(o.email, o));
-    root.querySelector('[data-customers]').innerHTML = [...seen.values()]
-      .map((o) => {
-        const own = ORDERS.filter((x) => x.email === o.email);
-        const sum = own.reduce((s, x) => s + x.total, 0);
-        return `
+    list.forEach((o) => seen.set(o.email, o));
+    root.querySelector('[data-customers]').innerHTML = seen.size
+      ? [...seen.values()]
+          .map((o) => {
+            const own = list.filter((x) => x.email === o.email);
+            const sum = own.reduce((s, x) => s + x.total, 0);
+            return `
         <div class="order">
           <div>
             <div class="order-id">${escapeHtml(o.customer)}</div>
-            <div class="order-meta">${escapeHtml(o.email)} · ${escapeHtml(o.phone)}</div>
+            <div class="order-meta">${escapeHtml(o.email)}${o.phone ? ` · ${escapeHtml(o.phone)}` : ''}</div>
           </div>
           <div class="order-total">${money(sum)}</div>
           <div class="order-items">${escapeHtml(o.address)} · ${own.length} zamówień</div>
         </div>`;
-      })
-      .join('');
+          })
+          .join('')
+      : '<p class="muted">Brak klientów — nikt jeszcze nie złożył zamówienia.</p>';
   }
 
-  // Lista życzeń — demo na podstawie katalogu
+  // Zamówienia: zaplecze widzi wszystkie z danymi klienta, klient wyłącznie swoje
+  const ordersBox = root.querySelector('[data-orders]');
+  const ordersLede = root.querySelector('[data-orders-lede]');
+  if (ordersLede) {
+    ordersLede.textContent = isAdmin
+      ? 'Wszystkie zamówienia z danymi klienta, adresem i kosztami.'
+      : 'Twoje zamówienia — status, pozycje i koszt dostawy.';
+  }
+  if (ordersBox) {
+    ordersBox.innerHTML = Orders.list.length
+      ? Orders.list.map((o) => orderRow(o, isAdmin)).join('')
+      : `<p class="muted">${isAdmin ? 'Brak zamówień w sklepie.' : 'Nie masz jeszcze żadnych zamówień.'}</p>`;
+  }
+
+  // Lista życzeń — produkty z tabeli wishlists (albo z localStorage bez bazy)
   const wish = root.querySelector('[data-grid="wishlist"]');
-  if (wish) renderGrid(wish, PRODUCTS.filter((p) => ['p-002', 'p-007'].includes(p.id)).slice(0, 4));
+  if (wish) {
+    const renderWish = () => {
+      const items = Wish.ids.map((id) => findProduct(id)).filter(Boolean);
+      if (!items.length) {
+        wish.innerHTML = '<p class="muted">Lista życzeń jest pusta — dodaj produkty sercem na kafelku.</p>';
+        return;
+      }
+      renderGrid(wish, items);
+    };
+    renderWish();
+    document.addEventListener('wishlist:change', renderWish);
+  }
 
   // Dane i adres klienta
   const profileForm = root.querySelector('[data-profile-form]');
   if (profileForm) {
     const profile = Profile.read();
-    profileForm.elements.name.value = profile.name || user.name;
-    profileForm.elements.email.value = profile.email || user.email;
-    profileForm.elements.phone.value = profile.phone || '';
-    profileForm.elements.street.value = profile.street || '';
-    profileForm.elements.zip.value = profile.zip || '';
-    profileForm.elements.city.value = profile.city || '';
-    profileForm.elements.newsletter.checked = Boolean(profile.newsletter);
+    const f = profileForm.elements;
+    f.name.value = profile.name || user.name;
+    f.email.value = profile.email || user.email;
+    f.phone.value = profile.phone || '';
+    f.street.value = profile.street || '';
+    f.zip.value = profile.zip || '';
+    f.city.value = profile.city || '';
+    f.newsletter.checked = Boolean(profile.newsletter);
 
-    profileForm.addEventListener('submit', (e) => {
+    // E-mail należy do sesji Supabase — zmiana adresu to osobna operacja
+    // w Auth (z potwierdzeniem mailem), nie edycja profilu.
+    if (Profile.source === 'baza') {
+      f.email.readOnly = true;
+      f.email.title = 'Adres logowania zmienia się w ustawieniach konta Supabase.';
+    }
+
+    profileForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const f = profileForm.elements;
-      Profile.write({
-        name: f.name.value.trim(),
-        email: f.email.value.trim(),
-        phone: f.phone.value.trim(),
-        street: f.street.value.trim(),
-        zip: f.zip.value.trim(),
-        city: f.city.value.trim(),
-        newsletter: f.newsletter.checked,
-      });
-      // Imię w nagłówku i menu ma nadążyć za formularzem. E-mail należy do
-      // sesji Supabase — jego zmiana to osobna operacja w Auth, nie profil.
-      Auth.rename(f.name.value.trim());
-      toast('Dane zapisane lokalnie — podłącz API');
+      const btn = profileForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+
+      try {
+        await Profile.save({
+          name: f.name.value.trim(),
+          email: f.email.value.trim(),
+          phone: f.phone.value.trim(),
+          street: f.street.value.trim(),
+          zip: f.zip.value.trim(),
+          city: f.city.value.trim(),
+          newsletter: f.newsletter.checked,
+        });
+        // Imię w nagłówku i menu ma nadążyć za formularzem.
+        Auth.rename(f.name.value.trim());
+        root.querySelector('[data-user-name]').textContent = f.name.value.trim() || user.name;
+        toast(Profile.source === 'baza' ? 'Dane zapisane' : 'Dane zapisane lokalnie — podłącz bazę');
+      } catch (err) {
+        toast(`Nie udało się zapisać: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+      }
     });
   }
 
@@ -711,7 +918,7 @@ function initAdmin() {
         <div class="admin-thumb">${icon(p.icon)}</div>
         <div>
           <div class="admin-name">${escapeHtml(p.name)}</div>
-          <div class="order-meta">${escapeHtml(p.id)} · ${escapeHtml(categoryName(p.category))} ·
+          <div class="order-meta">${escapeHtml(p.slug ?? p.id)} · ${escapeHtml(categoryName(p.category))} ·
             ${p.stock > 0 ? `${p.stock} szt.` : 'brak w magazynie'}</div>
         </div>
         <div class="order-total">${money(p.price)}</div>
@@ -816,10 +1023,16 @@ function productCard(p) {
   const out = p.stock === 0;
   return `
     <article class="card">
-      <a class="card-media" href="product.html?id=${encodeURIComponent(p.id)}" aria-label="${escapeHtml(p.name)}">
+      <div class="card-media">
+        <a class="card-media-link" href="product.html?id=${encodeURIComponent(p.id)}" aria-label="${escapeHtml(p.name)}">
+          ${icon(p.icon)}
+        </a>
         ${p.badge ? `<span class="badge ${/^-/.test(p.badge) ? '' : 'badge-neutral'}">${escapeHtml(p.badge)}</span>` : ''}
-        ${icon(p.icon)}
-      </a>
+        <button class="wish-btn" type="button" data-wish="${p.id}"
+          aria-pressed="${Wish.has(p.id)}" title="Lista życzeń" aria-label="Dodaj do listy życzeń">
+          ${icon('heart')}
+        </button>
+      </div>
       <div class="card-body">
         <span class="card-cat">${escapeHtml(categoryName(p.category))}</span>
         <h3 class="card-title"><a href="product.html?id=${encodeURIComponent(p.id)}">${escapeHtml(p.name)}</a></h3>
@@ -953,6 +1166,9 @@ function initProduct() {
         </div>
         <button class="btn" data-add-detail="${p.id}" ${out ? 'disabled' : ''}>
           ${out ? 'Niedostępny' : 'Dodaj do koszyka'}
+        </button>
+        <button class="btn btn-ghost" type="button" data-wish="${p.id}" aria-pressed="${Wish.has(p.id)}">
+          ${icon('heart')} Do listy życzeń
         </button>
       </div>
       <p><a class="arrow-link" href="cart.html">Przejdź do koszyka</a></p>
@@ -1130,6 +1346,36 @@ document.addEventListener('click', (e) => {
   toast('Dodano do koszyka');
 });
 
+// Serce na kafelku i na karcie produktu. Zapis leci do tabeli wishlists,
+// więc lista jedzie z kontem — bez logowania nie ma gdzie jej trzymać.
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-wish]');
+  if (!btn) return;
+  e.preventDefault();
+
+  const id = btn.dataset.wish;
+  btn.disabled = true;
+  try {
+    const on = await Wish.toggle(id);
+    if (on === null) {
+      toast('Zaloguj się, żeby zapisać listę życzeń');
+      return;
+    }
+    toast(on ? 'Dodano do listy życzeń' : 'Usunięto z listy życzeń');
+  } catch (err) {
+    toast(`Nie udało się: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// Stan serc po każdej zmianie — kafelki bywają przerysowywane niezależnie
+document.addEventListener('wishlist:change', () => {
+  document.querySelectorAll('[data-wish]').forEach((b) => {
+    b.setAttribute('aria-pressed', String(Wish.has(b.dataset.wish)));
+  });
+});
+
 document.addEventListener('cart:change', refreshCartBadge);
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1142,6 +1388,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Oba wywołania idą po kolei, żeby nie zbudować dwóch klientów naraz.
   await Auth.load();
   await Catalog.load();
+  // Lista życzeń przed renderem kafelków — serca mają od razu znać swój stan
+  await Wish.load();
   refreshCartBadge();
   initAccountMenu();
   initAdmin();
@@ -1150,7 +1398,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initProduct();
   initCart();
   initLogin();
-  initAccountPage();
+  await initAccountPage();
 
   document.querySelector('[data-newsletter]')?.addEventListener('submit', (e) => {
     e.preventDefault();

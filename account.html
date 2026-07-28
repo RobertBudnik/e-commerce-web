@@ -42,7 +42,7 @@
   <div class="account-layout">
     <nav class="side-nav" aria-label="Sekcje konta">
       <button type="button" data-panel-tab="overview" data-role="admin" aria-selected="true"><span data-icon="user"></span> Przegląd</button>
-      <button type="button" data-panel-tab="orders" data-role="admin" aria-selected="false"><span data-icon="box"></span> Zamówienia</button>
+      <button type="button" data-panel-tab="orders" data-role="all" aria-selected="false"><span data-icon="box"></span> Zamówienia</button>
       <button type="button" data-panel-tab="customers" data-role="admin" aria-selected="false"><span data-icon="pin"></span> Klienci i adresy</button>
       <button type="button" data-panel-tab="wishlist" data-role="all" aria-selected="false"><span data-icon="heart"></span> Lista życzeń</button>
       <button type="button" data-panel-tab="settings" data-role="all" aria-selected="false"><span data-icon="shield"></span> Dane i hasło</button>
@@ -73,9 +73,10 @@
         </div>
       </section>
 
-      <section class="panel" data-panel="orders" data-role="admin" hidden>
+      <!-- Zakres wierszy wycina RLS: klient widzi wyłącznie swoje zamówienia -->
+      <section class="panel" data-panel="orders" data-role="all" hidden>
         <h2>Zamówienia</h2>
-        <p class="lede">Wszystkie zamówienia z danymi klienta, adresem i kosztami.</p>
+        <p class="lede" data-orders-lede></p>
         <div data-orders></div>
       </section>
 

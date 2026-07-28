@@ -26,7 +26,7 @@ js/icons.js     cienkie ikony liniowe SVG (placeholdery zdjęć)
 js/data.js      ziarno katalogu (CATEGORIES, PRODUCTS) i atrapa zamówień (ORDERS)
 js/config.js    adres i klucz Supabase, przełącznik BACKEND_ENABLED
 js/backend.js   jedyne miejsce, które wie o bazie — sesja, katalog, zamówienia
-js/app.js       koszyk, sesja, katalog i profil, render, role, toasty
+js/app.js       koszyk, sesja, katalog, zamówienia, profil i lista życzeń, render, role, toasty
 ```
 
 Nawigacja w nagłówku to Start i Sklep — kategorie żyją wyłącznie w filtrach na `shop.html`,
@@ -74,7 +74,12 @@ parę `role` + `rawRole`, a `Auth.isAdmin()` w `js/app.js` sprawdza już tylko `
 | rola w bazie (`rawRole`) | `role` we froncie | co widzi |
 |---|---|---|
 | `owner`, `manager`, `staff` | organizacja | przegląd sklepu (obrót, koszty dostawy), wszystkie zamówienia z danymi klienta i adresem, klienci i adresy, lista życzeń, własne dane oraz **panel produktów** |
-| `customer` albo brak wpisu | klient | wyłącznie lista życzeń i sekcja „Dane i hasło", gdzie uzupełnia imię, telefon, e-mail i adres dostawy |
+| `customer` albo brak wpisu | klient | własne zamówienia, lista życzeń i sekcja „Dane i hasło", gdzie uzupełnia imię, telefon i adres dostawy |
+
+Zakładka „Zamówienia" jest ta sama dla obu ról — różnicę robi baza, nie front: polityka
+`zamówienia: odczyt własnych` oddaje klientowi wyłącznie wiersze z jego `user_id`, a wszystkie
+dopiero kontu z uprawnieniem `orders.read_all`. Dane kontaktowe klienta dokłada widok tylko
+wtedy, gdy pyta o nie zaplecze.
 
 Rolę nadaje się wpisem w bazie, nie zmianą w kodzie frontu:
 
@@ -83,9 +88,16 @@ insert into public.user_roles (user_id, role)
 select id, 'owner' from auth.users where email = 'twoj@adres.pl';
 ```
 
-Konto właściciela do pracy lokalnej zakłada `supabase/seed.sql`: `admin@nordo.pl`, hasło
-`nordo-local-dev`. Hasło żyje wyłącznie w seedzie lokalnym — na produkcji rolę nadaje się
-istniejącemu użytkownikowi zapytaniem powyżej.
+Konta do pracy lokalnej zakłada `supabase/seed.sql`:
+
+| konto | hasło | rola | co ma w bazie |
+|---|---|---|---|
+| `admin@nordo.pl` | `nordo-local-dev` | `owner` | pełny podgląd sklepu |
+| `klient@nordo.pl` | `nordo-local-dev` | `customer` | jedno zamówienie, adres dostawy, dwie pozycje na liście życzeń |
+
+Pozostałe dwa zamówienia z seeda nie mają `user_id` — to zakupy gościa. Widać na nich, co
+robi RLS: właściciel liczy trzy zamówienia, klient jedno. Hasła żyją wyłącznie w seedzie
+lokalnym — na produkcji rolę nadaje się istniejącemu użytkownikowi zapytaniem powyżej.
 
 Panel produktów (`admin.html`) pozwala kontu organizacji dodawać, edytować i usuwać dowolne
 pozycje: nazwa, opis, kategoria, ikona, cena i cena przed obniżką, stan magazynowy, plakietka,
@@ -102,9 +114,6 @@ bez `products.write` dostanie odmowę zapisu niezależnie od tego, co pokazuje f
 
 Co nadal zostaje do zrobienia:
 
-- „Zamówienia" i „Klienci i adresy" w panelu konta lecą wciąż z `ORDERS` w `js/data.js`,
-  czyli z kodu wysłanego każdemu odwiedzającemu. Dopóki nie zastąpi ich `Backend.myOrders()`,
-  te dane nie są żadną tajemnicą — filtrowanie po roli w przeglądarce jest tu tylko kosmetyką
 - przy wyłączonym backendzie (`BACKEND_ENABLED = false` w `js/config.js`) wraca stara atrapa:
   wpis `shop.user.v1` w `localStorage` da się ręcznie podmienić na `"role":"admin"`. To tryb
   do klikania szablonu bez bazy, nie do wystawiania na świat
@@ -139,8 +148,29 @@ Czego to nadal nie załatwia:
 - limity prób logowania i rejestracji ustawia się w `[auth.rate_limit]` w `supabase/config.toml`
   — domyślne wartości warto przejrzeć przed wyjściem na produkcję
 
-`ORDERS` w `js/data.js` to wciąż atrapa historii zamówień — podmiana na `Backend.myOrders()`
-to osobny krok.
+## Panel konta na bazie
+
+Zamówienia, profil, adres i lista życzeń jadą z Supabase. Front trzyma je w czterech
+obiektach w `js/app.js`, każdy z tym samym wzorcem fallbacku co `Catalog` i `Auth`
+(`source` mówi, czy dane przyszły z bazy, czy z `localStorage`):
+
+| obiekt | tabela | fallback bez backendu |
+|---|---|---|
+| `Orders` | `orders` + `order_items` | `ORDERS` z `js/data.js` |
+| `Profile` | `profiles` + `addresses` | wpis `shop.profile.v1` |
+| `Wish` | `wishlists` | wpis `shop.wishlist.v1` |
+
+Lista życzeń ma swoje serce na każdym kafelku produktu i na karcie produktu — klik dopisuje
+albo kasuje wiersz w `wishlists`, więc lista jedzie z kontem, nie z przeglądarką. Bez
+zalogowania przycisk prosi o logowanie zamiast udawać zapis.
+
+Formularz „Dane i hasło" zapisuje w dwóch miejscach: imię, telefon i newsletter do `profiles`,
+adres dostawy do `addresses` (jeden wiersz domyślny na konto, kolejny zapis go nadpisuje).
+Pole e-mail jest w trybie bazy tylko do odczytu — adres logowania zmienia Supabase Auth,
+osobną operacją z potwierdzeniem mailem.
+
+`ORDERS` w `js/data.js` zostaje w dwóch rolach: jako atrapa dla trybu offline i jako źródło
+demonstracyjnych zamówień dla `scripts/gen-seed.mjs`.
 
 ## Konfiguracja
 
@@ -158,7 +188,10 @@ Kolory, promienie, cienie i szerokość kolumny: zmienne CSS w `:root` w `css/st
 
 ## Czego brakuje do produkcji
 
-- Backend: checkout, płatności, walidacja stanu magazynowego po stronie serwera
+- Checkout i płatności: koszyk nadal kończy się na podsumowaniu, `Backend.checkout()`
+  i funkcja `create-checkout` czekają na spięcie z formularzem zamówienia
 - Prawdziwe zdjęcia zamiast ikon
-- Rabaty i ceny liczone na serwerze — obecna logika jest tylko po stronie klienta
-- Historia zamówień i profil klienta w panelu konta — wciąż na atrapie z `js/data.js`
+- Rabaty i ceny liczone na serwerze — obecna logika koszyka jest tylko po stronie klienta
+  (baza liczy je już w `create_order`, front jeszcze z tego nie korzysta)
+- Zmiana statusu zamówienia z panelu zaplecza — polityka `zamówienia: obsługa` na to pozwala,
+  interfejsu nie ma

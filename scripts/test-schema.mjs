@@ -70,7 +70,27 @@ create table auth.users (
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   raw_app_meta_data jsonb default '{}'::jsonb,
-  raw_user_meta_data jsonb default '{}'::jsonb
+  raw_user_meta_data jsonb default '{}'::jsonb,
+  -- Kolumny tokenów: seed lokalny je wypełnia, GoTrue nie znosi tu NULL-i
+  confirmation_token text default '',
+  recovery_token text default '',
+  email_change text default '',
+  email_change_token_new text default '',
+  email_change_token_current text default '',
+  phone_change text default '',
+  phone_change_token text default '',
+  reauthentication_token text default ''
+);
+
+create table auth.identities (
+  provider_id text not null,
+  user_id uuid not null references auth.users on delete cascade,
+  identity_data jsonb not null,
+  provider text not null,
+  last_sign_in_at timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  primary key (provider, provider_id)
 );
 
 create or replace function auth.jwt() returns jsonb language sql stable as $fn$
@@ -385,6 +405,52 @@ await throws(
   () => db.query(`select count(*) from public.inventory_movements`),
   'permission denied'
 );
+
+// ---------------------------------------------------------------------------
+// Panel konta: lista życzeń i adresy
+// ---------------------------------------------------------------------------
+console.log('\nPanel konta');
+await asUser(customer.id);
+await db.query(`insert into public.wishlists (user_id, product_id) values ($1, $2)`, [
+  customer.id,
+  bulb.id,
+]);
+await db.query(
+  `insert into public.addresses (user_id, recipient, street, postal_code, city, is_default)
+   values ($1, 'Klient Testowy', 'Krucza 12/4', '00-001', 'Warszawa', true)`,
+  [customer.id]
+);
+
+const myWish = await db.query(`select count(*) as n from public.wishlists`);
+check('klient widzi swoją listę życzeń', Number(myWish.rows[0].n) === 1, `${myWish.rows[0].n}`);
+
+const myAddr = await db.query(`select count(*) as n from public.addresses`);
+check('klient widzi swój adres', Number(myAddr.rows[0].n) === 1, `${myAddr.rows[0].n}`);
+
+await asUser(other.id);
+const foreignWish = await db.query(`select count(*) as n from public.wishlists`);
+check('klient nie widzi cudzej listy życzeń', Number(foreignWish.rows[0].n) === 0, `${foreignWish.rows[0].n}`);
+
+const foreignAddr = await db.query(`select count(*) as n from public.addresses`);
+check('klient nie widzi cudzego adresu', Number(foreignAddr.rows[0].n) === 0, `${foreignAddr.rows[0].n}`);
+
+await throws(
+  'klient nie dopisze się do cudzej listy życzeń',
+  () => db.query(`insert into public.wishlists (user_id, product_id) values ($1, $2)`, [customer.id, bulb.id]),
+  'policy'
+);
+
+// Zaplecze obsługuje wysyłkę, więc adresy czyta — ale listy życzeń już nie
+await asUser(owner.id);
+const staffWish = await db.query(`select count(*) as n from public.wishlists`);
+check('zaplecze nie zagląda na listy życzeń', Number(staffWish.rows[0].n) === 0, `${staffWish.rows[0].n}`);
+
+const staffAddr = await db.query(`select count(*) as n from public.addresses`);
+// Wierszy jest więcej niż jeden — dochodzi adres klienta z seeda
+check('zaplecze czyta adresy do wysyłki', Number(staffAddr.rows[0].n) >= 1, `${staffAddr.rows[0].n}`);
+
+const ownProfile = await db.query(`select count(*) as n from public.profiles where id = $1`, [customer.id]);
+check('profil klienta widoczny dla zaplecza', Number(ownProfile.rows[0].n) === 1, `${ownProfile.rows[0].n}`);
 
 // ---------------------------------------------------------------------------
 await asService();
