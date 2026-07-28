@@ -8,9 +8,6 @@ const CART_KEY = 'shop.cart.v1';
 const USER_KEY = 'shop.user.v1';
 const CATALOG_KEY = 'shop.catalog.v1';
 
-/* Atrapa roli administratora — patrz komentarz przy obiekcie Auth.
-   O tym, kto jest adminem, MUSI decydować backend, nie ten string. */
-const ADMIN_EMAIL = 'admin@nordo.pl';
 const SHIPPING_FLAT = 19.99;
 const FREE_SHIPPING_FROM = 300;
 const COUPONS = { NOWY10: 0.10, LATO20: 0.20 };
@@ -77,35 +74,131 @@ const Cart = {
   },
 };
 
-/* ---------- Sesja (atrapa) ----------
- * Wyłącznie warstwa prezentacji: trzyma imię i e-mail w localStorage,
- * żeby dało się pokazać stan zalogowany. Hasło nie jest nigdzie zapisywane
- * ani wysyłane. Prawdziwe logowanie robi backend — sesja w ciasteczku
- * HttpOnly albo token po stronie serwera, nie localStorage.
+/* ---------- Sesja ----------
+ * Źródłem prawdy jest Supabase Auth: hasło z formularza leci do bazy,
+ * sesję trzyma klient supabase-js, a rolę niesie claim `user_role`
+ * w access tokenie (dokłada go hook custom_access_token_hook).
+ * Gdy backend jest wyłączony albo nie odpowiada, zostaje dotychczasowa
+ * atrapa na localStorage — ten sam wzorzec fallbacku co w Catalog.
+ *
+ * `Auth.load()` leci raz w bootstrapie i odkłada użytkownika w `cached`,
+ * dzięki czemu `Auth.user()` zostaje synchroniczne i render nie musi czekać.
  */
 const Auth = {
+  /** Skąd ostatecznie przyszła sesja — 'baza' albo 'localStorage'. */
+  source: 'localStorage',
+
+  /** Użytkownik z ostatniego load()/logowania. null = niezalogowany. */
+  cached: null,
+
+  async load() {
+    // Ścieżka docelowa: sesja z Supabase. Gdy backend nie jest skonfigurowany
+    // albo nie odpowiada, spadamy na atrapę z localStorage i strona działa dalej.
+    if (typeof BACKEND_ENABLED !== 'undefined' && BACKEND_ENABLED) {
+      if (await Backend.init()) {
+        Auth.source = 'baza';
+        Auth.cached = await Backend.currentUser();
+        return Auth.cached;
+      }
+      console.warn('Backend nie odpowiedział — sesja z danych lokalnych.');
+    }
+
+    Auth.cached = Auth.readLocal();
+    return Auth.cached;
+  },
+
+  /** Synchroniczny odczyt dla renderu — stan z ostatniego load()/logowania. */
   user() {
+    return Auth.cached;
+  },
+
+  /**
+   * Logowanie hasłem. W trybie 'baza' hasło idzie prosto do Supabase i nigdzie
+   * nie jest zapisywane po stronie przeglądarki. Błędy lecą wyżej — formularz
+   * pokazuje je przy polu.
+   */
+  async signIn(email, password) {
+    if (Auth.source === 'baza') {
+      await Backend.signIn(email, password);
+      Auth.cached = await Backend.currentUser();
+      Auth.emit();
+      return Auth.cached;
+    }
+    return Auth.signInLocal({ email });
+  },
+
+  /**
+   * Rejestracja. Przy `enable_confirmations = true` Supabase nie zwraca sesji —
+   * konto czeka na kliknięcie linku z maila i nie wolno udawać zalogowania.
+   * Stąd `needsConfirmation` w odpowiedzi.
+   */
+  async signUp({ name, email, password }) {
+    if (Auth.source === 'baza') {
+      const data = await Backend.signUp(email, password, name);
+      if (!data?.session) return { user: null, needsConfirmation: true };
+      Auth.cached = await Backend.currentUser();
+      Auth.emit();
+      return { user: Auth.cached, needsConfirmation: false };
+    }
+    return { user: Auth.signInLocal({ name, email }), needsConfirmation: false };
+  },
+
+  async signOut() {
+    if (Auth.source === 'baza') await Backend.signOut();
+    localStorage.removeItem(USER_KEY);
+    Auth.cached = null;
+    Auth.emit();
+  },
+
+  /**
+   * O roli decyduje token, nie adres e-mail: hook wystawia `user_role`
+   * (owner/manager/staff/customer), backend.js mapuje go na `role` + `rawRole`.
+   */
+  isAdmin() {
+    return Auth.user()?.role === 'admin';
+  },
+
+  /** Zmiana wyświetlanego imienia z panelu konta. Zapis do bazy — praca 2. */
+  rename(name) {
+    if (!Auth.cached || !name || Auth.cached.name === name) return;
+    Auth.cached = { ...Auth.cached, name };
+    if (Auth.source !== 'baza') localStorage.setItem(USER_KEY, JSON.stringify(Auth.cached));
+    Auth.emit();
+  },
+
+  /* --- Ścieżka offline: dotychczasowa atrapa na localStorage --- */
+
+  readLocal() {
     try {
       const u = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
-      return u && u.email ? u : null;
+      if (!u || !u.email) return null;
+      return { ...u, role: u.role === 'admin' ? 'admin' : 'customer', rawRole: u.role ?? 'customer' };
     } catch {
       return null;
     }
   },
-  signIn({ name, email }) {
-    const role = email.trim().toLowerCase() === ADMIN_EMAIL ? 'admin' : 'customer';
-    const user = { name: name || email.split('@')[0], email, role };
+
+  /** Zapamiętuje imię i e-mail, żeby pokazać stan zalogowany. Hasła nie rusza. */
+  signInLocal({ name, email }) {
+    const stored = Auth.readLocal();
+    const same = stored?.email === email;
+    const user = {
+      name: name || (same ? stored.name : '') || email.split('@')[0],
+      email,
+      // Bez backendu nikt tu nie jest organizacją — rolę można podmienić
+      // wyłącznie ręcznie w localStorage (patrz README, „To nie jest zabezpieczenie").
+      role: same ? stored.role : 'customer',
+    };
     localStorage.setItem(USER_KEY, JSON.stringify(user));
-    document.dispatchEvent(new CustomEvent('auth:change', { detail: user }));
-    return user;
+    Auth.cached = { ...user, rawRole: user.role };
+    Auth.emit();
+    return Auth.cached;
   },
-  isAdmin() {
-    return Auth.user()?.role === 'admin';
+
+  emit() {
+    document.dispatchEvent(new CustomEvent('auth:change', { detail: Auth.cached }));
   },
-  signOut() {
-    localStorage.removeItem(USER_KEY);
-    document.dispatchEvent(new CustomEvent('auth:change', { detail: null }));
-  },
+
   initials(user) {
     return (user?.name || user?.email || '?')
       .split(/[\s.@_-]+/)
@@ -115,6 +208,23 @@ const Auth = {
       .join('');
   },
 };
+
+/** Komunikat z Supabase → jedno zdanie po polsku pod formularzem. */
+function authError(err) {
+  const msg = String(err?.message ?? err ?? '');
+  const short = msg.match(/password should be at least (\d+)/i);
+  const wait = msg.match(/only request this after (\d+)/i);
+
+  if (/invalid login credentials/i.test(msg)) return 'Nieprawidłowy e-mail lub hasło.';
+  if (/email not confirmed/i.test(msg)) return 'Konto czeka na potwierdzenie — kliknij link z wiadomości e-mail.';
+  if (/already registered|already exists/i.test(msg)) return 'Konto z tym adresem już istnieje — zaloguj się.';
+  if (short) return `Hasło jest za krótkie — minimum ${short[1]} znaków.`;
+  if (/unable to validate email address|invalid email/i.test(msg)) return 'Nieprawidłowy adres e-mail.';
+  if (wait) return `Za dużo prób — spróbuj ponownie za ${wait[1]} s.`;
+  if (/signups not allowed|signup is disabled/i.test(msg)) return 'Rejestracja jest wyłączona.';
+  if (/failed to fetch|networkerror|load failed/i.test(msg)) return 'Brak połączenia z serwerem — spróbuj za chwilę.';
+  return `Nie udało się: ${msg}`;
+}
 
 /* ---------- Profil klienta ----------
  * Dane kontaktowe i adres wpisane przez klienta. Docelowo PUT /api/me.
@@ -298,9 +408,12 @@ function initAccountMenu() {
       return;
     }
     if (e.target.closest('[data-signout]')) {
-      Auth.signOut();
-      toast('Wylogowano');
-      if (document.querySelector('[data-account-root]')) location.href = 'login.html';
+      // Strony za logowaniem odsyłamy do formularza — bez sesji nie mają co pokazać
+      const guarded = document.querySelector('[data-account-root], [data-admin-root]');
+      Auth.signOut().then(() => {
+        toast('Wylogowano');
+        if (guarded) location.href = 'login.html';
+      });
       return;
     }
     if (!e.target.closest('[data-account-menu]')) {
@@ -337,13 +450,70 @@ function initLogin() {
   });
   show(location.hash === '#register' ? 'register' : 'login');
 
+  // Odesłani z panelu produktów wracają tam po zalogowaniu, o ile mają rolę
+  const wantsAdmin = location.hash === '#admin';
+
+  /* Komunikat przy formularzu zamiast toasta: błąd logowania musi zostać
+     na ekranie, a nie zniknąć po dwóch sekundach. */
+  function message(form, text, kind = 'error') {
+    let box = form.querySelector('[data-auth-msg]');
+    if (!box) {
+      box = document.createElement('p');
+      box.className = 'notice';
+      box.setAttribute('role', 'alert');
+      box.dataset.authMsg = '';
+      form.prepend(box);
+    }
+    box.classList.toggle('notice-error', Boolean(text) && kind === 'error');
+    box.classList.toggle('notice-ok', Boolean(text) && kind === 'ok');
+    box.textContent = text;
+    box.hidden = !text;
+  }
+
   forms.forEach((form) =>
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = new FormData(form);
-      Auth.signIn({ name: data.get('name'), email: data.get('email') });
-      toast('Zalogowano — to atrapa, podłącz backend');
-      setTimeout(() => (location.href = 'account.html'), 700);
+      const register = form.dataset.authForm === 'register';
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const label = submitBtn.textContent;
+      let leaving = false;
+
+      message(form, '');
+      submitBtn.disabled = true;
+      submitBtn.textContent = register ? 'Zakładam konto…' : 'Loguję…';
+
+      try {
+        const email = String(data.get('email') ?? '').trim();
+        const password = String(data.get('password') ?? '');
+
+        if (register) {
+          const { needsConfirmation } = await Auth.signUp({
+            name: String(data.get('name') ?? '').trim(),
+            email,
+            password,
+          });
+          if (needsConfirmation) {
+            message(form, 'Konto założone. Sprawdź skrzynkę i kliknij link potwierdzający, potem zaloguj się.', 'ok');
+            form.reset();
+            return;
+          }
+        } else {
+          await Auth.signIn(email, password);
+        }
+
+        leaving = true;
+        message(form, 'Zalogowano — przenosimy Cię do konta.', 'ok');
+        const target = wantsAdmin && Auth.isAdmin() ? 'admin.html' : 'account.html';
+        setTimeout(() => (location.href = target), 500);
+      } catch (err) {
+        message(form, authError(err));
+      } finally {
+        if (!leaving) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = label;
+        }
+      }
     })
   );
 }
@@ -462,9 +632,9 @@ function initAccountPage() {
         city: f.city.value.trim(),
         newsletter: f.newsletter.checked,
       });
-      if (f.name.value.trim() && f.email.value.trim()) {
-        Auth.signIn({ name: f.name.value.trim(), email: f.email.value.trim() });
-      }
+      // Imię w nagłówku i menu ma nadążyć za formularzem. E-mail należy do
+      // sesji Supabase — jego zmiana to osobna operacja w Auth, nie profil.
+      Auth.rename(f.name.value.trim());
       toast('Dane zapisane lokalnie — podłącz API');
     });
   }
@@ -497,8 +667,9 @@ function initAdmin() {
   const root = document.querySelector('[data-admin-root]');
   if (!root) return;
 
-  // Blokada wyłącznie kosmetyczna: bez backendu każdy może podmienić wpis
-  // w localStorage. Prawdziwą autoryzację robi serwer przy każdym żądaniu.
+  // Przekierowanie to wyłącznie UX — kto zna adres, i tak otworzy ten plik.
+  // O zapisie decyduje RLS w bazie: konto bez products.write dostanie odmowę
+  // przy każdym żądaniu, niezależnie od tego, co pokazuje przeglądarka.
   if (!Auth.isAdmin()) {
     location.replace('login.html#admin');
     return;
@@ -966,6 +1137,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     el.innerHTML = icon(el.dataset.icon);
   });
 
+  // Sesja przed katalogiem: klient Supabase powstaje raz, a zapytania
+  // o produkty lecą już z tokenem — RLS widzi rolę zalogowanego konta.
+  // Oba wywołania idą po kolei, żeby nie zbudować dwóch klientów naraz.
+  await Auth.load();
   await Catalog.load();
   refreshCartBadge();
   initAccountMenu();

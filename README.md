@@ -24,7 +24,9 @@ admin.html      panel produktów: dodawanie, edycja, usuwanie (tylko organizacja
 css/style.css   style — tokeny w :root, motyw wyłącznie jasny
 js/icons.js     cienkie ikony liniowe SVG (placeholdery zdjęć)
 js/data.js      ziarno katalogu (CATEGORIES, PRODUCTS) i atrapa zamówień (ORDERS)
-js/app.js       koszyk, sesja, katalog i profil w localStorage, render, role, toasty
+js/config.js    adres i klucz Supabase, przełącznik BACKEND_ENABLED
+js/backend.js   jedyne miejsce, które wie o bazie — sesja, katalog, zamówienia
+js/app.js       koszyk, sesja, katalog i profil, render, role, toasty
 ```
 
 Nawigacja w nagłówku to Start i Sklep — kategorie żyją wyłącznie w filtrach na `shop.html`,
@@ -64,12 +66,26 @@ punkty to `productCard()`, `initProduct()` i render koszyka.
 
 ## Role i uprawnienia
 
-Rola wynika z adresu e-mail podanego przy logowaniu (`ADMIN_EMAIL` w `js/app.js`):
+Rola przyjeżdża w access tokenie z Supabase. Hook `custom_access_token_hook` dokłada do niego
+claim `user_role` na podstawie tabeli `public.user_roles`, `js/backend.js` mapuje ten claim na
+parę `role` + `rawRole`, a `Auth.isAdmin()` w `js/app.js` sprawdza już tylko `role === 'admin'`.
+Żaden adres e-mail sam z siebie nie daje uprawnień.
 
-| rola | konto | co widzi |
+| rola w bazie (`rawRole`) | `role` we froncie | co widzi |
 |---|---|---|
-| organizacja | `admin@nordo.pl`, dowolne hasło | przegląd sklepu (obrót, koszty dostawy), wszystkie zamówienia z danymi klienta i adresem, klienci i adresy, lista życzeń, własne dane oraz **panel produktów** |
-| klient | dowolny inny e-mail z rejestracji | wyłącznie lista życzeń i sekcja „Dane i hasło", gdzie uzupełnia imię, telefon, e-mail i adres dostawy |
+| `owner`, `manager`, `staff` | organizacja | przegląd sklepu (obrót, koszty dostawy), wszystkie zamówienia z danymi klienta i adresem, klienci i adresy, lista życzeń, własne dane oraz **panel produktów** |
+| `customer` albo brak wpisu | klient | wyłącznie lista życzeń i sekcja „Dane i hasło", gdzie uzupełnia imię, telefon, e-mail i adres dostawy |
+
+Rolę nadaje się wpisem w bazie, nie zmianą w kodzie frontu:
+
+```sql
+insert into public.user_roles (user_id, role)
+select id, 'owner' from auth.users where email = 'twoj@adres.pl';
+```
+
+Konto właściciela do pracy lokalnej zakłada `supabase/seed.sql`: `admin@nordo.pl`, hasło
+`nordo-local-dev`. Hasło żyje wyłącznie w seedzie lokalnym — na produkcji rolę nadaje się
+istniejącemu użytkownikowi zapytaniem powyżej.
 
 Panel produktów (`admin.html`) pozwala kontu organizacji dodawać, edytować i usuwać dowolne
 pozycje: nazwa, opis, kategoria, ikona, cena i cena przed obniżką, stan magazynowy, plakietka,
@@ -77,35 +93,54 @@ ocena, liczba opinii oraz specyfikacja (jedna linia = `Klucz: wartość`). Zmian
 na `shop.html`, stronę produktu i do koszyka. Przycisk „Przywróć katalog startowy" kasuje
 `shop.catalog.v1` i wraca do ziarna z `js/data.js`.
 
-### To nie jest zabezpieczenie
+### Co realnie pilnuje dostępu, a co jest tylko UX
 
-Podział ról działa wyłącznie w przeglądarce. Ukryte sekcje da się odsłonić, wpis
-`shop.user.v1` w `localStorage` da się podmienić ręcznie na `"role":"admin"`, a cudze zamówienia
-i adresy w tym szablonie i tak siedzą w `js/data.js`, czyli w kodzie wysłanym każdemu.
-Po stronie backendu:
+Podział ról w przeglądarce to wygoda, nie zabezpieczenie: ukryte sekcje da się odsłonić,
+a przekierowanie z `admin.html` na `login.html` obejdzie każdy, kto zna adres pliku.
+Broni dopiero baza — polityki RLS czytają rolę z tokenu przy **każdym** zapytaniu, więc konto
+bez `products.write` dostanie odmowę zapisu niezależnie od tego, co pokazuje front.
 
-- rola trzymana w sesji serwerowej, sprawdzana przy **każdym** żądaniu
-- `GET /api/orders` zwraca klientowi tylko jego zamówienia — filtruje serwer, nie frontend
-- `POST`/`PUT`/`DELETE /api/products` odrzucane dla konta bez roli organizacji
-- `admin.html` niedostępny bez uprawnień na poziomie serwera; obecny redirect to wyłącznie UX
+Co nadal zostaje do zrobienia:
 
-## Konto i logowanie — uwaga
+- „Zamówienia" i „Klienci i adresy" w panelu konta lecą wciąż z `ORDERS` w `js/data.js`,
+  czyli z kodu wysłanego każdemu odwiedzającemu. Dopóki nie zastąpi ich `Backend.myOrders()`,
+  te dane nie są żadną tajemnicą — filtrowanie po roli w przeglądarce jest tu tylko kosmetyką
+- przy wyłączonym backendzie (`BACKEND_ENABLED = false` w `js/config.js`) wraca stara atrapa:
+  wpis `shop.user.v1` w `localStorage` da się ręcznie podmienić na `"role":"admin"`. To tryb
+  do klikania szablonu bez bazy, nie do wystawiania na świat
 
-`login.html` i `account.html` to **wyłącznie warstwa prezentacji**. Obiekt `Auth` w `js/app.js`
-zapisuje w `localStorage` (`shop.user.v1`) tylko imię i e-mail, żeby dało się pokazać stan
-zalogowany: awatar w nagłówku, menu konta, panel klienta. Hasło z formularza nie jest
-przetwarzane — nie trafia do `localStorage` ani nigdzie indziej.
+## Konto i logowanie
 
-Podłączając prawdziwe logowanie:
+`login.html` rozmawia z Supabase Auth naprawdę: hasło z formularza idzie prosto do
+`signInWithPassword` / `signUp` i nigdzie po stronie przeglądarki nie jest zapisywane.
+Sesję — access i refresh token — trzyma klient `supabase-js` i sam ją odświeża.
 
-- uwierzytelnianie i sesja po stronie serwera — ciasteczko `HttpOnly` + `Secure` + `SameSite`,
-  nie token w `localStorage`
-- hasła hashowane po stronie backendu (argon2id albo bcrypt), nigdy w kodzie klienta
-- `account.html` chroniony na serwerze; obecne przekierowanie na `login.html` to tylko UX,
-  nie zabezpieczenie
-- rate limiting i CSRF na endpointach logowania i rejestracji
+Jak to spięte w `js/app.js`:
 
-`ORDERS` w `js/data.js` to atrapa historii zamówień — docelowo `GET /api/orders` dla zalogowanego użytkownika.
+- `Auth.load()` leci raz w bootstrapie, przed renderem, i odkłada użytkownika w `Auth.cached`
+- dzięki temu `Auth.user()` zostaje synchroniczne — menu konta, panel i guardy renderują się
+  bez czekania na sieć
+- `Auth.source` mówi, skąd przyszła sesja: `baza` albo `localStorage` (ten sam wzorzec
+  fallbacku co `Catalog.source`)
+- gdy `BACKEND_ENABLED = false` albo backend nie odpowie, `Auth` spada na dotychczasową atrapę
+  z `localStorage` — bez prawdziwego logowania, za to strona nadal działa
+
+Rejestracja zachowuje się zależnie od `enable_confirmations` w `supabase/config.toml`.
+Lokalnie flaga jest **wyłączona**, więc Supabase od razu zwraca sesję i konto ląduje w panelu.
+Po jej włączeniu `signUp` sesji nie zwraca — formularz pokazuje wtedy prośbę o kliknięcie
+linku z wiadomości e-mail zamiast udawać zalogowanie.
+
+Czego to nadal nie załatwia:
+
+- tokeny siedzą w `localStorage`, czyli są w zasięgu XSS-a. Przeniesienie ich do ciasteczka
+  `HttpOnly` + `Secure` + `SameSite` wymaga własnej warstwy serwerowej przed Supabase
+- `account.html` i `admin.html` chroni tylko przekierowanie w przeglądarce; dane odcina RLS,
+  ale sam widok zabezpieczeniem nie jest
+- limity prób logowania i rejestracji ustawia się w `[auth.rate_limit]` w `supabase/config.toml`
+  — domyślne wartości warto przejrzeć przed wyjściem na produkcję
+
+`ORDERS` w `js/data.js` to wciąż atrapa historii zamówień — podmiana na `Backend.myOrders()`
+to osobny krok.
 
 ## Konfiguracja
 
@@ -115,7 +150,9 @@ W `js/app.js`, u góry pliku:
 - `FREE_SHIPPING_FROM` — próg darmowej dostawy (300 zł)
 - `COUPONS` — kody rabatowe; domyślnie `NOWY10` (10%) i `LATO20` (20%)
 - `CART_KEY`, `USER_KEY`, `CATALOG_KEY`, `PROFILE_KEY` — klucze w `localStorage`
-- `ADMIN_EMAIL` — adres, który dostaje rolę organizacji (atrapa)
+
+Połączenie z bazą: `js/config.js` — `SUPABASE_URL`, `SUPABASE_ANON_KEY` oraz `BACKEND_ENABLED`
+(ustaw na `false`, żeby kliknąć szablon na samych danych lokalnych).
 
 Kolory, promienie, cienie i szerokość kolumny: zmienne CSS w `:root` w `css/style.css`.
 
@@ -124,4 +161,4 @@ Kolory, promienie, cienie i szerokość kolumny: zmienne CSS w `:root` w `css/st
 - Backend: checkout, płatności, walidacja stanu magazynowego po stronie serwera
 - Prawdziwe zdjęcia zamiast ikon
 - Rabaty i ceny liczone na serwerze — obecna logika jest tylko po stronie klienta
-- Prawdziwe uwierzytelnianie — obecny panel konta działa na atrapie sesji
+- Historia zamówień i profil klienta w panelu konta — wciąż na atrapie z `js/data.js`

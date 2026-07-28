@@ -997,6 +997,11 @@ select:hover { border-color: var(--line-strong); }
   color: var(--ink-soft);
 }
 .notice svg { width: 15px; height: 15px; flex: none; margin-top: 3px; color: var(--ink-faint); }
+/* display:flex wygrywa z atrybutem hidden — trzeba go przywrócić ręcznie */
+.notice[hidden] { display: none; }
+/* Warianty komunikatu przy formularzu logowania */
+.notice-error { border-color: var(--sale); color: var(--sale); background: var(--bg); }
+.notice-ok { border-color: var(--line-strong); color: var(--ink); }
 
 @media (max-width: 900px) {
   .auth { grid-template-columns: 1fr; min-height: 0; }
