@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { sessionCookieOptions } from './cookie-options';
 
 /**
  * Odświeżanie sesji przy każdym żądaniu. Bez tego access token wygasa i
@@ -25,7 +26,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, { ...options, httpOnly: true, sameSite: 'lax' })
+            response.cookies.set(name, value, sessionCookieOptions(options))
           );
         },
       },

@@ -10,6 +10,7 @@ import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { WishlistProvider } from '@/components/product/WishlistProvider';
 import { getSessionUser } from '@/lib/queries';
+import { siteUrl } from '@/lib/site';
 
 /**
  * Kroje ładuje `next/font`: pliki serwuje własna domena, więc znika request
@@ -31,7 +32,7 @@ const sans = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://127.0.0.1:3000'),
+  metadataBase: new URL(siteUrl()),
   title: {
     default: 'Nordo — sklep z elektroniką',
     template: '%s — Nordo',

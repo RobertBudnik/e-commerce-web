@@ -30,6 +30,27 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  /**
+   * Nagłówki bezpieczeństwa. Nie zastępują RLS, ale ograniczają szkody:
+   * treść sklepu nie ma powodu jechać w cudzej ramce ani wysyłać pełnego
+   * adresu strony do zewnętrznych hostów.
+   */
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          // HSTS działa tylko po HTTPS; lokalnie przeglądarka go zignoruje
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -1,4 +1,5 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { sessionCookieOptions } from './cookie-options';
 import { cookies } from 'next/headers';
 
 /**
@@ -24,9 +25,7 @@ export async function createClient() {
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
-              // httpOnly: token sesji ma być niewidoczny dla JavaScriptu w karcie.
-              // Działa, bo wszystkie zapytania do bazy idą przez serwer.
-              cookieStore.set(name, value, { ...options, httpOnly: true, sameSite: 'lax' });
+              cookieStore.set(name, value, sessionCookieOptions(options));
             });
           } catch {
             // Server Component nie może pisać ciasteczek. Odświeżanie sesji
