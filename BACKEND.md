@@ -69,6 +69,10 @@ npx supabase functions serve stripe-webhook --env-file supabase/.env.local --no-
 `--no-verify-jwt` przy webhooku jest konieczne: operator płatności nie nosi tokenu
 użytkownika. Autentyczność żądania potwierdza podpis HMAC, nie JWT.
 
+Sekrety funkcji lokalnie: `supabase/functions/.env` (wzór w `.env.example`),
+ładowany automatycznie przy `supabase start`. Podpięcie Stripe krok po kroku
+opisuje [STRIPE.md](STRIPE.md).
+
 ## Role i uprawnienia
 
 | rola | uprawnienia |

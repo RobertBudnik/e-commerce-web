@@ -67,6 +67,9 @@ npx supabase functions deploy stripe-webhook --no-verify-jwt
 `--no-verify-jwt` przy webhooku jest konieczne: operator płatności nie nosi
 tokenu użytkownika. Autentyczność żądania potwierdza podpis HMAC.
 
+Szczegóły podpięcia Stripe — od klucza testowego po metody płatności —
+opisuje [STRIPE.md](STRIPE.md).
+
 W panelu Stripe (**Developers → Webhooks**) dodaj endpoint:
 
 ```
