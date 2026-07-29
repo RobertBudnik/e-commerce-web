@@ -54,9 +54,6 @@ utils/supabase/         klient serwerowy (ciasteczka), publiczny (build) i middl
 
 ## Czego jeszcze nie ma
 
-- `/koszyk` — podsumowanie, kod rabatowy i formularz zamówienia
-- `/zamowienie/[numer]` — potwierdzenie po powrocie z płatności
-- `/konto` — zamówienia, profil, adres, lista życzeń, statusy dla zaplecza
 - `/panel` — dodawanie i edycja produktów, wgrywanie zdjęć
 - ostatnio oglądane, pasek zakupu na karcie produktu, szkielety ładowania
 - testy Playwrighta na ścieżkę „dodaj do koszyka → zamów → potwierdzenie"
