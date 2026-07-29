@@ -1,19 +1,11 @@
 /**
- * Generator danych startowych: js/data.js → supabase/seed.sql
+ * Generator danych startowych: scripts/seed-data.mjs → supabase/seed.sql
  * Użycie: node scripts/gen-seed.mjs > supabase/seed.sql
  *
- * Trzyma seed w zgodzie z katalogiem szablonu. Gdy katalog zacznie żyć
- * w bazie, ten skrypt przestaje być potrzebny.
+ * Wypełnia lokalną bazę czymś, na czym da się klikać. Na produkcji katalog
+ * wpisuje się przez panel produktów, a seeda się nie uruchamia.
  */
-import { readFileSync } from 'node:fs';
-
-const src = readFileSync(new URL('../js/data.js', import.meta.url), 'utf8');
-const sandbox = {};
-new Function(
-  'exports',
-  `${src}\nexports.CATEGORIES = CATEGORIES; exports.PRODUCTS = PRODUCTS; exports.ORDERS = ORDERS;`
-)(sandbox);
-const { CATEGORIES, PRODUCTS, ORDERS } = sandbox;
+import { CATEGORIES, ORDERS, PRODUCTS } from './seed-data.mjs';
 
 const q = (v) => (v === null || v === undefined ? 'null' : `'${String(v).replace(/'/g, "''")}'`);
 
@@ -35,7 +27,7 @@ const out = [];
 
 out.push(`-- =============================================================================
 -- Nordo — dane startowe
--- Generowane z js/data.js: node scripts/gen-seed.mjs > supabase/seed.sql
+-- Generowane: node scripts/gen-seed.mjs > supabase/seed.sql
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------

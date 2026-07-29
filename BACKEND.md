@@ -22,7 +22,8 @@ supabase/
     create-checkout/                       zamówienie + sesja płatności
     stripe-webhook/                        potwierdzenie płatności (weryfikacja podpisu)
 scripts/
-  gen-seed.mjs                             js/data.js → supabase/seed.sql
+  seed-data.mjs                            katalog demonstracyjny
+  gen-seed.mjs                             seed-data.mjs → supabase/seed.sql
   test-schema.mjs                          testy schematu na Postgresie w WASM
 ```
 
@@ -33,7 +34,7 @@ npm run db:test
 ```
 
 Odpala Postgres 16 skompilowany do WebAssembly, wgrywa migracje i seed, po czym
-sprawdza 83 przypadki: uprawnienia ról, liczenie cen, wycenę koszyka, rezerwację
+sprawdza 86 przypadków: uprawnienia ról, liczenie cen, wycenę koszyka, rezerwację
 stanu, RLS oraz dane panelu konta.
 Nie zastępuje pełnego stosu (brak Auth, PostgREST, Realtime), ale weryfikuje
 wszystko, co jest w SQL.

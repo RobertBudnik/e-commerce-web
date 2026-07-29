@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Nordo — dane startowe
--- Generowane z js/data.js: node scripts/gen-seed.mjs > supabase/seed.sql
+-- Generowane: node scripts/gen-seed.mjs > supabase/seed.sql
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------

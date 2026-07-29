@@ -2,13 +2,16 @@
   "name": "nordo-shop",
   "private": true,
   "version": "0.1.0",
-  "description": "Szablon sklepu Nordo — frontend statyczny + backend Supabase",
+  "description": "Sklep Nordo — Next.js (App Router) + Supabase",
   "scripts": {
-    "db:start": "SITE_URL=${SITE_URL:-http://127.0.0.1:8000} ADDITIONAL_REDIRECT_URL=${ADDITIONAL_REDIRECT_URL:-http://127.0.0.1:8000} supabase start",
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "typecheck": "npm --prefix web run typecheck",
+    "db:start": "SITE_URL=${SITE_URL:-http://localhost:3000} ADDITIONAL_REDIRECT_URL=${ADDITIONAL_REDIRECT_URL:-http://localhost:3000} supabase start",
     "db:stop": "supabase stop",
-    "db:reset": "SITE_URL=${SITE_URL:-http://127.0.0.1:8000} ADDITIONAL_REDIRECT_URL=${ADDITIONAL_REDIRECT_URL:-http://127.0.0.1:8000} supabase db reset",
+    "db:reset": "SITE_URL=${SITE_URL:-http://localhost:3000} ADDITIONAL_REDIRECT_URL=${ADDITIONAL_REDIRECT_URL:-http://localhost:3000} supabase db reset",
     "db:test": "node scripts/test-schema.mjs",
-    "serve": "python3 -m http.server 8000"
+    "db:seed": "node scripts/gen-seed.mjs > supabase/seed.sql"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.2.17",

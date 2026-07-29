@@ -1,12 +1,13 @@
 ---
 name: nordo-design
-description: Design system i reguły ruchu sklepu Nordo — tokeny, komponenty, animacje. Użyj przy każdej zmianie w css/style.css, przy dodawaniu komponentów UI (modale, szuflady, paski postępu, karty) oraz gdy pojawia się prośba o animacje, mikrointerakcje albo „ładniejszy" wygląd.
+description: Design system i reguły ruchu sklepu Nordo — tokeny, komponenty, animacje. Użyj przy każdej zmianie w web/app/globals.css, przy dodawaniu komponentów UI (modale, szuflady, paski postępu, karty) oraz gdy pojawia się prośba o animacje, mikrointerakcje albo „ładniejszy" wygląd.
 ---
 
 # Nordo — design i ruch
 
-Statyczny sklep: czysty HTML + CSS + JS, zero zależności, zero kroku budowania.
-Motyw wyłącznie jasny. Zmiany mają wyglądać, jakby były tu od początku.
+Sklep na Next.js (App Router) w katalogu `web/`. Style w jednym pliku
+`web/app/globals.css` — bez Tailwinda i bez CSS-in-JS. Motyw wyłącznie jasny.
+Zmiany mają wyglądać, jakby były tu od początku.
 
 ## Tokeny — używaj zmiennych, nigdy wartości wprost
 
@@ -48,8 +49,8 @@ listy życzeń. Zieleń i czerwień z palety systemowej są zakazane.
   Nie ściskaj trackingu mocniej — serif zlepia się na zakończeniach liter.
 - Nagłówki użytkowe (panel konta, podsumowanie, szuflada, karta w modalu)
   zostają przy Interze: w rozmiarach ~1 rem serif tylko szumi.
-- Podmiana kroju = zmiana `--display` w `:root` plus `<link>` w plikach HTML.
-  Wymóg twardy: subset **latin-ext** (polskie znaki ą ć ę ł ń ó ś ź ż).
+- Podmiana kroju = zmiana `--display` w `:root` plus krój z `next/font` w
+  `web/app/layout.tsx`. Wymóg twardy: subset **latin-ext** (ą ć ę ł ń ó ś ź ż).
 
 ## Ruch
 
@@ -77,7 +78,7 @@ Animujemy **wyłącznie `transform` i `opacity`** (oraz kolor). Nigdy `width`,
 
 ## prefers-reduced-motion — obowiązkowo
 
-W `css/style.css` stoi globalna reguła ścinająca czasy do `.01ms`. To nie zwalnia
+W `web/app/globals.css` stoi globalna reguła ścinająca czasy do `.01ms`. To nie zwalnia
 z myślenia:
 
 - Element ujawniany przy scrollu **nie może zostać niewidoczny**, gdy ruch jest
@@ -107,18 +108,18 @@ poza obszarem.
 
 ## Konwencje kodu
 
-- CSS dopisujesz do `css/style.css` w sekcji tematycznej z komentarzem
+- CSS dopisujesz do `web/app/globals.css` w sekcji tematycznej z komentarzem
   `/* ---------- Nazwa ---------- */`; kolejność jak w pliku: tokeny → baza →
   komponenty → widoki → media queries na końcu bloku komponentu.
-- JS: moduł jako obiekt z `init()`/`open()`/`close()`, wpięty w bootstrap
-  `DOMContentLoaded` w `js/app.js`. Delegacja zdarzeń na `document`, nie listener
-  na każdym kafelku.
-- Markup generujesz przez `escapeHtml()` dla wszystkiego, co pochodzi z danych.
-- Ikony wyłącznie z `ICON_PATHS` w `js/icons.js` (`icon('nazwa')`), stroke 1.1.
-- Zdjęcie produktu zawsze przez `productMedia(p)` — sam decyduje, czy pokazać plik
-  z kubełka, czy ikonę zastępczą. Nigdy nie wstawiaj `<img>` z ręki: kafle mediów
-  mają swoje proporcje, `object-fit: cover` i wejście `media-in`, a ikona musi
-  zostać dla produktów bez zdjęcia.
+- Komponenty: serwerowe domyślnie, `'use client'` tylko tam, gdzie potrzebny
+  jest stan albo zdarzenie. Wyspy trzymamy małe — cały katalog nie ma po co
+  lądować w bundlu.
+- Ikony wyłącznie z `ICON_PATHS` w `web/components/Icon.tsx` (`<Icon name="…" />`), stroke 1.1.
+- Zdjęcie produktu zawsze przez `<ProductMedia />` — sam decyduje, czy pokazać
+  plik z kubełka, czy ikonę zastępczą. Nigdy `<img>` z ręki: kafle mediów mają
+  swoje proporcje, `object-fit: cover` i wejście `media-in`, a ikona musi zostać
+  dla produktów bez zdjęcia. `next/image` z `fill` wymaga pozycjonowanego
+  rodzica — lista takich kontenerów jest na końcu globals.css.
 - Komentarz po polsku tłumaczy **dlaczego**, nie co robi linijka.
 
 ## Czego nie robić

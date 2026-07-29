@@ -1,15 +1,20 @@
 /**
- * Przykładowe dane katalogu.
- * Podmień na odpowiedź z API — reszta kodu korzysta tylko z tych pól.
+ * Dane startowe katalogu — źródło dla `scripts/gen-seed.mjs`.
+ *
+ * Do wersji z listopada te dane mieszkały w `js/data.js` statycznego frontu
+ * i służyły jednocześnie za atrapę dla przeglądarki. Front statyczny zniknął,
+ * więc zostaje im jedno zadanie: wypełnić `supabase/seed.sql` przy pracy
+ * lokalnej. Na produkcji katalog wpisuje się przez panel produktów.
  */
-const CATEGORIES = [
+
+export const CATEGORIES = [
   { id: 'audio',   name: 'Audio',        desc: 'Słuchawki i głośniki', icon: 'headphones' },
   { id: 'komputery', name: 'Komputery',  desc: 'Laptopy i akcesoria', icon: 'laptop' },
   { id: 'foto',    name: 'Foto',         desc: 'Aparaty i obiektywy', icon: 'camera' },
   { id: 'smart',   name: 'Smart home',   desc: 'Automatyka domowa', icon: 'bulb' },
 ];
 
-const PRODUCTS = [
+export const PRODUCTS = [
   {
     id: 'p-001',
     name: 'Słuchawki bezprzewodowe Aura X',
@@ -176,7 +181,7 @@ const PRODUCTS = [
  * Przykładowa historia zamówień dla panelu klienta.
  * Docelowo: GET /api/orders dla zalogowanego użytkownika.
  */
-const ORDERS = [
+export const ORDERS = [
   {
     id: 'NOR-2026-0418',
     date: '2026-07-14',

@@ -139,9 +139,8 @@ sekrety funkcji Edge, gdzie trafia automatycznie.
   prawdziwym zamówieniu warto przejść na płatny.
 - **Domena i HTTPS** — nagłówek HSTS jest ustawiony w `next.config.ts`
   i zadziała dopiero po HTTPS.
-- **Statyczna wersja** w katalogu głównym repozytorium nie jest przeznaczona
-  do wystawienia: przy `BACKEND_ENABLED = false` rolę da się podmienić
-  w `localStorage`. Wystawiamy wyłącznie `web/`.
+- **Testy E2E** — ścieżka zakupu nie ma jeszcze pokrycia automatem. Do czasu,
+  aż powstanie, każde wdrożenie warto zakończyć ręcznym zamówieniem testowym.
 
 ---
 
