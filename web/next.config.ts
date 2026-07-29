@@ -8,6 +8,11 @@ import type { NextConfig } from 'next';
 const supabaseUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321');
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Zdjęcia produktów idą przez Server Action; domyślny limit 1 MB
+    // odrzucałby wszystko powyżej miniatury. Kubełek i tak tnie na 5 MB.
+    serverActions: { bodySizeLimit: '6mb' },
+  },
   images: {
     remotePatterns: [
       {

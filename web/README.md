@@ -47,14 +47,16 @@ app/
   actions/
     auth.ts             logowanie, rejestracja, wylogowanie
     shop.ts             wycena koszyka, miniatury, lista życzeń
-components/             wyspy klienckie: koszyk, szuflada, podgląd, stos sortowania
+    account.ts          profil, adres, statusy zamówień, anulowanie
+    catalog.ts          zapis i usuwanie produktów, wgrywanie zdjęć
+  panel/                panel produktów (guard po roli, upload do Storage)
+components/             wyspy klienckie: koszyk, szuflada, podgląd, panel konta, panel produktów
 lib/                    typy, mapowanie wierszy, zapytania serwerowe, formatowanie
 utils/supabase/         klient serwerowy (ciasteczka), publiczny (build) i middleware
 ```
 
 ## Czego jeszcze nie ma
 
-- `/panel` — dodawanie i edycja produktów, wgrywanie zdjęć
 - ostatnio oglądane, pasek zakupu na karcie produktu, szkielety ładowania
 - testy Playwrighta na ścieżkę „dodaj do koszyka → zamów → potwierdzenie"
 

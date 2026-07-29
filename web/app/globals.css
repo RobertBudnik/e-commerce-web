@@ -1776,6 +1776,7 @@ code {
 .product-media,
 .cart-item-media,
 .drawer-item-media,
+.admin-thumb,
 .uploader-preview { position: relative; }
 
 /* Obraz z next/image dostaje własne style inline — te dokładają kadrowanie */
