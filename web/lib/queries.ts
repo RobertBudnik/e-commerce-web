@@ -120,6 +120,23 @@ export async function getOrders(): Promise<Order[]> {
   return data.map(toOrder);
 }
 
+/**
+ * Jedno zamówienie po numerze. RLS oddaje je właścicielowi albo zapleczu —
+ * zamówienia gościa nie zobaczy nikt inny, więc strona potwierdzenia musi
+ * umieć pokazać sam numer.
+ */
+export async function getOrderByNumber(orderNumber: string): Promise<Order | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, order_items(*)')
+    .eq('order_number', orderNumber)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return toOrder(data);
+}
+
 /** Lista życzeń zalogowanego konta; RLS nie wypuszcza cudzych wpisów. */
 export async function getWishlist(): Promise<Product[]> {
   const supabase = await createClient();
