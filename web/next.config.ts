@@ -8,6 +8,13 @@ import type { NextConfig } from 'next';
 const supabaseUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321');
 
 const nextConfig: NextConfig = {
+  /**
+   * Katalog wyjściowy z możliwością podmiany. `npm run build` używa
+   * `.next-build`, żeby produkcyjny build nie deptał katalogu `.next`
+   * działającego serwera deweloperskiego — inaczej dev szuka chunków,
+   * których build już nie ma („Cannot find module ./vendor-chunks/…").
+   */
+  distDir: process.env.NEXT_DIST_DIR ?? '.next',
   experimental: {
     // Zdjęcia produktów idą przez Server Action; domyślny limit 1 MB
     // odrzucałby wszystko powyżej miniatury. Kubełek i tak tnie na 5 MB.
