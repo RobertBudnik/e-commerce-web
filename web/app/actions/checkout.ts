@@ -51,7 +51,8 @@ export async function checkoutAction(input: CheckoutInput): Promise<CheckoutResu
   if (error) {
     // FunctionsHttpError chowa treść odpowiedzi w `context` — bez tego
     // do klienta dociera samo „non-2xx status code" zamiast powodu odmowy.
-    const body = await (error as any).context?.json?.().catch(() => null);
+    const context = (error as { context?: { json?: () => Promise<{ error?: string }> } }).context;
+    const body = await context?.json?.().catch(() => null);
     return { ok: false, error: checkoutMessage(body?.error ?? error.message) };
   }
 

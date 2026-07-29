@@ -7,7 +7,7 @@ import { BuyBox } from '@/components/product/BuyBox';
 import { BuyBar } from '@/components/product/BuyBar';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { money, stars } from '@/lib/format';
-import { getCategories, getProductBySlug, getProducts, getProductSlugs } from '@/lib/queries';
+import { getCategories, getProductBySlug, getProductSlugs, getRelatedProducts } from '@/lib/queries';
 
 export const revalidate = 60;
 
@@ -39,15 +39,16 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [product, products, categories] = await Promise.all([
-    getProductBySlug(slug),
-    getProducts(),
-    getCategories(),
-  ]);
-
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
+  // Kategorie i podobne pozycje dopiero po znalezieniu produktu — nie ma sensu
+  // ciągnąć ich dla adresu, który i tak skończy się na 404.
+  const [categories, related] = await Promise.all([
+    getCategories(),
+    getRelatedProducts(product.category, product.id),
+  ]);
+
   const categoryName = categories.find((c) => c.id === product.category)?.name ?? product.category;
   const out = product.stock === 0;
 
@@ -101,12 +102,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </div>
 
-      <RecentlyViewed
-        catalog={products}
-        categories={categories}
-        skipId={product.id}
-        track={product.id}
-      />
+      <RecentlyViewed categories={categories} skipId={product.id} track={product.id} />
 
       {Boolean(related.length) && (
         <>

@@ -356,6 +356,22 @@ const quoteShort = (
 ).rows[0].q;
 check('wycena oznacza brak towaru', quoteShort.lines[0].in_stock === false);
 
+// Wejście od klienta ma sufit: bez niego żądanie z tysiącami pozycji
+// zajmowało bazę na tyle długo, że wystarczyło kilka naraz
+const hugeCart = JSON.stringify(
+  Array.from({ length: 51 }, () => ({ product_id: bulb.id, qty: 1 }))
+);
+await throws(
+  'wycena odrzuca koszyk ponad limit',
+  () => db.query(`select public.quote_order($1::jsonb, null)`, [hugeCart]),
+  'Za dużo pozycji'
+);
+await throws(
+  'zamówienie odrzuca koszyk ponad limit',
+  () => db.query(`select * from public.create_order($1::jsonb, $2, null, null, null)`, [hugeCart, 'klient@example.com']),
+  'Za dużo pozycji'
+);
+
 // Kupony zostają zamknięte — wycena oddaje wynik, nie listę kodów
 const couponPeek = await db.query(`select count(*) as n from public.coupons`);
 check('klient nie wylistuje kuponów', Number(couponPeek.rows[0].n) === 0, `${couponPeek.rows[0].n}`);

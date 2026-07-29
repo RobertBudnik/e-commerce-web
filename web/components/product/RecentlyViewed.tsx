@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ProductGrid } from './ProductGrid';
+import { productsByIdsAction } from '@/app/actions/shop';
 import type { Category, Product } from '@/lib/types';
 
 const RECENT_KEY = 'shop.recent.v1';
@@ -10,7 +11,7 @@ const RECENT_MAX = 8;
 function read(): string[] {
   try {
     const list = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
-    return Array.isArray(list) ? list : [];
+    return Array.isArray(list) ? list.filter((id) => typeof id === 'string') : [];
   } catch {
     return [];
   }
@@ -18,43 +19,53 @@ function read(): string[] {
 
 /**
  * Historia oglądania: lista identyfikatorów w localStorage, najnowsze z przodu.
- * Świadomie tylko lokalnie — to podpowiedź nawigacyjna, nie dane konta,
- * a przy koncie musiałaby przejść przez RLS i osobną tabelę.
+ * Świadomie tylko lokalnie — to podpowiedź nawigacyjna, nie dane konta.
  *
- * `skipId` wypada z listy, żeby na własnej karcie nie pokazywać jej samej.
+ * Same produkty dociąga serwer po identyfikatorach. Strona nie musi więc
+ * wysyłać całego katalogu do przeglądarki tylko po to, żeby wybrać z niego
+ * cztery pozycje.
  */
 export function RecentlyViewed({
-  catalog,
   categories,
   skipId,
   track,
   className = 'section',
 }: {
-  catalog: Product[];
   categories: Category[];
+  /** Bieżący produkt wypada z listy — na własnej karcie nie pokazujemy jej samej. */
   skipId?: string;
+  /** Identyfikator do dopisania do historii (karta produktu). */
   track?: string;
   /** Strona główna trzyma treść w kontenerze, karta produktu już w nim jest. */
   className?: string;
 }) {
-  const [ids, setIds] = useState<string[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     // Najpierw odczyt (bez bieżącej pozycji), potem zapis — inaczej karta
     // dopisałaby samą siebie, zanim zdąży pokazać poprzednie.
-    setIds(read());
+    const history = read();
 
     if (track) {
-      const next = [track, ...read().filter((id) => id !== track)].slice(0, RECENT_MAX);
+      const next = [track, ...history.filter((id) => id !== track)].slice(0, RECENT_MAX);
       localStorage.setItem(RECENT_KEY, JSON.stringify(next));
     }
-  }, [track]);
 
-  const products = ids
-    .filter((id) => id !== skipId)
-    .map((id) => catalog.find((p) => p.id === id))
-    .filter((p): p is Product => Boolean(p))
-    .slice(0, 4);
+    const wanted = history.filter((id) => id !== skipId).slice(0, 4);
+    if (!wanted.length) {
+      setProducts([]);
+      return;
+    }
+
+    let cancelled = false;
+    productsByIdsAction(wanted).then((rows) => {
+      if (!cancelled) setProducts(rows);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [track, skipId]);
 
   if (!products.length) return null;
 

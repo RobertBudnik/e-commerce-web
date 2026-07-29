@@ -1,8 +1,11 @@
 import 'server-only';
 
+import { cache } from 'react';
+
 import { createClient } from '@/utils/supabase/server';
 import { createPublicClient } from '@/utils/supabase/public';
 import { toOrder, toProduct, toSessionUser } from './mappers';
+import type { OrderRow, ProductRow } from './rows';
 import type { Category, Order, Product, SessionUser, StoreSettings } from './types';
 
 const BUCKET = 'product-images';
@@ -28,7 +31,7 @@ function decodeClaims(token: string): Record<string, unknown> {
  * Zalogowany użytkownik albo null. `getUser()` weryfikuje token u dostawcy,
  * a rola przyjeżdża claimem — front nie pyta o nią bazy przy każdym renderze.
  */
-export async function getSessionUser(): Promise<SessionUser | null> {
+export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const supabase = await createClient();
 
   const {
@@ -41,7 +44,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   } = await supabase.auth.getSession();
 
   return toSessionUser(user, session ? decodeClaims(session.access_token) : {});
-}
+});
 
 /**
  * Same slugi, bez sesji — `generateStaticParams` biegnie poza żądaniem,
@@ -56,7 +59,7 @@ export async function getProductSlugs(): Promise<string[]> {
   return (data ?? []).map((row) => row.slug as string);
 }
 
-export async function getCategories(): Promise<Category[]> {
+export const getCategories = cache(async (): Promise<Category[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('categories')
@@ -65,13 +68,13 @@ export async function getCategories(): Promise<Category[]> {
 
   if (error || !data) return [];
   return data.map((c) => ({ id: c.id, name: c.name, desc: c.description ?? '', icon: c.icon ?? 'grid' }));
-}
+});
 
 /**
  * Katalog. Aktywne pozycje widzi każdy — polityka `produkty: odczyt publiczny`
  * przepuszcza `anon`, więc lista renderuje się serwerowo także dla gościa.
  */
-export async function getProducts(): Promise<Product[]> {
+export const getProducts = cache(async (): Promise<Product[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('products')
@@ -80,15 +83,37 @@ export async function getProducts(): Promise<Product[]> {
     .order('created_at');
 
   if (error || !data) return [];
-  return data.map((row) => toProduct(row, imageUrl));
-}
+  return data.map((row) => toProduct(row as ProductRow, imageUrl));
+});
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.from('products').select('*').eq('slug', slug).maybeSingle();
 
   if (error || !data) return null;
-  return toProduct(data, imageUrl);
+  return toProduct(data as ProductRow, imageUrl);
+}
+
+/**
+ * Podobne produkty. Wcześniej strona ciągnęła cały katalog i filtrowała go
+ * w pamięci — przy większym asortymencie to rosnący koszt bez powodu.
+ */
+export async function getRelatedProducts(
+  categoryId: string,
+  excludeId: string,
+  limit = 4
+): Promise<Product[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('category_id', categoryId)
+    .eq('is_active', true)
+    .neq('id', excludeId)
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data.map((row) => toProduct(row as ProductRow, imageUrl));
 }
 
 export async function getStoreSettings(): Promise<StoreSettings> {
@@ -117,7 +142,7 @@ export async function getOrders(): Promise<Order[]> {
     .order('created_at', { ascending: false });
 
   if (error || !data) return [];
-  return data.map(toOrder);
+  return data.map((row) => toOrder(row as OrderRow));
 }
 
 /**
@@ -134,7 +159,7 @@ export async function getOrderByNumber(orderNumber: string): Promise<Order | nul
     .maybeSingle();
 
   if (error || !data) return null;
-  return toOrder(data);
+  return toOrder(data as OrderRow);
 }
 
 /** Lista życzeń zalogowanego konta; RLS nie wypuszcza cudzych wpisów. */
@@ -146,9 +171,10 @@ export async function getWishlist(): Promise<Product[]> {
     .order('created_at', { ascending: false });
 
   if (error || !data) return [];
-  return data
-    .filter((row: any) => row.products)
-    .map((row: any) => toProduct(row.products, imageUrl));
+  // PostgREST zwraca zagnieżdżony produkt; bywa pusty, gdy pozycja zniknęła
+  return (data as unknown as { products: ProductRow | null }[])
+    .filter((row) => row.products)
+    .map((row) => toProduct(row.products as ProductRow, imageUrl));
 }
 
 export async function getProfile() {

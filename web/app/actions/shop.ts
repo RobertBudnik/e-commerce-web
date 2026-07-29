@@ -2,8 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
-import { toQuote } from '@/lib/mappers';
-import type { CartLine, Quote } from '@/lib/types';
+import { toProduct, toQuote } from '@/lib/mappers';
+import type { ProductRow, QuoteRow } from '@/lib/rows';
+import { imageUrl } from '@/lib/queries';
+import type { CartLine, Product, Quote } from '@/lib/types';
 
 /**
  * Zapytania do bazy, które w statycznej wersji szły prosto z przeglądarki.
@@ -29,7 +31,7 @@ export async function quoteCartAction(
     console.warn('Błąd wyceny koszyka:', error.message);
     return null;
   }
-  return toQuote(data);
+  return toQuote(data as QuoteRow);
 }
 
 /** Miniatury do koszyka: wycena zwraca nazwy i ceny, ale nie grafikę. */
@@ -82,4 +84,29 @@ export async function wishlistIdsAction(): Promise<string[]> {
   const supabase = await createClient();
   const { data } = await supabase.from('wishlists').select('product_id');
   return (data ?? []).map((row) => row.product_id as string);
+}
+
+/**
+ * Produkty po identyfikatorach — dla „ostatnio oglądanych". Historia siedzi
+ * w localStorage, więc dopiero przeglądarka wie, o co zapytać. Wcześniej
+ * strona wysyłała klientowi cały katalog tylko po to, żeby wybrać z niego
+ * cztery pozycje.
+ */
+export async function productsByIdsAction(ids: string[]): Promise<Product[]> {
+  if (!ids.length) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .in('id', ids.slice(0, 12))
+    .eq('is_active', true);
+
+  if (error || !data) return [];
+
+  // Kolejność z historii, nie z bazy — najnowsze oglądane jako pierwsze
+  const order = new Map(ids.map((id, i) => [id, i]));
+  return data
+    .map((row) => toProduct(row as ProductRow, imageUrl))
+    .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 }

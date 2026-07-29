@@ -2,44 +2,33 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 import { Icon } from '@/components/Icon';
 import { ShipBar } from './ShipBar';
 import { useCart } from './CartProvider';
-import { cartMediaAction, quoteCartAction } from '@/app/actions/shop';
+import { useCartQuote } from './useCartQuote';
 import { money } from '@/lib/format';
-import type { Quote } from '@/lib/types';
-
-type Media = Map<string, { icon: string; image: string | null; slug: string }>;
 
 /**
  * Szuflada zamiast skoku na osobną stronę po każdym „do koszyka".
  * Kwoty bierze z tej samej wyceny co koszyk, więc nic się nie rozjeżdża.
  */
 export function MiniCart() {
-  const { lines, open, setOpen, setQty, remove } = useCart();
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [media, setMedia] = useState<Media>(new Map());
+  const { lines, open, setOpen, setQty, bump, remove } = useCart();
   const closeBtn = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname();
+
+  // Na stronie koszyka szuflada byłaby zasłoną na to samo — otwieramy ją
+  // wyłącznie tam, gdzie klient nie widzi koszyka wprost.
+  const onCartPage = pathname === '/koszyk';
+  const visible = open && !onCartPage;
+
+  const { quote, media } = useCartQuote(lines, null, visible);
 
   useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-
-    (async () => {
-      const [q, m] = await Promise.all([
-        quoteCartAction(lines),
-        cartMediaAction(lines.map((l) => l.id)),
-      ]);
-      if (cancelled) return;
-      setQuote(q);
-      setMedia(new Map(m.map((row) => [row.id, row])));
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, lines]);
+    if (open && onCartPage) setOpen(false);
+  }, [open, onCartPage, setOpen]);
 
   useEffect(() => {
     const onEsc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
@@ -48,18 +37,18 @@ export function MiniCart() {
   }, [setOpen]);
 
   useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : '';
-    if (open) closeBtn.current?.focus();
-  }, [open]);
+    document.body.style.overflow = visible ? 'hidden' : '';
+    if (visible) closeBtn.current?.focus();
+  }, [visible]);
 
   const byId = new Map(quote?.lines.map((l) => [l.id, l]) ?? []);
 
   return (
     <>
-      <div className={`overlay${open ? ' is-open' : ''}`} hidden={!open} onClick={() => setOpen(false)} />
+      <div className={`overlay${visible ? ' is-open' : ''}`} hidden={!visible} onClick={() => setOpen(false)} />
       <aside
-        className={`drawer${open ? ' is-open' : ''}`}
-        hidden={!open}
+        className={`drawer${visible ? ' is-open' : ''}`}
+        hidden={!visible}
         role="dialog"
         aria-modal="true"
         aria-labelledby="minicart-title"
@@ -123,7 +112,7 @@ export function MiniCart() {
                       <button
                         type="button"
                         aria-label="Zmniejsz ilość"
-                        onClick={() => setQty(line.id, line.qty - 1, info.stock)}
+                        onClick={() => bump(line.id, -1, info.stock)}
                       >
                         −
                       </button>
@@ -138,7 +127,7 @@ export function MiniCart() {
                       <button
                         type="button"
                         aria-label="Zwiększ ilość"
-                        onClick={() => setQty(line.id, line.qty + 1, info.stock)}
+                        onClick={() => bump(line.id, 1, info.stock)}
                       >
                         +
                       </button>

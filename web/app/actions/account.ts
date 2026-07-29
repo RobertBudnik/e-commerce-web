@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
 import { toOrder } from '@/lib/mappers';
+import type { OrderRow } from '@/lib/rows';
 import type { Order, OrderStatus } from '@/lib/types';
 
 /**
@@ -85,7 +86,7 @@ export async function setOrderStatusAction(
   if (!data.length) return { ok: false, error: 'Brak uprawnień do zmiany statusu tego zamówienia.' };
 
   revalidatePath('/konto');
-  return { ok: true, data: toOrder(data[0]) };
+  return { ok: true, data: toOrder(data[0] as OrderRow) };
 }
 
 /**
@@ -100,5 +101,5 @@ export async function cancelOrderAction(orderId: string): Promise<ActionResult<O
   if (error) return { ok: false, error: error.message };
 
   revalidatePath('/konto');
-  return { ok: true, data: toOrder(Array.isArray(data) ? data[0] : data) };
+  return { ok: true, data: toOrder((Array.isArray(data) ? data[0] : data) as OrderRow) };
 }

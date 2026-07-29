@@ -11,6 +11,8 @@ type CartContext = {
   ready: boolean;
   add: (id: string, qty?: number, stock?: number) => void;
   setQty: (id: string, qty: number, stock?: number) => void;
+  /** Zmiana o krok — liczona od bieżącego stanu, nie od wartości z renderu. */
+  bump: (id: string, delta: number, stock?: number) => void;
   remove: (id: string) => void;
   clear: () => void;
   open: boolean;
@@ -82,6 +84,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [write]
   );
 
+  /**
+   * Szybkie klikanie „+" trzy razy pod rząd ustawiało ilość na 2, nie na 4:
+   * każde kliknięcie liczyło od `qty` zapamiętanego przy renderze. Krok
+   * czytany z bieżącego stanu rozwiązuje to raz dla wszystkich miejsc.
+   */
+  const bump = useCallback(
+    (id: string, delta: number, stock = Infinity) => {
+      const current = read().find((i) => i.id === id)?.qty ?? 0;
+      const next = read()
+        .map((i) => (i.id === id ? { ...i, qty: Math.max(0, Math.min(current + delta, stock)) } : i))
+        .filter((i) => i.qty > 0);
+      write(next);
+    },
+    [write]
+  );
+
   const remove = useCallback((id: string) => write(read().filter((i) => i.id !== id)), [write]);
   const clear = useCallback(() => write([]), [write]);
 
@@ -92,12 +110,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       ready,
       add,
       setQty,
+      bump,
       remove,
       clear,
       open,
       setOpen,
     }),
-    [lines, ready, add, setQty, remove, clear, open]
+    [lines, ready, add, setQty, bump, remove, clear, open]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

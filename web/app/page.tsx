@@ -112,7 +112,7 @@ export default async function HomePage() {
         <ProductGrid products={featured} categories={categories} />
       </section>
 
-      <RecentlyViewed catalog={products} categories={categories} className="section container" />
+      <RecentlyViewed categories={categories} className="section container" />
 
       <section className="newsletter">
         <div className="container newsletter-inner">

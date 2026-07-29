@@ -7,11 +7,10 @@ import { useEffect, useState, useTransition } from 'react';
 import { Icon } from '@/components/Icon';
 import { ShipBar } from './ShipBar';
 import { useCart } from './CartProvider';
-import { cartMediaAction, quoteCartAction } from '@/app/actions/shop';
+import { useCartQuote } from './useCartQuote';
 import { checkoutAction } from '@/app/actions/checkout';
 import { money } from '@/lib/format';
 import { toast } from '@/components/ui/ToastHost';
-import type { Quote } from '@/lib/types';
 
 type Defaults = {
   name: string;
@@ -22,45 +21,25 @@ type Defaults = {
   city: string;
 };
 
-type Media = { id: string; icon: string; image: string | null; slug: string };
-
 export function CartPage({ defaults }: { defaults: Defaults }) {
-  const { lines, ready, setQty, remove, clear } = useCart();
+  const { lines, ready, setQty, bump, remove, clear } = useCart();
   const router = useRouter();
 
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [media, setMedia] = useState<Map<string, Media>>(new Map());
   const [coupon, setCoupon] = useState('');
   const [couponInput, setCouponInput] = useState('');
   const [error, setError] = useState('');
   const [sending, startCheckout] = useTransition();
 
-  // Wycena leci do bazy po każdej zmianie koszyka albo kodu rabatowego —
-  // tymi samymi regułami, których użyje potem create_order.
+  // Wycena liczona w bazie tymi samymi regułami, których użyje create_order
+  const { quote, media } = useCartQuote(lines, coupon || null, ready);
+
+  // Kod rabatowy sprawdza baza, nie front — komunikat dopiero po wycenie
   useEffect(() => {
-    if (!ready) return;
-    let cancelled = false;
-
-    (async () => {
-      const [q, m] = await Promise.all([
-        quoteCartAction(lines, coupon || null),
-        cartMediaAction(lines.map((l) => l.id)),
-      ]);
-      if (cancelled) return;
-      setQuote(q);
-      setMedia(new Map(m.map((row) => [row.id, row])));
-
-      // Kod sprawdza baza, nie front — komunikat dopiero po wycenie
-      if (coupon && q && !q.couponValid) {
-        toast('Nieprawidłowy kod rabatowy');
-        setCoupon('');
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [lines, coupon, ready]);
+    if (coupon && quote && !quote.couponValid) {
+      toast('Nieprawidłowy kod rabatowy');
+      setCoupon('');
+    }
+  }, [coupon, quote]);
 
   if (!ready) return null;
 
@@ -152,7 +131,7 @@ export function CartPage({ defaults }: { defaults: Defaults }) {
                     <button
                       type="button"
                       aria-label="Zmniejsz ilość"
-                      onClick={() => setQty(line.id, line.qty - 1, info.stock)}
+                      onClick={() => bump(line.id, -1, info.stock)}
                     >
                       −
                     </button>
@@ -167,7 +146,7 @@ export function CartPage({ defaults }: { defaults: Defaults }) {
                     <button
                       type="button"
                       aria-label="Zwiększ ilość"
-                      onClick={() => setQty(line.id, line.qty + 1, info.stock)}
+                      onClick={() => bump(line.id, 1, info.stock)}
                     >
                       +
                     </button>
