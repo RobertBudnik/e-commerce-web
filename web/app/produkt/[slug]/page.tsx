@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { ProductMedia } from '@/components/product/ProductMedia';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { BuyBox } from '@/components/product/BuyBox';
+import { BuyBar } from '@/components/product/BuyBar';
+import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { money, stars } from '@/lib/format';
 import { getCategories, getProductBySlug, getProducts, getProductSlugs } from '@/lib/queries';
 
@@ -83,6 +85,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </p>
 
           <BuyBox product={product} />
+          <BuyBar product={product} />
 
           <h2 className="label spec-head">Specyfikacja</h2>
           <table className="specs">
@@ -97,6 +100,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </table>
         </div>
       </div>
+
+      <RecentlyViewed
+        catalog={products}
+        categories={categories}
+        skipId={product.id}
+        track={product.id}
+      />
 
       {Boolean(related.length) && (
         <>

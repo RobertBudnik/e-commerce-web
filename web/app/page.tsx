@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { ProductGrid } from '@/components/product/ProductGrid';
+import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { getCategories, getProducts } from '@/lib/queries';
 
 /** Katalog zmienia się rzadko — strona główna może stać w cache przez minutę. */
@@ -110,6 +111,8 @@ export default async function HomePage() {
         </div>
         <ProductGrid products={featured} categories={categories} />
       </section>
+
+      <RecentlyViewed catalog={products} categories={categories} className="section container" />
 
       <section className="newsletter">
         <div className="container newsletter-inner">
