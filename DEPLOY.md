@@ -139,8 +139,9 @@ sekrety funkcji Edge, gdzie trafia automatycznie.
   prawdziwym zamówieniu warto przejść na płatny.
 - **Domena i HTTPS** — nagłówek HSTS jest ustawiony w `next.config.ts`
   i zadziała dopiero po HTTPS.
-- **Testy E2E** — ścieżka zakupu nie ma jeszcze pokrycia automatem. Do czasu,
-  aż powstanie, każde wdrożenie warto zakończyć ręcznym zamówieniem testowym.
+- **Testy E2E** — `npm run test:e2e` przechodzi po lokalnym stacku. Przed
+  wdrożeniem warto puścić je jeszcze raz; na środowisku produkcyjnym nie należy
+  ich uruchamiać, bo składają prawdziwe zamówienia.
 
 ---
 

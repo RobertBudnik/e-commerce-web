@@ -55,10 +55,23 @@ lib/                    typy, mapowanie wierszy, zapytania serwerowe, formatowan
 utils/supabase/         klient serwerowy (ciasteczka), publiczny (build) i middleware
 ```
 
+## Testy E2E
+
+```bash
+npm run test:e2e
+```
+
+19 przypadków na prawdziwym sklepie i prawdziwej bazie — bez atrap. Wymagają
+działającego stacku Supabase; serwer deweloperski Playwright podnosi sam albo
+korzysta z już uruchomionego.
+
+Pokryte: katalog serwerowy (treść w HTML, nie dociągana przez JS), filtry,
+sortowanie, szukajka, szybki podgląd, metadane produktu, koszyk z wyceną
+z bazy, kod rabatowy, blokada przy braku towaru, zamówienie gościa,
+`HttpOnly` na ciasteczku sesji, przekierowania dla gościa, rozdział
+uprawnień klient/zaplecze, zmiana statusu i anulowanie ze zwrotem towaru.
+
 ## Czego jeszcze nie ma
 
-- ostatnio oglądane, pasek zakupu na karcie produktu, szkielety ładowania
-- testy Playwrighta na ścieżkę „dodaj do koszyka → zamów → potwierdzenie"
-
-Do tego czasu statyczna wersja w katalogu nadrzędnym działa bez zmian —
-obie korzystają z tej samej bazy.
+- klucze operatora płatności — ścieżka ze Stripe nieprzeklikana
+- powiadomienia e-mail o zamówieniu i wysyłce

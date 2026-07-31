@@ -4,3 +4,6 @@ next-env.d.ts
 .env.local
 tsconfig.tsbuildinfo
 .next-build/
+test-results/
+playwright-report/
+blob-report/

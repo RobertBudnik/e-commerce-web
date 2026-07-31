@@ -33,9 +33,12 @@ export function CartPage({ defaults }: { defaults: Defaults }) {
   // Wycena liczona w bazie tymi samymi regułami, których użyje create_order
   const { quote, media } = useCartQuote(lines, coupon || null, ready);
 
-  // Kod rabatowy sprawdza baza, nie front — komunikat dopiero po wycenie
+  // Kod rabatowy sprawdza baza, nie front — komunikat dopiero po wycenie.
+  // Warunek `quote.coupon === coupon` jest tu konieczny: zaraz po wpisaniu kodu
+  // w stanie siedzi jeszcze poprzednia wycena (bez kuponu, `couponValid` false)
+  // i bez tego porównania kod byłby kasowany, zanim baza zdąży go sprawdzić.
   useEffect(() => {
-    if (coupon && quote && !quote.couponValid) {
+    if (coupon && quote?.coupon === coupon && !quote.couponValid) {
       toast('Nieprawidłowy kod rabatowy');
       setCoupon('');
     }
