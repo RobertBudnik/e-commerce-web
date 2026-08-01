@@ -385,6 +385,55 @@ const anonQuote = (
 check('gość wycenia koszyk bez logowania', anonQuote.total_cents === bulb.price_cents + 1999, `${anonQuote.total_cents}`);
 
 // ---------------------------------------------------------------------------
+// Postgres nadaje EXECUTE roli PUBLIC każdej nowej funkcji, a anon
+// i authenticated po PUBLIC dziedziczą. Odebranie prawa samym rolom nie
+// wystarcza — trzeba odebrać PUBLIC, inaczej funkcja dalej wisi pod
+// /rest/v1/rpc/<nazwa>. Te testy pilnują, żeby nie wróciło.
+console.log('\nFunkcje zamknięte przed przeglądarką');
+await asService();
+
+for (const [nazwa, sygnatura] of [
+  ['mark_order_paid', 'public.mark_order_paid(uuid, text, text)'],
+  ['take_stock', 'public.take_stock(uuid, integer, text, uuid)'],
+  ['return_stock', 'public.return_stock(uuid, integer, text, uuid)'],
+  ['handle_new_user', 'public.handle_new_user()'],
+  ['custom_access_token_hook', 'public.custom_access_token_hook(jsonb)'],
+]) {
+  const { rows } = await db.query(
+    `select has_function_privilege('anon', $1, 'execute') as a,
+            has_function_privilege('authenticated', $1, 'execute') as u`,
+    [sygnatura]
+  );
+  check(`${nazwa}: gość nie uruchomi`, rows[0].a === false, `anon=${rows[0].a}`);
+  check(`${nazwa}: zalogowany nie uruchomi`, rows[0].u === false, `authenticated=${rows[0].u}`);
+}
+
+// Wystawione świadomie — mają własne sprawdzenie uprawnień w środku
+for (const [nazwa, sygnatura] of [
+  ['create_order', 'public.create_order(jsonb, text, text, jsonb, text)'],
+  ['quote_order', 'public.quote_order(jsonb, text)'],
+]) {
+  const { rows } = await db.query(
+    `select has_function_privilege('anon', $1, 'execute') as a`,
+    [sygnatura]
+  );
+  check(`${nazwa}: gość uruchomi`, rows[0].a === true, `anon=${rows[0].a}`);
+}
+
+// Ustalony search_path — bez niego funkcja z cudzymi prawami rozwiązuje
+// nazwy tabel według ścieżki wołającego
+for (const nazwa of ['custom_access_token_hook', 'touch_updated_at']) {
+  const { rows } = await db.query(
+    `select p.proconfig from pg_proc p
+     join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public' and p.proname = $1`,
+    [nazwa]
+  );
+  const ustawiony = (rows[0]?.proconfig ?? []).some((c) => c.startsWith('search_path='));
+  check(`${nazwa}: ma ustalony search_path`, ustawiony, `${rows[0]?.proconfig}`);
+}
+
+// ---------------------------------------------------------------------------
 console.log('\nStany magazynowe');
 await asService();
 const { rows: [camera] } = await db.query(
