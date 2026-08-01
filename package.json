@@ -12,7 +12,8 @@
     "db:reset": "SITE_URL=${SITE_URL:-http://localhost:3000} ADDITIONAL_REDIRECT_URL=${ADDITIONAL_REDIRECT_URL:-http://localhost:3000} supabase db reset",
     "db:test": "node scripts/test-schema.mjs",
     "db:seed": "node scripts/gen-seed.mjs > supabase/seed.sql",
-    "test:e2e": "npm --prefix web run test:e2e"
+    "test:e2e": "npm --prefix web run test:e2e",
+    "test:smoke": "npm --prefix web run test:smoke"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.2.17",

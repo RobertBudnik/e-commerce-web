@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Nowy push na tę samą gałąź unieważnia poprzedni przebieg. Na planie
+# prywatnym minuty Actions są limitowane — nie ma powodu dokańczać przebiegu,
+# którego wynik i tak nikogo już nie obchodzi.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Szybki nawrót: schemat i typy. Bez Dockera, bo test-schema.mjs odpala
+  # Postgresa skompilowanego do WebAssembly.
+  schemat-i-typy:
+    name: Schemat i typy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+
+      - name: Zależności
+        run: |
+          npm ci
+          npm ci --prefix web
+
+      - name: Testy schematu
+        run: npm run db:test
+
+      - name: Typy
+        run: npm run typecheck
+
+  # Zastępnik CodeQL na czas, gdy repozytorium jest prywatne — skanowanie kodu
+  # wymaga tam Advanced Security. `npm audit` działa zawsze i wyłapuje znane
+  # dziury w zależnościach.
+  audyt:
+    name: Audyt zależności
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Znane podatności
+        run: |
+          npm audit --audit-level=high
+          npm audit --audit-level=high --prefix web
+
+  # Pełna ścieżka: prawdziwy Supabase w Dockerze, build produkcyjny i
+  # Playwright po katalogu z seeda.
+  e2e:
+    name: Build i e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+
+      - name: Zależności
+        run: |
+          npm ci
+          npm ci --prefix web
+
+      - name: Przeglądarka do Playwrighta
+        run: npx --prefix web playwright install --with-deps chromium
+
+      - name: Supabase
+        run: npm run db:start
+
+      # Klucze lokalnego stacku są generowane przy starcie, więc wyciągamy je
+      # z CLI zamiast trzymać w repozytorium.
+      - name: Klucze lokalnego stacku
+        run: |
+          eval "$(npx supabase status -o env)"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+          } >> "$GITHUB_ENV"
+
+      # build:check pisze do .next-build, żeby nie deptać katalogu, z którego
+      # zaraz skorzysta serwer deweloperski podnoszony przez Playwrighta.
+      - name: Build produkcyjny
+        run: npm --prefix web run build:check
+
+      - name: Testy e2e
+        run: npm run test:e2e
+
+      - name: Ślady nieudanych testów
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report/
+            web/test-results/
+          retention-days: 7
+
+      - name: Logi Supabase przy porażce
+        if: failure()
+        run: npx supabase status || true

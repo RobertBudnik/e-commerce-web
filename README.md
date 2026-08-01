@@ -75,10 +75,34 @@ Postgres 16 skompilowany do WebAssembly, bez Dockera: uprawnienia ról, liczenie
 cen, wycena koszyka, rezerwacja stanu przy równoległych zamówieniach, RLS na
 zamówieniach, adresach, listach życzeń i Storage.
 
+```bash
+npm run test:e2e
+```
+
+Playwright po prawdziwym sklepie i lokalnej bazie. Testy składają zamówienia
+i zdejmują stan magazynowy, więc po serii przebiegów katalog się wydrenuje —
+`npm run db:reset` przywraca seed.
+
+```bash
+E2E_BASE_URL=https://adres-wdrozenia npm run test:smoke
+```
+
+Zestaw dymny — wyłącznie odczyt, bezpieczny na produkcji.
+
+## Ciągła integracja
+
+| workflow | kiedy | co robi |
+|---|---|---|
+| `.github/workflows/ci.yml` | PR i push na `main` | testy schematu, typy, audyt zależności, build produkcyjny i pełne e2e na Supabase w Dockerze |
+| `.github/workflows/dym.yml` | po wdrożeniu przez Vercela | testy dymne po adresie podglądu — tylko odczyt |
+| `.github/workflows/codeql.yml` | PR, push, tygodniowo | skan bezpieczeństwa; **wymaga repozytorium publicznego** albo Advanced Security |
+
+Praca w chmurze: [`.devcontainer/README.md`](.devcontainer/README.md) —
+Codespaces z Dockerem, więc lokalny Supabase działa bez własnej maszyny.
+
 ## Czego brakuje do produkcji
 
 - klucze operatora płatności — bez nich zamówienie powstaje, ale nikt go nie opłaci
-- testy E2E ścieżki „dodaj do koszyka → zamów → potwierdzenie"
 - powiadomienia e-mail o zamówieniu, wysyłce i anulowaniu
 - faktury, integracja z kurierem, numer przesyłki
 - opinie klientów — `rating` i `reviews` to dziś liczby z ziarna

@@ -1,0 +1,40 @@
+name: CodeQL
+
+# UWAGA: skanowanie kodu jest darmowe na repozytoriach publicznych. Na
+# prywatnym wymaga GitHub Advanced Security i bez niego ten przebieg padnie
+# z „Advanced Security must be enabled for this repository". Dopóki repo jest
+# prywatne, rolę pierwszej linii pełni job „audyt" w ci.yml plus alerty
+# Dependabota (te działają wszędzie).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Poniedziałek rano — nowe reguły CodeQL wchodzą bez naszego pusha.
+    - cron: '17 6 * * 1'
+
+jobs:
+  analiza:
+    name: Analiza
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          # Zapytania rozszerzone łapią m.in. przepływy do zapytań SQL
+          # i do renderowania — przy sklepie z płatnościami warte minut.
+          queries: security-extended
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:javascript-typescript'

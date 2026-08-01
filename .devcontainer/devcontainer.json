@@ -1,0 +1,45 @@
+{
+  "name": "Nordo",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+
+  // Lokalny Supabase to kilkanaście kontenerów, więc kontener roboczy sam
+  // musi umieć uruchamiać Dockera.
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+
+  // Postgres, Kong, Studio i Next naraz nie mieszczą się wygodnie w dwóch
+  // rdzeniach. Codespaces dobierze maszynę pod ten wymóg.
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+
+  "postCreateCommand": "npm install && npm ci --prefix web",
+
+  "forwardPorts": [3000, 54321, 54322, 54323],
+  "portsAttributes": {
+    "3000": { "label": "Sklep", "onAutoForward": "notify" },
+    "54321": { "label": "Supabase API" },
+    "54322": { "label": "Postgres" },
+    "54323": { "label": "Supabase Studio" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-playwright.playwright"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "typescript.tsdk": "web/node_modules/typescript/lib"
+      }
+    }
+  },
+
+  "remoteUser": "node"
+}

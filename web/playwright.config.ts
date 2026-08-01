@@ -7,7 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * Serwer deweloperski jest podnoszony przez Playwrighta, ale gdy już chodzi,
  * jest wykorzystywany ponownie — inaczej każde uruchomienie kosztowałoby
- * kilkanaście sekund startu.
+ * kilkanaście sekund startu. Wyjątkiem jest `E2E_BASE_URL`: wtedy testy jadą
+ * po gotowym adresie i podnoszenie czegokolwiek lokalnie nie ma sensu.
  */
 export default defineConfig({
   testDir: './e2e',
@@ -28,10 +29,12 @@ export default defineConfig({
 
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: process.env.E2E_BASE_URL
+    ? undefined
+    : {
+        command: 'npm run dev',
+        url: 'http://localhost:3000',
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      },
 });

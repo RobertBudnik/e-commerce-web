@@ -102,6 +102,15 @@ vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
 Wartości: **Project Settings → API** w panelu Supabase. `NEXT_PUBLIC_SITE_URL`
 możesz pominąć — kod bierze wtedy `VERCEL_PROJECT_PRODUCTION_URL`.
 
+Monitorowanie błędów (opcjonalne, patrz punkt 5):
+
+```bash
+vercel env add NEXT_PUBLIC_SENTRY_DSN production
+vercel env add SENTRY_ORG production
+vercel env add SENTRY_PROJECT production
+vercel env add SENTRY_AUTH_TOKEN production
+```
+
 ```bash
 vercel --prod
 ```
@@ -110,6 +119,34 @@ Katalog główny projektu w ustawieniach Vercela: `web`.
 
 **Klucz `service_role` nie ma tu wstępu.** Omija RLS; jego jedyne miejsce to
 sekrety funkcji Edge, gdzie trafia automatycznie.
+
+### Własna domena
+
+Adres `*.vercel.app` działa, ale nie wygląda jak sklep. GitHub Student Pack
+daje przez Namecheap darmową domenę `.me` na rok razem z certyfikatem.
+
+1. Odbierz domenę na <https://education.github.com/pack> → Namecheap.
+2. W panelu Vercela: **Project → Settings → Domains → Add**, wpisz domenę.
+   Vercel poda rekordy do ustawienia.
+3. W Namecheapie (**Domain List → Manage → Advanced DNS**) wpisz to, o co
+   prosi Vercel — zwykle rekord `A` dla `@` i `CNAME` dla `www`.
+4. Poczekaj na propagację (zwykle minuty, w najgorszym razie kilka godzin).
+   Certyfikat Vercel wystawia sam, gdy DNS się zgadza.
+
+Po przełączeniu domeny trzy miejsca wymagają aktualizacji, inaczej sklep
+działa tylko z pozoru:
+
+| gdzie | co ustawić |
+|---|---|
+| Supabase → Authentication → URL Configuration | Site URL i Redirect URLs na nową domenę — inaczej logowanie odbija w pustkę |
+| sekrety funkcji Edge | `npx supabase secrets set SITE_URL=https://twoja-domena` — z tego adresu buduje się powrót ze Stripe'a |
+| Vercel → zmienne | `NEXT_PUBLIC_SITE_URL=https://twoja-domena`, jeśli domena ma być w sitemapie i metadanych OG |
+
+Endpoint webhooka Stripe zostaje bez zmian: wskazuje na Supabase, nie na front.
+
+Nagłówek HSTS z `next.config.ts` zaczyna obowiązywać dopiero teraz — zanim
+go zostawisz na dwa lata (`max-age=63072000`), upewnij się, że HTTPS na
+domenie działa. Cofnięcie HSTS-a wymaga odczekania całego okresu.
 
 ---
 
@@ -124,6 +161,17 @@ sekrety funkcji Edge, gdzie trafia automatycznie.
 | webhook | w panelu Stripe sprawdź dostarczenie zdarzenia, w bazie `payment_status = 'opłacone'` |
 | stan magazynu | po zamówieniu `stock` spada, po anulowaniu wraca |
 | sitemapa | `https://twoja-domena/sitemap.xml` i `/robots.txt` |
+
+Część z tego chodzi automatycznie: po każdym wdrożeniu Vercela workflow
+`.github/workflows/dym.yml` puszcza testy dymne po adresie podglądu.
+Sprawdzają wyłącznie odczyt — katalog, kartę produktu, przekierowanie
+z `/konto`, nagłówki i sitemapę. Zamówień nie składają.
+
+Ręcznie po dowolnym adresie:
+
+```bash
+E2E_BASE_URL=https://twoja-domena npm run test:smoke
+```
 
 ---
 
@@ -141,7 +189,15 @@ sekrety funkcji Edge, gdzie trafia automatycznie.
   i zadziała dopiero po HTTPS.
 - **Testy E2E** — `npm run test:e2e` przechodzi po lokalnym stacku. Przed
   wdrożeniem warto puścić je jeszcze raz; na środowisku produkcyjnym nie należy
-  ich uruchamiać, bo składają prawdziwe zamówienia.
+  ich uruchamiać, bo składają prawdziwe zamówienia. Po wdrożeniu służy do tego
+  `npm run test:smoke` — ten zestaw tylko czyta.
+- **Monitorowanie błędów** — bez `NEXT_PUBLIC_SENTRY_DSN` Sentry jest wyłączone
+  w całości: nie ładuje się w przeglądarce i nie instrumentuje serwera. Żeby je
+  włączyć, załóż projekt (plan dla studentów w GitHub Student Pack), wybierz
+  **Next.js** i wpisz DSN w zmiennych Vercela. `SENTRY_AUTH_TOKEN` jest
+  potrzebny wyłącznie do wysyłki map źródeł — bez niego zgłoszenia dochodzą,
+  tylko ze zminifikowanym śladem stosu. Klient sklepu płaci za to ~86 kB
+  dodatkowego JS-u przy pierwszym wejściu.
 
 ---
 

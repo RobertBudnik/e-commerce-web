@@ -11,9 +11,16 @@
     "typecheck": "tsc --noEmit",
     "build:check": "NEXT_DIST_DIR=.next-build next build",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:smoke": "playwright test --config playwright.smoke.config.ts"
+  },
+  "comment:overrides": "Next ciągnie własne postcss i sharp, oba z aktywnymi CVE. `npm audit fix` chciałby cofnąć Next do wersji 9 — zamiast tego podnosimy same zależności przechodnie. Do usunięcia, gdy Next podbije je u siebie.",
+  "overrides": {
+    "postcss": "^8.5.25",
+    "sharp": "^0.35.3"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.69.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.10",
     "next": "^15.1.6",

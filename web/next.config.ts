@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 
 /**
@@ -53,4 +54,47 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Sentry wchodzi wyłącznie tam, gdzie jest DSN — czyli na wdrożeniu.
+ *
+ * Wtyczka buildowa dokłada swoją warstwę do webpacka i w trybie
+ * deweloperskim potrafi rozciągnąć kompilację strony do dziesiątek sekund;
+ * testy e2e zaczynały wtedy padać na hydratacji koszyka. Skoro bez DSN i tak
+ * nie ma dokąd wysyłać zgłoszeń, opakowanie nie ma tam nic do roboty.
+ *
+ * Bez `SENTRY_AUTH_TOKEN` wysyłka map źródeł jest pomijana — zgłoszenia
+ * dochodzą, tylko ślady stosu zostają zminifikowane.
+ */
+const sentryWlaczone = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN);
+
+export default sentryWlaczone
+  ? withSentryConfig(nextConfig, {
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      // Mapy źródeł idą do Sentry, ale nie zostają na serwerze — inaczej każdy
+      // mógłby sobie pobrać czytelne źródła sklepu spod /_next.
+      sourcemaps: { deleteSourcemapsAfterUpload: true },
+
+      // SDK w przeglądarce kosztuje kilogramy kodu. Wycinamy z bundla to,
+      // czego sklep nie używa: powtórki sesji i komunikaty diagnostyczne.
+      bundleSizeOptimizations: {
+        excludeDebugStatements: true,
+        excludeReplayShadowDom: true,
+        excludeReplayIframe: true,
+        excludeReplayWorker: true,
+      },
+
+      // Blokada reklam ucina requesty do sentry.io; tunel przez własną domenę
+      // sprawia, że zgłoszenia dochodzą także od takich klientów.
+      tunnelRoute: '/monitoring',
+
+      // Logi wtyczki tylko wtedy, gdy build i tak jest gadatliwy.
+      silent: !process.env.CI,
+      disableLogger: true,
+
+      // Cron monitor dla Vercela; przy braku zadań nic nie kosztuje.
+      automaticVercelMonitors: true,
+    })
+  : nextConfig;
