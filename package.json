@@ -16,7 +16,7 @@
     "test:smoke": "npm --prefix web run test:smoke"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.2.17",
+    "@electric-sql/pglite": "^0.5.4",
     "supabase": "^2.30.4"
   }
 }
