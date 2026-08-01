@@ -16,7 +16,9 @@
     "storage": "32gb"
   },
 
-  "postCreateCommand": "npm install && npm ci --prefix web",
+  // `ci` a nie `install`: świeży kontener ma odtworzyć dokładnie to, co stoi
+  // w package-lock, a nie rozwiązywać zakresy wersji od nowa.
+  "postCreateCommand": "npm ci && npm ci --prefix web",
 
   "forwardPorts": [3000, 54321, 54322, 54323],
   "portsAttributes": {

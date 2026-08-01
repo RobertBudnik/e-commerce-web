@@ -1,9 +1,9 @@
 # Nordo — backend na Supabase
 
 Warstwa serwerowa: Postgres ze wszystkimi regułami dostępu w bazie (RLS), logika
-handlowa w funkcjach SQL, płatności w funkcjach Edge. Na razie wszystko lokalnie,
-ale nic nie jest przybite do `localhost` — przejście na domenę to zmiana zmiennych
-środowiskowych, nie kodu.
+handlowa w funkcjach SQL, płatności w funkcjach Edge. Nic nie jest przybite do
+`localhost` — przejście na domenę to zmiana zmiennych środowiskowych, nie kodu.
+Pełna procedura wyjścia na produkcję: [DEPLOY.md](DEPLOY.md).
 
 ## Co już działa
 
@@ -17,10 +17,12 @@ supabase/
     20260727090300_auth_hook_grants.sql    hook roli w tokenie
     20260728120000_quote_order.sql         wycena koszyka przed zamówieniem
     20260729090000_product_images.sql      kubełek na zdjęcia i polityki Storage
+    20260729120000_limit_cart_size.sql     sufit na liczbę pozycji w koszyku
   seed.sql                                 dane startowe, konto właściciela i klienta demo
   functions/
     create-checkout/                       zamówienie + sesja płatności
     stripe-webhook/                        potwierdzenie płatności (weryfikacja podpisu)
+    .env.example                           wzór sekretów funkcji (Stripe, SITE_URL)
 scripts/
   seed-data.mjs                            katalog demonstracyjny
   gen-seed.mjs                             seed-data.mjs → supabase/seed.sql
@@ -52,7 +54,10 @@ npm run db:start
 ```
 
 CLI wypisze adresy i klucze — `API URL`, `anon key`, `service_role key`, Studio
-pod `http://127.0.0.1:54323`. Wpisz je do `.env` na podstawie `.env.example`.
+pod `http://127.0.0.1:54323`. `API URL` i `anon key` wpisujesz do
+`web/.env.local` (wzór: `web/.env.example`). `service_role key` nie ma tam
+wstępu — omija RLS i należy wyłącznie do funkcji Edge, gdzie platforma
+wstrzykuje go sama.
 
 Reset bazy razem z seedem:
 
@@ -63,16 +68,21 @@ npm run db:reset
 Funkcje Edge lokalnie:
 
 ```bash
-npx supabase functions serve create-checkout --env-file supabase/.env.local
-npx supabase functions serve stripe-webhook --env-file supabase/.env.local --no-verify-jwt
+npx supabase functions serve create-checkout --env-file supabase/functions/.env
+npx supabase functions serve stripe-webhook --env-file supabase/functions/.env --no-verify-jwt
 ```
 
 `--no-verify-jwt` przy webhooku jest konieczne: operator płatności nie nosi tokenu
 użytkownika. Autentyczność żądania potwierdza podpis HMAC, nie JWT.
 
-Sekrety funkcji lokalnie: `supabase/functions/.env` (wzór w `.env.example`),
-ładowany automatycznie przy `supabase start`. Podpięcie Stripe krok po kroku
-opisuje [STRIPE.md](STRIPE.md).
+Sekrety funkcji lokalnie: `supabase/functions/.env` (wzór obok, w
+`supabase/functions/.env.example`), ładowany automatycznie przy `supabase start` —
+osobne `serve` jest potrzebne tylko wtedy, gdy chcesz podglądać logi funkcji na
+żywo. Podpięcie Stripe krok po kroku opisuje [STRIPE.md](STRIPE.md).
+
+Nie myl tego z `supabase/.env.example`: tamten plik opisuje `SITE_URL`
+i `ADDITIONAL_REDIRECT_URL`, czyli zmienne czytane przez `config.toml`
+z otoczenia powłoki przy starcie stacku, a nie sekrety funkcji.
 
 ## Role i uprawnienia
 
@@ -129,13 +139,13 @@ Nic w kodzie nie zawiera adresu na sztywno. Do przełączenia wystarczy:
 
 ```bash
 export SITE_URL="https://nordo.pl"
-export ADDITIONAL_REDIRECT_URL="https://nordo.pl/login.html"
+export ADDITIONAL_REDIRECT_URL="https://nordo.pl/logowanie"
 
 npx supabase link --project-ref <ref-projektu>
 npx supabase db push                 # migracje na zdalną bazę
 npx supabase functions deploy create-checkout
 npx supabase functions deploy stripe-webhook --no-verify-jwt
-npx supabase secrets set --env-file supabase/.env.local
+npx supabase secrets set --env-file supabase/functions/.env
 ```
 
 Do tego w panelu Supabase: **Authentication → URL Configuration** ustawić Site URL

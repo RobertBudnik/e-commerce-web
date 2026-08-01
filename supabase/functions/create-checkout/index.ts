@@ -7,14 +7,16 @@
  * Wejście:  { items: [{ product_id, qty }], email, phone?, shipping_address?, coupon? }
  * Wyjście:  { order_id, order_number, total_cents, checkout_url }
  *
- * Zmienne środowiskowe (supabase/.env.local lokalnie, sekrety projektu na produkcji):
- *   SITE_URL             — adres frontendu; lokalnie http://127.0.0.1:8000, potem domena
+ * Zmienne środowiskowe (supabase/functions/.env lokalnie, sekrety projektu na produkcji):
+ *   SITE_URL             — adres frontendu; lokalnie http://localhost:3000, potem domena
  *   STRIPE_SECRET_KEY    — klucz operatora; pusty = tryb bez płatności (do pracy lokalnej)
  *   SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY — wstrzykiwane przez platformę
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-const SITE_URL = Deno.env.get('SITE_URL') ?? 'http://127.0.0.1:8000';
+// Wartość awaryjna celuje w serwer deweloperski Next.js — trafia też do
+// nagłówka CORS niżej, więc zły adres blokuje wywołanie z przeglądarki.
+const SITE_URL = Deno.env.get('SITE_URL') ?? 'http://localhost:3000';
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
 
 const CORS = {

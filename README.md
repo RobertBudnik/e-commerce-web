@@ -35,6 +35,8 @@ hasło `nordo-local-dev`.
 
 ```
 web/                 front na Next.js — patrz web/README.md
+  e2e/               19 testów Playwrighta po lokalnym stacku (pisze do bazy)
+  e2e-smoke/         testy dymne po wdrożeniu (wyłącznie odczyt)
 supabase/
   migrations/        schemat, RLS, funkcje handlowe, kubełek na zdjęcia
   functions/         create-checkout i stripe-webhook
@@ -43,6 +45,8 @@ scripts/
   seed-data.mjs      katalog demonstracyjny
   gen-seed.mjs       seed-data.mjs → supabase/seed.sql
   test-schema.mjs    86 testów schematu na Postgresie w WASM
+.github/workflows/   CI, testy dymne po wdrożeniu, CodeQL
+.devcontainer/       Codespaces z Dockerem — patrz .devcontainer/README.md
 ```
 
 Dokumentacja: [web/README.md](web/README.md) (front), [BACKEND.md](BACKEND.md)
