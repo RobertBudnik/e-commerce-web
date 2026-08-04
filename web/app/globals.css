@@ -2065,3 +2065,32 @@ code {
 .tab { min-height: 44px; }
 /* Serce i szybki podgląd na kafelku produktu — te same 44 px co reszta. */
 .wish-btn, .card-quick { min-width: 44px; min-height: 44px; }
+
+/* ---------- Przycisk konta ----------
+   Klasa nie miała stylów bazowych i przeglądarka rysowała domyślny przycisk:
+   własne obramowanie, własny krój, własny rozmiar. Wygląda teraz jak druga
+   pigułka w nagłówku, obok koszyka. */
+.account-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 44px;
+  padding-inline: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink);
+  font-size: .9375rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color .16s ease, background-color .16s ease;
+}
+.account-btn:hover { border-color: var(--line-strong); background: var(--bg-soft); }
+.account-btn[aria-expanded="true"] { border-color: var(--ink); background: var(--bg-soft); }
+
+.account-name {
+  max-width: 13ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
