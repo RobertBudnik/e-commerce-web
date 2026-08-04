@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { InstallHint } from '@/components/magazyn/InstallHint';
 import { PackCard } from '@/components/magazyn/PackCard';
 import { getOrdersToPack, getSessionUser } from '@/lib/queries';
 
@@ -37,6 +38,8 @@ export default async function Magazyn() {
             : `${zamowienia.length} w kolejce${nowe ? ` · ${nowe} nowych` : ''}`}
         </p>
       </header>
+
+      <InstallHint />
 
       {zamowienia.length === 0 ? (
         <p className="magazyn-pusto">

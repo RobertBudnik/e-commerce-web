@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Mono, Instrument_Sans, Instrument_Serif } from 'next/font/google';
 import './globals.css';
 
@@ -69,6 +69,34 @@ export const metadata: Metadata = {
     locale: 'pl_PL',
     siteName: 'Nordo',
   },
+
+  /**
+   * iOS nie czyta ikon z manifestu — kafel na ekranie początkowym bierze
+   * wyłącznie z `apple-touch-icon`. Bez tego Safari wstawia zrzut strony.
+   */
+  appleWebApp: {
+    capable: true,
+    title: 'Nordo',
+    statusBarStyle: 'default',
+  },
+  icons: {
+    icon: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+};
+
+/**
+ * Pasek stanu telefonu dostaje kolor tła aplikacji — inaczej w ciemnym
+ * motywie zostaje jasny pasek nad ciemną treścią.
+ */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#faf9f7' },
+    { media: '(prefers-color-scheme: dark)', color: '#121110' },
+  ],
+  // Blokada powiększania szczypaniem byłaby wygodna przy skanowaniu, ale
+  // odbiera możliwość powiększenia komuś, kto tego potrzebuje.
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

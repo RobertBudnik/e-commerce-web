@@ -2188,3 +2188,18 @@ code {
 
 .pack-error { margin: 0; padding: 10px 16px; color: var(--accent); font-size: .875rem; }
 .pack-cta { border-radius: 0; height: 52px; }
+
+/* ---------- Podpowiedź instalacji na iPhonie ---------- */
+.install-hint {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  padding: 14px 12px 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+}
+.install-hint-text { flex: 1; min-width: 0; }
+.install-hint p:last-child { margin: 6px 0 0; font-size: .875rem; color: var(--ink-2); }
+.install-hint strong { color: var(--ink); font-weight: 500; }
