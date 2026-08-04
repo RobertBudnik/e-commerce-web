@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { ShopBrowser } from '@/components/product/ShopBrowser';
 import { getCategories, getProducts } from '@/lib/queries';
+import { storeMode } from '@/lib/store-mode';
 
 export const revalidate = 60;
 
@@ -17,9 +19,14 @@ export const metadata: Metadata = {
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ kategoria?: string; sort?: string; szukaj?: string }>;
+  searchParams: Promise<{ kategoria?: string; sort?: string; szukaj?: string; mode?: string }>;
 }) {
   const params = await searchParams;
+
+  // W trybie jednoproduktowym lista nie ma czego pokazywać — cała sprzedaż
+  // dzieje się na stronie głównej.
+  if (storeMode(params) === 'single') redirect('/');
+
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
 
   return (

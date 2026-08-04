@@ -35,10 +35,10 @@ export function SiteFooter() {
                 <Link href="/konto#orders">Status zamówienia</Link>
               </li>
               <li>
-                <Link href="/koszyk">Dostawa i płatności</Link>
+                <Link href="/informacje/dostawa-i-platnosci">Dostawa i płatności</Link>
               </li>
               <li>
-                <Link href="/konto">Zwroty i reklamacje</Link>
+                <Link href="/informacje/zwroty-i-reklamacje">Zwroty i reklamacje</Link>
               </li>
             </ul>
           </div>
@@ -46,13 +46,16 @@ export function SiteFooter() {
             <h3>Firma</h3>
             <ul>
               <li>
-                <Link href="/">O nas</Link>
+                <Link href="/pomoc">Pomoc i kontakt</Link>
               </li>
               <li>
-                <Link href="/">Regulamin</Link>
+                <Link href="/informacje/regulamin">Regulamin</Link>
               </li>
               <li>
-                <Link href="/">Polityka prywatności</Link>
+                <Link href="/informacje/polityka-prywatnosci">Polityka prywatności</Link>
+              </li>
+              <li>
+                <Link href="/informacje/odstapienie-od-umowy">Odstąpienie od umowy</Link>
               </li>
             </ul>
           </div>

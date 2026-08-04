@@ -5,6 +5,7 @@ import { ProductMedia } from '@/components/product/ProductMedia';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { BuyBox } from '@/components/product/BuyBox';
 import { BuyBar } from '@/components/product/BuyBar';
+import { TrustBlock } from '@/components/product/TrustBlock';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { money, stars } from '@/lib/format';
 import { getCategories, getProductBySlug, getProductSlugs, getRelatedProducts } from '@/lib/queries';
@@ -52,6 +53,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const categoryName = categories.find((c) => c.id === product.category)?.name ?? product.category;
   const out = product.stock === 0;
 
+  // Rabat wyłącznie z danych. Cena odniesienia niższa albo równa bieżącej
+  // nie jest promocją, tylko błędem w katalogu — wtedy nie pokazujemy nic.
+  const rabat =
+    product.oldPrice && product.oldPrice > product.price
+      ? Math.round((1 - product.price / product.oldPrice) * 100)
+      : null;
+
   return (
     <main className="container">
       <nav className="breadcrumbs" aria-label="Ścieżka nawigacji">
@@ -78,8 +86,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </p>
           <p className="lede">{product.short}</p>
           <div className="price-row">
-            <span className="product-price">{money(product.price)}</span>
-            {product.oldPrice && <span className="price-old">{money(product.oldPrice)}</span>}
+            <span className="product-price num">{money(product.price)}</span>
+            {rabat !== null && (
+              <>
+                <span className="price-old num">{money(product.oldPrice!)}</span>
+                <span className="price-off num">−{rabat}%</span>
+              </>
+            )}
           </div>
           <p className={`stock${out ? ' out' : ''}`}>
             {out ? 'Chwilowo niedostępny' : `Dostępny — ${product.stock} szt. w magazynie`}
@@ -87,6 +100,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <BuyBox product={product} />
           <BuyBar product={product} />
+
+          <TrustBlock />
 
           <h2 className="label spec-head">Specyfikacja</h2>
           <table className="specs">

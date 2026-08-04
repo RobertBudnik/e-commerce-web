@@ -22,6 +22,12 @@ export const ICON_PATHS: Record<string, string> = {
     '<rect x="10" y="21" width="28" height="20" rx="3"/><path d="M17 21v-6a7 7 0 0 1 14 0v6"/><circle cx="24" cy="30" r="2"/>',
   search:
     '<circle cx="21" cy="21" r="13"/><path d="M31 31l11 11"/>',
+  sun:
+    '<circle cx="24" cy="24" r="8.5"/><path d="M24 5v5m0 28v5M5 24h5m28 0h5M10.6 10.6l3.5 3.5m19.8 19.8l3.5 3.5m0-26.8l-3.5 3.5M14.1 33.9l-3.5 3.5"/>',
+  moon:
+    '<path d="M39 28.6A16 16 0 0 1 19.4 9a16 16 0 1 0 19.6 19.6z"/>',
+  menu:
+    '<path d="M7 15h34M7 24h34M7 33h34"/>',
   grid:
     '<rect x="6" y="6" width="15" height="15" rx="1.5"/><rect x="27" y="6" width="15" height="15" rx="1.5"/><rect x="6" y="27" width="15" height="15" rx="1.5"/><rect x="27" y="27" width="15" height="15" rx="1.5"/>',
   user:

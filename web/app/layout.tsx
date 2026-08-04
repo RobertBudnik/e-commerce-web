@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Fraunces, Inter } from 'next/font/google';
+import { IBM_Plex_Mono, Instrument_Sans, Instrument_Serif } from 'next/font/google';
 import './globals.css';
 
 import { CartProvider } from '@/components/cart/CartProvider';
@@ -17,19 +17,45 @@ import { siteUrl } from '@/lib/site';
  * do Google i skok układu przy zamianie fontu zastępczego.
  * Subset latin-ext jest obowiązkowy — polskie znaki.
  */
-const display = Fraunces({
+const display = Instrument_Serif({
   subsets: ['latin-ext'],
-  weight: ['400', '500', '600'],
+  weight: ['400'],
   variable: '--font-display',
   display: 'swap',
 });
 
-const sans = Inter({
+const sans = Instrument_Sans({
   subsets: ['latin-ext'],
   weight: ['400', '500', '600'],
   variable: '--font-sans',
   display: 'swap',
 });
+
+/** Etykiety techniczne: nadtytuły, kategorie na kartach, nagłówki w stopce. */
+const mono = IBM_Plex_Mono({
+  subsets: ['latin-ext'],
+  weight: ['400'],
+  variable: '--font-mono',
+  display: 'swap',
+});
+
+/**
+ * Skrypt blokujący — musi wykonać się przed pierwszym malowaniem, inaczej
+ * wchodząc w ciemnym motywie zobaczysz mignięcie jasnego tła. Dlatego leci
+ * inline w <head>, a nie przez komponent kliencki.
+ *
+ * Kolejność źródeł: zapis użytkownika, potem ustawienie systemu.
+ */
+const SKRYPT_MOTYWU = `
+(function () {
+  try {
+    var zapis = localStorage.getItem('nordo-theme');
+    var ciemny = zapis === 'dark' ||
+      (zapis !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+    if (ciemny) document.documentElement.classList.add('dark');
+  } catch (e) {}
+})();
+`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -51,7 +77,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const user = await getSessionUser();
 
   return (
-    <html lang="pl" className={`${display.variable} ${sans.variable}`}>
+    <html lang="pl" className={`${display.variable} ${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SKRYPT_MOTYWU }} />
+      </head>
       <body>
         <CartProvider>
           <WishlistProvider signedIn={Boolean(user)}>

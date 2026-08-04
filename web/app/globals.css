@@ -1,55 +1,143 @@
 /* ==========================================================================
-   Nordo — motyw jasny, modernistyczny minimalizm.
-   Monochrom + jeden akcent grafitowy. Hairline'y zamiast obwódek,
-   cienie tylko na interakcji, dużo światła.
+   Nordo — modernistyczny minimalizm w dwóch motywach.
+   Hairline'y zamiast obwódek, cienie tylko na interakcji, dużo światła.
+
+   Motyw przełącza klasa `dark` na <html>. Wartości bazowe siedzą w dwóch
+   blokach niżej; wszystko inne w tym pliku sięga po nie przez var(), więc
+   ciemny wariant nie wymaga ani jednej dodatkowej reguły w komponentach.
    ========================================================================== */
 
-/* ---------- Tokens ---------- */
+/* ---------- Tokeny bazowe: motyw jasny ---------- */
 :root {
-  /* powierzchnie — biel jako baza, beż jako drugi ton */
-  --bg: #ffffff;
-  --bg-soft: #f7f5f0;      /* jasny beż — kafle mediów, sekcje */
-  --bg-sunken: #efeae1;    /* beż głębszy — hover, stany aktywne */
-  --beige: #f2ede4;        /* pełne pasy beżowe */
+  color-scheme: light;
+
+  /* powierzchnie */
+  --bg: #faf9f7;
   --surface: #ffffff;
+  --panel: #f2ede6;
+
+  /* tekst — trzy stopnie nasycenia.
+     --ink-3 przyciemniony o 18% wobec pierwotnego #8a8377: tamta wartość
+     dawała 3.22:1 na --panel i 3.57:1 na --bg, czyli poniżej progu 4.5:1.
+     Nosi etykiety mono w kapitalikach, a te są treścią, nie dekoracją.
+     Ten sam odcień, tylko ciemniej — 4.53:1 na --panel. */
+  --ink: #16150f;
+  --ink-2: #5f5a51;
+  --ink-3: #716b62;
 
   /* linie */
-  --line: #e9e4da;
-  --line-strong: #d9d2c5;
+  --line: #e2ddd3;
 
-  /* tekst */
-  --ink: #1a1815;
-  --ink-soft: #57534c;
-  --ink-faint: #8d877d;
+  /* akcent: rdzawy. Jedyny kolor poza monochromem —
+     przeceny, gwiazdki, kropka w logo, aktywne obramowania */
+  --accent: oklch(0.52 0.15 40);
+  --accent-soft: oklch(0.94 0.03 60);
 
-  /* akcent */
-  --accent: #1a1815;
-  --accent-hover: #000000;
-  --on-accent: #ffffff;
-  --sale: #a2603f;         /* przygaszona terakota zamiast krzykliwej czerwieni */
+  /* przyciski główne: odwrócony kontrast wobec tła */
+  --btn-bg: #16150f;
+  --btn-ink: #faf9f7;
+
+  /* kafle zdjęć i kreskowanie zastępcze */
+  --img: #f2ede6;
+  --img-line: #dad2c4;
+
+  /* Jedyna zieleń w palecie: status dostępności i zrealizowanego zamówienia. */
+  --ok: #3f8f5f;
+  --ok-soft: #e6ede7;
+  --ok-ink: #2f5a3c;
 
   /* kształt */
-  --r-sm: 8px;
-  --r: 14px;
+  --radius: 14px;
+  --radius-sm: 10px;
+
+  /* cień — ledwie widoczny, tylko na interakcji */
+  --shadow: 0 1px 2px rgba(22, 21, 15, .04), 0 18px 40px -24px rgba(22, 21, 15, .26);
+}
+
+/* ---------- Tokeny bazowe: motyw ciemny ---------- */
+.dark {
+  color-scheme: dark;
+
+  --bg: #121110;
+  --surface: #1a1917;
+  --panel: #201e1b;
+
+  --ink: #f5f2ec;
+  --ink-2: #b0a99d;
+  --ink-3: #8c8478;
+
+  --line: #302d29;
+
+  /* w ciemności rdza gaśnie — akcent przechodzi w ciepły amber */
+  --accent: oklch(0.78 0.13 72);
+  --accent-soft: oklch(0.32 0.06 72);
+
+  --btn-bg: #f5f2ec;
+  --btn-ink: #121110;
+
+  --img: #201e1b;
+  --img-line: #38342f;
+
+  --ok: #6cc48a;
+  --ok-soft: #1d2a21;
+  --ok-ink: #9fd9b3;
+
+  /* czarny cień na czarnym tle jest niewidoczny — w ciemnym motywie
+     głębię buduje jaśniejsza powierzchnia, więc cień tylko przygasza tło */
+  --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 18px 40px -24px rgba(0, 0, 0, .9);
+}
+
+/* ---------- Aliasy zgodności ----------
+   Reszta pliku (ponad trzysta odwołań) powstała przy jednym motywie i innym
+   nazewnictwie. Zamiast przepisywać każdą regułę, stare nazwy wskazują na
+   nowe tokeny — dzięki temu ciemny motyw obejmuje cały interfejs od razu,
+   a różnice nazw znikną przy okazji kolejnych zmian w komponentach.
+
+   Uwaga na jedno przesunięcie znaczeń: dawny `--accent` był grafitem tła
+   przycisków, dziś to `--btn-bg`. Kolor akcentu przejął rolę dawnego
+   `--sale`, czyli przecen i wyróżnień. */
+:root,
+.dark {
+  --bg-soft: var(--panel);
+  --beige: var(--panel);
+  --ink-soft: var(--ink-2);
+  --ink-faint: var(--ink-3);
+  --accent-hover: var(--ink);
+  --on-accent: var(--btn-ink);
+  --sale: var(--accent);
+
+  --r-sm: var(--radius-sm);
+  --r: var(--radius);
   --r-lg: 20px;
   --r-pill: 999px;
-
-  /* cień — ledwie widoczny, tylko na hover */
-  --shadow: 0 1px 2px rgba(26, 24, 21, .04), 0 18px 40px -24px rgba(26, 24, 21, .26);
 
   /* układ */
   --maxw: 1160px;
   --gutter: 28px;
   --header-h: 72px;
 
+  /* Warstwy elementów unoszących się nad treścią. Trzymane w jednym
+     miejscu, żeby pasek zakupu nie wylądował nad modalem. */
+  --z-header: 40;
+  --z-buybar: 60;
+  --z-drawer: 80;
+  --z-modal: 100;
+  --z-toast: 120;
+
   /* typografia
-     Fraunces w nagłówkach: serif o zmiennej wielkości optycznej, ciepły
-     w tej palecie beży i terakoty. Inter zostaje wszędzie, gdzie liczy się
-     czytelność w małych rozmiarach — interfejs, ceny, tabele.
-     Podmiana kroju to jedna zmienna niżej i jeden <link> w plikach HTML. */
+     Instrument Serif w nagłówkach, Instrument Sans w interfejsie,
+     IBM Plex Mono w etykietach technicznych. Podmiana kroju to zmiana
+     zmiennej niżej plus krój z next/font w web/app/layout.tsx.
+     Subset latin-ext obowiązkowy — polskie znaki. */
   --sans: var(--font-sans), ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
   --display: var(--font-display), "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+:root { --bg-sunken: #e9e3d8; }
+.dark { --bg-sunken: #27241f; }
+:root { --line-strong: #d3ccbe; }
+.dark { --line-strong: #413c36; }
 
 /* ---------- Reset / base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
@@ -115,12 +203,15 @@ p:last-child { margin-bottom: 0; }
   letter-spacing: -.005em;
 }
 
+/* Etykieta techniczna: nadtytuł sekcji, kategoria na karcie, nagłówek kolumny
+   w stopce. Krój maszynowy odróżnia ją od treści bez sięgania po kolor. */
 .label {
+  font-family: var(--mono);
   font-size: .6875rem;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-3);
 }
 
 .muted { color: var(--ink-soft); }
@@ -152,19 +243,19 @@ p:last-child { margin-bottom: 0; }
 
 /* ---------- Buttons ---------- */
 .btn {
-  --btn-bg: var(--accent);
-  --btn-fg: var(--on-accent);
-  --btn-bd: var(--accent);
+  --b-bg: var(--btn-bg);
+  --b-fg: var(--btn-ink);
+  --b-bd: var(--btn-bg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   height: 44px;
   padding-inline: 22px;
-  border: 1px solid var(--btn-bd);
+  border: 1px solid var(--b-bd);
   border-radius: var(--r-pill);
-  background: var(--btn-bg);
-  color: var(--btn-fg);
+  background: var(--b-bg);
+  color: var(--b-fg);
   font-size: .9375rem;
   font-weight: 500;
   letter-spacing: -.01em;
@@ -172,15 +263,15 @@ p:last-child { margin-bottom: 0; }
   white-space: nowrap;
   transition: background .18s ease, border-color .18s ease, color .18s ease, opacity .18s ease;
 }
-.btn:hover { --btn-bg: var(--accent-hover); --btn-bd: var(--accent-hover); }
+.btn:hover { --b-bg: var(--ink); --b-bd: var(--ink); }
 .btn:disabled { opacity: .35; cursor: not-allowed; }
 
 .btn-ghost {
-  --btn-bg: transparent;
-  --btn-fg: var(--ink);
-  --btn-bd: var(--line-strong);
+  --b-bg: transparent;
+  --b-fg: var(--ink);
+  --b-bd: var(--line-strong);
 }
-.btn-ghost:hover { --btn-bg: var(--bg-soft); --btn-bd: var(--ink); --btn-fg: var(--ink); }
+.btn-ghost:hover { --b-bg: var(--bg-soft); --b-bd: var(--ink); --b-fg: var(--ink); }
 
 .btn svg { width: 16px; height: 16px; flex: none; }
 .btn[aria-pressed="true"] svg { fill: currentColor; color: var(--sale); }
@@ -220,11 +311,16 @@ p:last-child { margin-bottom: 0; }
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: rgba(255, 255, 255, .82);
+  z-index: var(--z-header);
+  /* Tło z przezroczystością liczone z tokenu, nie wpisane na sztywno —
+     inaczej w ciemnym motywie nagłówek zostawał biały. */
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter: saturate(160%) blur(14px);
   -webkit-backdrop-filter: saturate(160%) blur(14px);
   border-bottom: 1px solid var(--line);
+}
+@supports not (background: color-mix(in srgb, red 50%, transparent)) {
+  .site-header { background: var(--bg); }
 }
 .header-inner {
   height: var(--header-h);
@@ -245,7 +341,7 @@ p:last-child { margin-bottom: 0; }
   width: 4px; height: 4px;
   margin-left: 3px;
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--accent);
   vertical-align: middle;
 }
 
@@ -271,6 +367,79 @@ p:last-child { margin-bottom: 0; }
 .nav a[aria-current="page"] { color: var(--ink); }
 
 .header-actions { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+
+/* ---------- Przełącznik motywu ---------- */
+/* 44×44 to minimalny cel dotykowy; ikona zostaje mała, klikalne jest pole. */
+.theme-toggle {
+  width: 44px; height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  border-radius: var(--r-pill);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: color .16s ease, background-color .16s ease;
+}
+.theme-toggle:hover { color: var(--ink); background: var(--bg-soft); }
+.theme-toggle svg { width: 18px; height: 18px; }
+
+/* ---------- Nawigacja na wąskim ekranie ---------- */
+.nav-burger {
+  display: none;
+  width: 44px; height: 44px;
+  place-items: center;
+  margin-left: -10px;
+  border: 0;
+  background: transparent;
+  border-radius: var(--r-pill);
+  color: var(--ink);
+  cursor: pointer;
+}
+.nav-burger svg { width: 20px; height: 20px; }
+
+.navsheet {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-drawer);
+  background: color-mix(in srgb, var(--ink) 34%, transparent);
+  animation: navsheet-tlo .2s ease;
+}
+.navsheet-panel {
+  height: 100%;
+  width: min(88vw, 360px);
+  padding: 20px var(--gutter) 32px;
+  background: var(--bg);
+  border-right: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  animation: navsheet-panel .28s cubic-bezier(.2, .7, .3, 1);
+}
+.navsheet-top {
+  height: calc(var(--header-h) - 20px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.navsheet-list { display: flex; flex-direction: column; }
+.navsheet-list a {
+  padding: 15px 0;
+  font-size: 1.125rem;
+  border-bottom: 1px solid var(--line);
+  transition: color .16s ease;
+}
+.navsheet-list a:hover { color: var(--accent); }
+
+@keyframes navsheet-tlo { from { opacity: 0 } }
+@keyframes navsheet-panel { from { translate: -18px 0; opacity: 0 } }
+
+@media (max-width: 760px) {
+  .nav { display: none; }
+  .nav-burger { display: grid; }
+  .header-inner { gap: 12px; }
+}
 
 .search {
   display: flex;
@@ -303,8 +472,8 @@ p:last-child { margin-bottom: 0; }
   height: 20px;
   padding-inline: 6px;
   border-radius: var(--r-pill);
-  background: var(--ink);
-  color: #fff;
+  background: var(--accent);
+  color: var(--bg);
   font-size: .6875rem;
   font-weight: 600;
   display: inline-grid;
@@ -482,7 +651,7 @@ select:hover { border-color: var(--line-strong); }
 .card-media-link svg {
   width: 44%;
   height: auto;
-  color: #bdb5a6;
+  color: var(--img-line);
   transition: transform .3s cubic-bezier(.2, .7, .3, 1), color .25s ease;
 }
 .card:hover .card-media-link svg { transform: scale(1.04); color: var(--ink-soft); }
@@ -496,7 +665,7 @@ select:hover { border-color: var(--line-strong); }
   place-items: center;
   border: 0;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, .92);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   color: var(--ink-faint);
   cursor: pointer;
   transition: color .2s ease, transform .2s ease;
@@ -519,7 +688,7 @@ select:hover { border-color: var(--line-strong); }
   align-items: center;
   padding-inline: 10px;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, .92);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   color: var(--sale);
   font-size: .6875rem;
   font-weight: 600;
@@ -555,10 +724,16 @@ select:hover { border-color: var(--line-strong); }
 
 .product {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 72px;
+  /* auto-fit zamiast sztywnych dwóch kolumn: przy wąskim oknie kolumny
+     schodzą pod siebie same, bez media query. */
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 56px;
   padding-bottom: clamp(56px, 7vw, 88px);
 }
+/* Domyślne `min-width: auto` na elemencie siatki nie pozwala mu zejść poniżej
+   szerokości treści — tabela specyfikacji rozpychała wtedy całą stronę
+   i pojawiał się poziomy pasek przewijania. */
+.product > * { min-width: 0; }
 .product-media {
   aspect-ratio: 1;
   border-radius: var(--r-lg);
@@ -566,7 +741,7 @@ select:hover { border-color: var(--line-strong); }
   display: grid;
   place-items: center;
 }
-.product-media svg { width: 38%; height: auto; color: #bdb5a6; }
+.product-media svg { width: 38%; height: auto; color: var(--img-line); }
 
 .product-info > * + * { margin-top: 18px; }
 .product-info h1 { margin: 6px 0 0; font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.25rem); }
@@ -588,7 +763,7 @@ select:hover { border-color: var(--line-strong); }
   content: "";
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: #3f8f5f;
+  background: var(--ok);
 }
 .stock.out::before { background: var(--sale); }
 
@@ -668,7 +843,7 @@ select:hover { border-color: var(--line-strong); }
   display: grid;
   place-items: center;
 }
-.cart-item-media svg { width: 44%; height: auto; color: #bdb5a6; }
+.cart-item-media svg { width: 44%; height: auto; color: var(--img-line); }
 .cart-item-title { font-weight: 500; letter-spacing: -.012em; }
 .cart-item-title:hover { text-decoration: underline; text-underline-offset: 3px; }
 .cart-item-meta { font-size: .8125rem; color: var(--ink-faint); margin-top: 2px; }
@@ -844,11 +1019,11 @@ select:hover { border-color: var(--line-strong); }
   gap: 10px;
   padding: 12px 20px;
   border-radius: var(--r-pill);
-  background: var(--ink);
-  color: #fff;
+  background: var(--btn-bg);
+  color: var(--btn-ink);
   font-size: .875rem;
   letter-spacing: -.01em;
-  box-shadow: 0 20px 40px -20px rgba(26, 24, 21, .5);
+  box-shadow: var(--shadow);
   opacity: 0;
   transition: transform .32s cubic-bezier(.2, .8, .2, 1), opacity .2s ease;
   z-index: 100;
@@ -908,8 +1083,8 @@ select:hover { border-color: var(--line-strong); }
   width: 24px; height: 24px;
   flex: none;
   border-radius: 50%;
-  background: var(--ink);
-  color: #fff;
+  background: var(--btn-bg);
+  color: var(--btn-ink);
   display: grid;
   place-items: center;
   font-size: .6875rem;
@@ -1164,8 +1339,8 @@ select:hover { border-color: var(--line-strong); }
   text-transform: uppercase;
   color: var(--ink-soft);
 }
-.pill-done { background: #e6ede7; color: #33613f; }
-.pill-way { background: #efe8dc; color: var(--sale); }
+.pill-done { background: var(--ok-soft); color: var(--ok-ink); }
+.pill-way { background: var(--accent-soft); color: var(--accent); }
 
 .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border-radius: var(--r); overflow: hidden; border: 1px solid var(--line); margin-bottom: 28px; }
 .stat { background: var(--surface); padding: 20px 22px; }
@@ -1213,7 +1388,7 @@ select:hover { border-color: var(--line-strong); }
   display: grid;
   place-items: center;
 }
-.admin-thumb svg { width: 50%; height: auto; color: #bdb5a6; }
+.admin-thumb svg { width: 50%; height: auto; color: var(--img-line); }
 .admin-name { font-weight: 500; letter-spacing: -.012em; }
 .admin-actions {
   grid-column: 2 / -1;
@@ -1338,7 +1513,7 @@ code {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(26, 24, 21, .28);
+  background: color-mix(in srgb, var(--ink) 28%, transparent);
   opacity: 0;
   transition: opacity .28s ease;
 }
@@ -1394,7 +1569,7 @@ code {
   border-radius: var(--r-sm);
   background: var(--bg-soft);
 }
-.drawer-item-media svg { width: 52%; height: auto; color: #bdb5a6; }
+.drawer-item-media svg { width: 52%; height: auto; color: var(--img-line); }
 .drawer-item-name { font-size: .9375rem; letter-spacing: -.012em; }
 .drawer-item-meta { font-size: .8125rem; color: var(--ink-faint); }
 .drawer-item-total { font-variant-numeric: tabular-nums; font-size: .9375rem; }
@@ -1470,7 +1645,7 @@ code {
   border-radius: var(--r);
   background: var(--bg-soft);
 }
-.quick-media svg { width: 46%; height: auto; color: #bdb5a6; }
+.quick-media svg { width: 46%; height: auto; color: var(--img-line); }
 .quick h2 { font-size: 1.35rem; margin-bottom: .2em; }
 .quick .specs { margin-top: 18px; }
 
@@ -1491,7 +1666,7 @@ code {
   gap: 8px;
   border: 0;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, .94);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
   color: var(--ink);
   font-size: .8125rem;
   font-weight: 500;
@@ -1708,7 +1883,7 @@ code {
   left: 0; right: 0; bottom: 0;
   z-index: 40;
   border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, .92);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(8px);
   transform: translateY(100%);
   transition: transform .3s cubic-bezier(.2, .7, .3, 1);
@@ -1744,7 +1919,7 @@ code {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .7), transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 70%, transparent), transparent);
   animation: skeleton-sweep 1.3s ease-in-out infinite;
 }
 .skeleton-media { aspect-ratio: 4 / 5; border-radius: var(--r); }
@@ -1781,3 +1956,112 @@ code {
 
 /* Obraz z next/image dostaje własne style inline — te dokładają kadrowanie */
 .media-img { object-fit: cover; }
+
+/* ---------- Strony informacyjne ---------- */
+.doc { max-width: 760px; padding-block: 48px 88px; }
+.doc h1 { margin: 6px 0 0; font-size: clamp(30px, 4vw, 44px); overflow-wrap: anywhere; }
+.doc-lead { margin: 14px 0 0; font-size: 1.0625rem; color: var(--ink-2); }
+
+.crumbs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: .6875rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.crumbs a { transition: color .16s ease; }
+.crumbs a:hover { color: var(--ink); }
+
+.doc-section { margin-top: 38px; padding-top: 26px; border-top: 1px solid var(--line); }
+.doc-section h2 { margin: 0 0 12px; font-size: 1.375rem; }
+.doc-section p { margin: 0 0 10px; color: var(--ink-2); }
+
+.doc-todo {
+  margin-top: 30px;
+  padding: 20px 22px;
+  border-radius: var(--r);
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.doc-todo ul { margin: 10px 0 0; padding-left: 18px; color: var(--ink-2); }
+.doc-todo li { margin-bottom: 6px; font-size: .9375rem; }
+
+.doc-links { display: grid; gap: 1px; margin-top: 30px; background: var(--line); border-radius: var(--r); overflow: hidden; }
+.doc-link { display: block; padding: 20px 22px; background: var(--surface); transition: background-color .16s ease; }
+.doc-link:hover { background: var(--panel); }
+.doc-link-title { display: block; font-weight: 500; }
+.doc-link-desc { display: block; margin-top: 4px; font-size: .875rem; color: var(--ink-2); }
+
+/* ---------- Blok zaufania pod przyciskiem zakupu ---------- */
+.trust { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
+.trust-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.trust-list li { display: flex; gap: 10px; align-items: flex-start; font-size: .9375rem; color: var(--ink-2); }
+.trust-list svg { width: 16px; height: 16px; flex: none; margin-top: 3px; color: var(--accent); }
+
+.trust-pay {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.trust-pay ul { list-style: none; display: flex; gap: 8px; margin: 0; padding: 0; flex-wrap: wrap; }
+.trust-pay li {
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  font-size: .8125rem;
+  color: var(--ink-2);
+}
+
+/* Plakietka rabatu — liczona z danych, nigdy wpisana ręcznie */
+.price-off {
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: .8125rem;
+  font-weight: 600;
+}
+
+/* Kropka dostępności */
+.stock { display: flex; align-items: center; gap: 8px; }
+.stock::before {
+  content: "";
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  flex: none;
+}
+.stock.out::before { background: var(--ink-3); }
+
+/* ---------- Cele dotykowe i wąskie ekrany ----------
+   Wymóg 44×44 px dotyczy wszystkiego, co się klika. Przyciski miały 38 px
+   wysokości, a hamburger dawał się ścisnąć do 32 px szerokości, bo siedzi
+   w kontenerze flex. */
+.nav-burger { flex: none; }
+.theme-toggle { flex: none; }
+.icon-btn { min-width: 44px; min-height: 44px; }
+.btn-sm { height: 44px; }
+
+@media (max-width: 460px) {
+  /* Przy tej szerokości nagłówek nie mieści logo, nawigacji i dwóch pigułek
+     z podpisami. Podpisy znikają — ikony i licznik zostają, bo one niosą
+     informację. */
+  .header-inner { gap: 8px; }
+  .header-actions { gap: 4px; }
+  .cart-btn { padding-inline: 12px; font-size: 0; gap: 0; }
+  .cart-btn .cart-count { font-size: .6875rem; }
+  .account-name { display: none; }
+  .account-btn { padding-inline: 10px; }
+}
+.btn { min-width: 44px; min-height: 44px; }
+.tab { min-height: 44px; }
+/* Serce i szybki podgląd na kafelku produktu — te same 44 px co reszta. */
+.wish-btn, .card-quick { min-width: 44px; min-height: 44px; }
