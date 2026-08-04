@@ -69,9 +69,16 @@ export function AccountMenu({ user }: { user: SessionUser | null }) {
           <Icon name="heart" /> Lista życzeń
         </Link>
         {user.role === 'admin' && (
-          <Link href="/panel">
-            <Icon name="grid" /> Panel produktów
-          </Link>
+          <>
+            {/* Magazyn wyżej niż katalog: pakowanie to codzienność,
+                edycja produktów zdarza się raz na jakiś czas. */}
+            <Link href="/magazyn">
+              <Icon name="box" /> Magazyn
+            </Link>
+            <Link href="/panel">
+              <Icon name="grid" /> Panel produktów
+            </Link>
+          </>
         )}
         <div className="menu-sep" />
         {/* Wylogowanie idzie Server Action: ciasteczko sesji kasuje serwer,

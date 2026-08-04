@@ -146,6 +146,27 @@ export async function getOrders(): Promise<Order[]> {
 }
 
 /**
+ * Zamówienia do obsłużenia w magazynie: opłacone i jeszcze niewysłane,
+ * najstarsze na górze — kolejka pakowania, a nie historia sklepu.
+ *
+ * Filtr idzie do bazy, nie do przeglądarki. Telefon ma ściągnąć dwadzieścia
+ * wierszy, a nie cały rok sprzedaży, żeby wybrać z nich pięć.
+ */
+export async function getOrdersToPack(): Promise<Order[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, order_items(*)')
+    .in('status', ['nowe', 'w realizacji'])
+    .neq('payment_status', 'zwrócone')
+    .order('created_at', { ascending: true })
+    .limit(50);
+
+  if (error || !data) return [];
+  return data.map((row) => toOrder(row as OrderRow));
+}
+
+/**
  * Jedno zamówienie po numerze. RLS oddaje je właścicielowi albo zapleczu —
  * zamówienia gościa nie zobaczy nikt inny, więc strona potwierdzenia musi
  * umieć pokazać sam numer.

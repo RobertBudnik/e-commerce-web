@@ -2094,3 +2094,97 @@ code {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ---------- Magazyn ----------
+   Widok pod kciuk: jedna kolumna, duże cele, wszystko czytelne przy
+   wyciągniętej ręce nad kartonem. Na biurku ta sama lista, szersza. */
+.magazyn { padding-block: 28px 96px; max-width: 720px; }
+.magazyn-top { margin-bottom: 22px; }
+.magazyn-top h1 { margin: 6px 0 4px; font-size: clamp(28px, 6vw, 40px); }
+.magazyn-licznik { color: var(--ink-2); font-size: .9375rem; }
+.magazyn-pusto {
+  padding: 40px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  color: var(--ink-2);
+  text-align: center;
+}
+.magazyn-lista { display: grid; gap: 14px; }
+
+.pack {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  overflow: hidden;
+}
+.pack-done { opacity: .55; }
+
+.pack-head {
+  width: 100%;
+  min-height: 64px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.pack-head-main { display: grid; gap: 3px; min-width: 0; }
+.pack-nr { font-size: .8125rem; color: var(--ink-3); }
+.pack-customer {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pack-head-side { display: grid; gap: 5px; justify-items: end; flex: none; }
+
+.pack-status {
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  font-size: .6875rem;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  background: var(--panel);
+  color: var(--ink-2);
+}
+.pack-status-nowe { background: var(--accent-soft); color: var(--accent); }
+.pack-status-wysłane { background: var(--ok-soft); color: var(--ok-ink); }
+
+.pack-warn {
+  margin: 0;
+  padding: 9px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: .875rem;
+}
+.pack-warn svg { width: 15px; height: 15px; flex: none; }
+
+.pack-body { padding: 4px 16px 14px; border-top: 1px solid var(--line); }
+.pack-items { list-style: none; margin: 0 0 14px; padding: 0; }
+.pack-items li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .9375rem;
+}
+.pack-qty { color: var(--ink-3); flex: none; min-width: 2.5ch; }
+.pack-item-name { flex: 1; min-width: 0; }
+
+.pack-meta { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: .875rem; }
+.pack-meta dt { color: var(--ink-3); font-family: var(--mono); font-size: .6875rem; text-transform: uppercase; letter-spacing: .1em; padding-top: 3px; }
+.pack-meta dd { margin: 0; overflow-wrap: anywhere; }
+.pack-meta a { text-decoration: underline; text-decoration-color: var(--line-strong); }
+
+.pack-error { margin: 0; padding: 10px 16px; color: var(--accent); font-size: .875rem; }
+.pack-cta { border-radius: 0; height: 52px; }
