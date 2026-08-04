@@ -1,0 +1,24 @@
+{
+  "source": "/Users/robert/e-commerce-web/ios/NordoMagazyn/Sources/MagazynView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Brak połączenia",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 22
+        }
+      },
+      {
+        "comment": "",
+        "key": "Spróbuj ponownie",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 28
+        }
+      }
+    ]
+  },
+  "version": 1
+}

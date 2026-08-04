@@ -1,0 +1,2 @@
+Target dependency graph (1 target)
+Target 'NordoMagazyn' in project 'NordoMagazyn' (no dependencies)
