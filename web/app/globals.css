@@ -2396,3 +2396,87 @@ code {
    każdy piksel wysokości to jedna pozycja więcej na liście. */
 .w-aplikacji .magazyn { padding-block: 12px 24px; }
 .w-aplikacji .magazyn-top h1 { font-size: 30px; }
+
+/* ---------- Treść w powłoce: konwencje iOS ----------
+   Poza paskiem zakładek o „stronie" zdradzały trzy rzeczy: szeryfowy
+   nagłówek, karty pływające na tle z marginesem dookoła oraz nadtytuł
+   powtarzający to, co i tak pisze na zakładce. */
+
+/* Krój systemowy. San Francisco na iOS wygląda jak wszystko inne na tym
+   telefonie — a to jest cała różnica między aplikacją a witryną. */
+.w-aplikacji .magazyn,
+.w-aplikacji .magazyn h1,
+.w-aplikacji .magazyn h2 {
+  font-family: -apple-system, BlinkMacSystemFont, var(--sans);
+}
+.w-aplikacji .magazyn h1 {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -.022em;
+  line-height: 1.1;
+}
+
+/* Nadtytuł „MAGAZYN" znika: zakładka na dole mówi to samo, tylko czytelniej. */
+.w-aplikacji .magazyn-top .label { display: none; }
+.w-aplikacji .magazyn-top { margin-bottom: 16px; }
+.w-aplikacji .magazyn-licznik { margin-top: 2px; font-size: .9375rem; }
+
+/* Lista grupowana zamiast kart z odstępami: rzędy stykają się, rozdziela je
+   hairline, a zaokrąglenie zostaje tylko na krawędziach grupy. Tak wyglądają
+   listy w Ustawieniach i w każdej aplikacji trzymającej się konwencji. */
+.w-aplikacji .magazyn { padding-inline: 0; }
+.w-aplikacji .magazyn-top,
+.w-aplikacji .magazyn-pusto { margin-inline: var(--gutter); }
+
+.w-aplikacji .stock-lista,
+.w-aplikacji .magazyn-lista {
+  gap: 0;
+  border-block: 1px solid var(--line);
+  background: var(--surface);
+}
+.w-aplikacji .stock-row,
+.w-aplikacji .pack {
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+}
+.w-aplikacji .stock-row:last-child,
+.w-aplikacji .pack:last-child { border-bottom: 0; }
+
+.w-aplikacji .stock-head,
+.w-aplikacji .pack-head { padding-inline: var(--gutter); }
+.w-aplikacji .stock-edit,
+.w-aplikacji .pack-body,
+.w-aplikacji .pack-warn,
+.w-aplikacji .stock-flag { padding-inline: var(--gutter); }
+
+/* Pasek zakładek zasłaniałby ostatni wiersz. Bez tego zapasu ostatnia paczka
+   w kolejce jest zawsze tą, do której nie da się dosięgnąć. */
+.w-aplikacji .magazyn { padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
+
+/* Skaner dostaje pełną szerokość kadru — obraz z kamery na marginesie
+   wygląda jak osadzony film, a ma wyglądać jak celownik. */
+.w-aplikacji .skan { padding-inline: var(--gutter); }
+.w-aplikacji .skan-okno { margin-inline: calc(var(--gutter) * -1); border-radius: 0; border-inline: 0; }
+
+/* Oznaczenie braków przetrwało w liście grupowanej: pasek wraca przy lewej
+   krawędzi rzędu. Bez niego widok stanów traci to, po co się go otwiera. */
+.w-aplikacji .stock-brak { border-left: 3px solid var(--accent); }
+.w-aplikacji .stock-niski { border-left: 3px solid var(--ink-3); }
+.w-aplikacji .stock-brak .stock-head,
+.w-aplikacji .stock-niski .stock-head { padding-left: calc(var(--gutter) - 3px); }
+
+/* Podpowiedź instalacji dotyczy skrótu w Safari. W natywnej powłoce jest
+   bezsensowna — użytkownik już jest w aplikacji. */
+.w-aplikacji .install-hint { display: none; }
+
+/* Przycisk akcji w liście grupowanej: wcięty, z zaokrągleniem, zamiast pasa
+   na całą szerokość. Pas rozcinał listę na kawałki i przy przewijaniu
+   wyglądał jak koniec sekcji, a nie jak akcja dla jednego zamówienia. */
+.w-aplikacji .pack-cta {
+  height: 48px;
+  margin: 0 var(--gutter) 14px;
+  width: calc(100% - var(--gutter) * 2);
+  border-radius: var(--r-pill);
+}
