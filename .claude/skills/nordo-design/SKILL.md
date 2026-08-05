@@ -6,24 +6,60 @@ description: Design system i reguły ruchu sklepu Nordo — tokeny, komponenty, 
 # Nordo — design i ruch
 
 Sklep na Next.js (App Router) w katalogu `web/`. Style w jednym pliku
-`web/app/globals.css` — bez Tailwinda i bez CSS-in-JS. Motyw wyłącznie jasny.
+`web/app/globals.css` — bez Tailwinda i bez CSS-in-JS. Dwa motywy: jasny
+i ciemny, przełączane klasą `dark` na `<html>`.
 Zmiany mają wyglądać, jakby były tu od początku.
+
+## Dwa motywy — reguła nadrzędna
+
+Wartości kolorów żyją **wyłącznie** w dwóch blokach na górze `globals.css`:
+`:root` (jasny) i `.dark` (ciemny). Reszta pliku sięga po nie przez `var()`,
+więc ciemny wariant nie wymaga ani jednej dodatkowej reguły w komponentach.
+
+- Nowy kolor = **dwa wpisy**, w `:root` i w `.dark`. Jeden wpis to usterka,
+  która wyjdzie dopiero po przełączeniu motywu.
+- Nigdy wartość koloru wprost w regule komponentu. Odwrócony kontrast
+  (jasny napis na ciemnym tle) pisze się `background: var(--ink); color: var(--bg)`
+  — nie `#fff`, bo w ciemnym motywie `--ink` jest jasny i biel znika.
+- Motyw wybiera skrypt blokujący w `web/app/layout.tsx` (zapis w
+  `localStorage` pod `nordo-theme`, w drugiej kolejności ustawienie systemu).
+  Zmiana palety wymaga też przejrzenia `viewport.themeColor` w tym samym pliku —
+  pasek stanu telefonu bierze kolor stamtąd, nie z CSS-a.
+- Przy przezroczystościach `color-mix(in srgb, var(--ink) 28%, transparent)`,
+  nie `rgba()` z liczbami — inaczej nakładka nie odwróci się w ciemności.
 
 ## Tokeny — używaj zmiennych, nigdy wartości wprost
 
+Nazwy podstawowe (jasny → ciemny):
+
 | grupa | zmienne |
 |---|---|
-| powierzchnie | `--bg` #fff, `--bg-soft` #f7f5f0, `--bg-sunken` #efeae1, `--beige` #f2ede4, `--surface` |
-| linie | `--line` #e9e4da, `--line-strong` #d9d2c5 |
-| tekst | `--ink` #1a1815, `--ink-soft` #57534c, `--ink-faint` #8d877d |
-| akcent | `--accent` (grafit), `--accent-hover` #000, `--on-accent` #fff, `--sale` #a2603f |
-| kształt | `--r-sm` 8, `--r` 14, `--r-lg` 20, `--r-pill` 999 |
+| powierzchnie | `--bg` #faf9f7 → #121110, `--surface` #fff → #1a1917, `--panel` #f2ede6 → #201e1b, `--bg-sunken` |
+| linie | `--line` #e2ddd3 → #302d29, `--line-strong` |
+| tekst | `--ink` #16150f → #f5f2ec, `--ink-2`, `--ink-3` (trzy stopnie nasycenia) |
+| akcent | `--accent` rdza `oklch(.52 .15 40)` → amber `oklch(.78 .13 72)`, `--accent-soft` |
+| przyciski | `--btn-bg`, `--btn-ink` — odwrócony kontrast wobec tła |
+| zdjęcia | `--img`, `--img-line` (kafel i kreskowanie zastępcze) |
+| status OK | `--ok`, `--ok-soft`, `--ok-ink` — dostępność i zamówienie zrealizowane |
+| kształt | `--radius` 14, `--radius-sm` 10; aliasy `--r`, `--r-sm`, `--r-lg` 20, `--r-pill` 999 |
 | cień | `--shadow` — tylko na interakcji, nigdy w stanie spoczynku |
 | układ | `--maxw` 1160, `--gutter` 28, `--header-h` 72 |
+| warstwy | `--z-header` 40, `--z-buybar` 60, `--z-drawer` 80, `--z-modal` 100, `--z-toast` 120 |
 
-Nowy kolor dokładasz wyłącznie jako token w `:root`. Terakota `--sale` to jedyny
-kolor poza monochromem — zostaje przy przecenach, cenach promocyjnych i sercu
-listy życzeń. Zieleń i czerwień z palety systemowej są zakazane.
+Blok „Aliasy zgodności" mapuje stare nazwy na nowe: `--bg-soft`/`--beige` →
+`--panel`, `--ink-soft` → `--ink-2`, `--ink-faint` → `--ink-3`, `--on-accent` →
+`--btn-ink`, `--sale` → `--accent`. W nowym kodzie pisz nazwami bazowymi;
+aliasy zostają dla trzystu istniejących odwołań.
+
+Uwaga na przesunięcie znaczeń: dawny `--accent` był grafitem tła przycisków —
+dziś to `--btn-bg`. `--accent` to rdza/amber, czyli dawny `--sale`: przeceny,
+gwiazdki, kropka w logo, aktywne obramowania.
+
+`--ok` to jedyna zieleń w palecie i jedyny kolor statusu. Poza `--accent`
+i `--ok` paleta jest monochromatyczna. Czerwień systemowa jest zakazana —
+błąd niesie treść komunikatu, nie kolor.
+
+Nigdy nie warto pisać `z-index` liczbą — pasek zakupu wylądowałby nad modalem.
 
 ## Zasady wizualne
 
@@ -34,22 +70,27 @@ listy życzeń. Zieleń i czerwień z palety systemowej są zakazane.
   (modal, szuflada, pasek przyklejony).
 - **Promienie**: pola i przyciski w pigułkach (`--r-pill`), kafle i karty `--r`,
   duże panele `--r-lg`.
-- **Mikroetykiety**: `.label` — uppercase, `letter-spacing: .14em`, `--ink-faint`.
+- **Mikroetykiety**: `.label` — krój maszynowy, uppercase,
+  `letter-spacing: .14em`, `--ink-3`. Odróżnia etykietę od treści bez koloru.
 - **Liczby**: `font-variant-numeric: tabular-nums` (klasa `.num`) wszędzie, gdzie
   wartość się zmienia — ceny, liczniki, sumy.
+- **Fokus**: `:focus-visible` ma globalny obrys `1.5px solid var(--ink)` z
+  `outline-offset: 3px`. Nie kasuj go w komponencie.
 
-## Typografia — dwa kroje
+## Typografia — trzy kroje
 
 | rola | krój | zmienna | gdzie |
 |---|---|---|---|
-| display | **Fraunces** (zmienny, `opsz` 9–144) | `--display` | `h1`, `h2`, `.logo` |
-| interfejs | **Inter** | `--sans` | reszta: `h3`, tabele, przyciski, pola, ceny |
+| display | **Instrument Serif** (400) | `--display` | `h1`, `h2`, `.logo` |
+| interfejs | **Instrument Sans** (400/500/600) | `--sans` | reszta: `h3`, tabele, przyciski, pola, ceny |
+| etykiety | **IBM Plex Mono** (400) | `--mono` | `.label`: nadtytuły, kategoria na karcie, nagłówki kolumn w stopce |
 
 - Nagłówki szeryfowe: waga 400, `letter-spacing: -.012em`, `line-height: 1.08`.
   Nie ściskaj trackingu mocniej — serif zlepia się na zakończeniach liter.
-- Nagłówki użytkowe (panel konta, podsumowanie, szuflada, karta w modalu)
-  zostają przy Interze: w rozmiarach ~1 rem serif tylko szumi.
-- Podmiana kroju = zmiana `--display` w `:root` plus krój z `next/font` w
+- Nagłówki użytkowe (`.panel h2`, `.summary h2`, `.drawer-head h2`,
+  `.card-box h3`, `.quick h2`) zostają przy groteskach: w rozmiarach ~1 rem
+  serif tylko szumi. Dokładając taki nagłówek, dopisz jego selektor do tej listy.
+- Podmiana kroju = zmiana zmiennej w bloku aliasów plus krój z `next/font` w
   `web/app/layout.tsx`. Wymóg twardy: subset **latin-ext** (ą ć ę ł ń ó ś ź ż).
 
 ## Ruch
@@ -127,5 +168,8 @@ poza obszarem.
 - karuzeli z autoprzewijaniem, licznika odliczającego promocję, wyskakującego
   popupu z rabatem — to nie ten sklep
 - gradientów, neonów, kolorowych cieni
+- koloru wpisanego wprost w regule komponentu ani `rgba()` z liczbami —
+  jedno i drugie przeżyje przełączenie motywu i będzie świecić
+- `z-index` liczbą zamiast tokenu warstwy
 - animacji dłuższych niż 400 ms i opóźnień większych niż 300 ms
 - `!important` (poza istniejącą regułą reduced-motion)
