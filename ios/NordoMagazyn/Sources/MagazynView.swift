@@ -52,7 +52,6 @@ struct MagazynView: View {
         TabView(selection: $wybrana) {
             ForEach(Zakladka.allCases, id: \.self) { zakladka in
                 WebTab(url: zakladka.url)
-                    .ignoresSafeArea(edges: .top)
                     .tabItem {
                         Label(zakladka.etykieta, systemImage: zakladka.ikona)
                     }

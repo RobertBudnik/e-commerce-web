@@ -2480,3 +2480,16 @@ code {
   width: calc(100% - var(--gutter) * 2);
   border-radius: var(--r-pill);
 }
+
+/* Krój systemowy obowiązuje w całej powłoce, nie tylko w magazynie —
+   ekran logowania też jest częścią aplikacji. */
+.w-aplikacji body,
+.w-aplikacji h1,
+.w-aplikacji h2,
+.w-aplikacji h3 {
+  font-family: -apple-system, BlinkMacSystemFont, var(--sans);
+}
+.w-aplikacji h1 { font-weight: 700; letter-spacing: -.022em; }
+
+/* Pasek stanu telefonu: treść musi zaczynać się pod zegarem, nie za nim. */
+.w-aplikacji main { padding-top: max(12px, env(safe-area-inset-top)); }

@@ -123,9 +123,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <CartProvider>
           <WishlistProvider signedIn={Boolean(user)}>
-            {!magazyn && <SiteHeader user={user} />}
+            {!magazyn && !wAplikacji && <SiteHeader user={user} />}
             {children}
-            {!magazyn && <SiteFooter />}
+            {!magazyn && !wAplikacji && <SiteFooter />}
             <MiniCart />
             <QuickViewHost />
             <ToastHost />

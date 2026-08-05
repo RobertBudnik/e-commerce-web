@@ -27,8 +27,8 @@ export default async function LoginPage({
           <span className="label">Konto</span>
           <h1>Zaloguj się</h1>
           <p className="lede">
-            Hasło leci prosto do Supabase Auth i nigdzie po stronie przeglądarki nie jest
-            zapisywane. Sesję trzyma ciasteczko ustawiane przez serwer.
+            Zaloguj się, żeby zobaczyć swoje zamówienia, zapisane adresy i listę
+            życzeń. Hasła nie przechowujemy — sprawdzamy je i od razu zapominamy.
           </p>
           <AuthTabs
             defaultTab={tryb === 'rejestracja' ? 'register' : 'login'}
@@ -39,7 +39,7 @@ export default async function LoginPage({
 
       <aside className="auth-aside">
         <div>
-          <blockquote>Konto trzyma zamówienia, adres i listę życzeń — nie przeglądarka.</blockquote>
+          <blockquote>Zamówienia, adresy i lista życzeń czekają na koncie — także po zmianie urządzenia.</blockquote>
           <cite>Nordo</cite>
           <ul className="auth-perks">
             <li>
