@@ -42,7 +42,7 @@
     "overrides" : {
       "commandLine" : {
         "table" : {
-
+          "NORDO_URL" : "http://192.168.1.81:3000/magazyn"
         }
       },
       "synthesized" : {

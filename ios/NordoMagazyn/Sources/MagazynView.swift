@@ -122,16 +122,17 @@ struct WebView: UIViewRepresentable {
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
 
+        // Znacznik doklejany publicznym API: WebKit sam dopisze go do
+        // standardowego User-Agenta. Wcześniej szedł tu odczyt przez KVC,
+        // który potrafi zwrócić pusto i wtedy serwer nie rozpoznawał powłoki.
+        config.applicationNameForUserAgent = "NordoApp/1.0"
+
         let web = WKWebView(frame: .zero, configuration: config)
         web.navigationDelegate = context.coordinator
         web.allowsBackForwardNavigationGestures = true
         web.isOpaque = false
         web.backgroundColor = .clear
         web.scrollView.backgroundColor = .clear
-        // Znacznik w User-Agencie: serwer po nim poznaje, że treść jedzie do
-        // aplikacji, i chowa elementy, które w niej dublują natywny interfejs.
-        web.customUserAgent = (web.value(forKey: "userAgent") as? String ?? "") + " NordoApp/1.0"
-
         // Odświeżanie gestem — odruch każdego, kto trzyma telefon
         let odswiez = UIRefreshControl()
         odswiez.addTarget(context.coordinator, action: #selector(Coordinator.odswiez(_:)), for: .valueChanged)
