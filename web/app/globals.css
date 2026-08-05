@@ -2366,3 +2366,33 @@ code {
   cursor: pointer;
 }
 .skan-korekta button:active { background: var(--bg-soft); }
+
+/* ---------- Widok wewnątrz natywnej powłoki ----------
+   Aplikacja rysuje własny pasek zakładek na dole, więc ten z HTML-u znika.
+   Reszta reguł ścina zachowania, po których widać przeglądarkę: zaznaczanie
+   tekstu przy przytrzymaniu, menu kontekstowe na linkach, podświetlenie
+   tapnięcia i sprężynowanie przy krawędzi. */
+.w-aplikacji .mag-nav { display: none; }
+
+.w-aplikacji body,
+.w-aplikacji .magazyn {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+
+/* Numery zamówień i kody trzeba dać się skopiować — to jedyne miejsca,
+   gdzie zaznaczanie ma sens. */
+.w-aplikacji .pack-nr,
+.w-aplikacji .skan-kod,
+.w-aplikacji .pack-meta dd {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Nagłówek widoku bliżej góry: pasek stanu telefonu daje już oddech, a
+   każdy piksel wysokości to jedna pozycja więcej na liście. */
+.w-aplikacji .magazyn { padding-block: 12px 24px; }
+.w-aplikacji .magazyn-top h1 { font-size: 30px; }

@@ -107,11 +107,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   // Magazyn to osobne narzędzie, nie mobilna odmiana sklepu. Nagłówek
   // z koszykiem i stopka z regulaminem tylko zabierałyby tam miejsce.
-  const sciezka = (await headers()).get('x-nordo-path') ?? '';
+  const naglowki = await headers();
+  const sciezka = naglowki.get('x-nordo-path') ?? '';
   const magazyn = sciezka.startsWith('/magazyn');
 
+  // Treść jedzie do natywnej powłoki? Wtedy pasek zakładek jest już na dole
+  // ekranu, narysowany przez system — powtarzanie go w HTML-u byłoby dublem.
+  const wAplikacji = (naglowki.get('user-agent') ?? '').includes('NordoApp');
+
   return (
-    <html lang="pl" className={`${display.variable} ${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang="pl" className={`${display.variable} ${sans.variable} ${mono.variable}${wAplikacji ? ' w-aplikacji' : ''}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SKRYPT_MOTYWU }} />
       </head>
