@@ -43,7 +43,28 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     data: { session },
   } = await supabase.auth.getSession();
 
-  return toSessionUser(user, session ? decodeClaims(session.access_token) : {});
+  const claims = session ? decodeClaims(session.access_token) : {};
+
+  // Rola normalnie przyjeżdża claimem, bez pytania bazy przy każdym renderze.
+  // Gdy hook nie jest włączony w projekcie, claimu nie ma i całe zaplecze
+  // wyglądałoby jak konto klienta — łącznie z właścicielem. Wtedy, i tylko
+  // wtedy, dopytujemy tabelę ról. Ten sam wariant awaryjny ma po swojej
+  // stronie `current_role_name()` w bazie.
+  if (!claims.user_role) {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+
+    const kolejnosc = ['owner', 'manager', 'staff', 'customer'];
+    const najwyzsza = (data ?? [])
+      .map((r) => String(r.role))
+      .sort((a, b) => kolejnosc.indexOf(a) - kolejnosc.indexOf(b))[0];
+
+    if (najwyzsza) claims.user_role = najwyzsza;
+  }
+
+  return toSessionUser(user, claims);
 });
 
 /**
