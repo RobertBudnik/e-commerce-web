@@ -12,7 +12,13 @@ import { sessionCookieOptions } from './cookie-options';
 const GUARDED = ['/konto', '/panel'];
 
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  // Ścieżka dopisana do nagłówków ŻĄDANIA, nie odpowiedzi — komponent
+  // serwerowy czyta przez headers() to, co przyszło, a nie to, co wyjdzie.
+  // Dzięki temu layout wie, że renderuje magazyn, i pomija chrom sklepu.
+  const naglowki = new Headers(request.headers);
+  naglowki.set('x-nordo-path', request.nextUrl.pathname);
+
+  let response = NextResponse.next({ request: { headers: naglowki } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -9,6 +9,7 @@ import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { WishlistProvider } from '@/components/product/WishlistProvider';
+import { headers } from 'next/headers';
 import { getSessionUser } from '@/lib/queries';
 import { siteUrl } from '@/lib/site';
 
@@ -104,6 +105,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // dodatkowego zapytania, a token weryfikuje Auth, nie przeglądarka.
   const user = await getSessionUser();
 
+  // Magazyn to osobne narzędzie, nie mobilna odmiana sklepu. Nagłówek
+  // z koszykiem i stopka z regulaminem tylko zabierałyby tam miejsce.
+  const sciezka = (await headers()).get('x-nordo-path') ?? '';
+  const magazyn = sciezka.startsWith('/magazyn');
+
   return (
     <html lang="pl" className={`${display.variable} ${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
@@ -112,9 +118,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <CartProvider>
           <WishlistProvider signedIn={Boolean(user)}>
-            <SiteHeader user={user} />
+            {!magazyn && <SiteHeader user={user} />}
             {children}
-            <SiteFooter />
+            {!magazyn && <SiteFooter />}
             <MiniCart />
             <QuickViewHost />
             <ToastHost />
