@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { InstallHint } from '@/components/magazyn/InstallHint';
+import { MagazynNav } from '@/components/magazyn/MagazynNav';
 import { PackCard } from '@/components/magazyn/PackCard';
 import { getOrdersToPack, getSessionUser } from '@/lib/queries';
 
@@ -38,6 +39,8 @@ export default async function Magazyn() {
             : `${zamowienia.length} w kolejce${nowe ? ` · ${nowe} nowych` : ''}`}
         </p>
       </header>
+
+      <MagazynNav aktywny="zamowienia" />
 
       <InstallHint />
 

@@ -146,6 +146,26 @@ export async function getOrders(): Promise<Order[]> {
 }
 
 /**
+ * Stany magazynowe: najpierw to, czego brakuje.
+ *
+ * Sortowanie rosnąco po ilości, nie alfabetycznie — magazynier otwiera ten
+ * widok, żeby zobaczyć, co się kończy, a nie żeby przeglądać katalog.
+ * Produkty wycofane pomijamy: ich stan nikogo nie obchodzi.
+ */
+export async function getStockLevels(): Promise<Product[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .order('stock', { ascending: true })
+    .order('name', { ascending: true });
+
+  if (error || !data) return [];
+  return data.map((row) => toProduct(row as ProductRow, imageUrl));
+}
+
+/**
  * Zamówienia do obsłużenia w magazynie: opłacone i jeszcze niewysłane,
  * najstarsze na górze — kolejka pakowania, a nie historia sklepu.
  *
