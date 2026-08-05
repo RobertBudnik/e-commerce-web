@@ -10,6 +10,13 @@ const supabaseUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.
 
 const nextConfig: NextConfig = {
   /**
+   * Wskaźnik trybu deweloperskiego. Widok magazynu jest podawany do natywnej
+   * powłoki, gdzie ta plakietka wygląda jak element aplikacji, a nie jak
+   * narzędzie — i zasłania nagłówek ekranu logowania.
+   */
+  devIndicators: false,
+
+  /**
    * Katalog wyjściowy z możliwością podmiany. `npm run build` używa
    * `.next-build`, żeby produkcyjny build nie deptał katalogu `.next`
    * działającego serwera deweloperskiego — inaczej dev szuka chunków,
@@ -19,7 +26,24 @@ const nextConfig: NextConfig = {
   experimental: {
     // Zdjęcia produktów idą przez Server Action; domyślny limit 1 MB
     // odrzucałby wszystko powyżej miniatury. Kubełek i tak tnie na 5 MB.
-    serverActions: { bodySizeLimit: '6mb' },
+    serverActions: {
+      bodySizeLimit: '6mb',
+      /**
+       * Akcje serwerowe są odrzucane, gdy żądanie przychodzi spod adresu
+       * spoza listy — to zabezpieczenie przed wywołaniem ich z obcej strony.
+       * Aplikacja na telefonie łączy się z serwerem deweloperskim po adresie
+       * z sieci lokalnej, więc bez tego wpisu logowanie odbija komunikatem
+       * „An unexpected response was received from the server".
+       *
+       * Zakres celowo wąski: wyłącznie adresy prywatne. Produkcja chodzi na
+       * własnej domenie i z tej listy nie korzysta.
+       */
+      allowedOrigins: [
+        'localhost:3000',
+        '127.0.0.1:3000',
+        '192.168.1.81:3000',
+      ],
+    },
   },
   images: {
     remotePatterns: [

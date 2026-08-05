@@ -6,6 +6,48 @@
 	<integer>12</integer>
 	<key>logs</key>
 	<dict>
+		<key>5D7A6FB9-B1A2-41E1-97B7-35F4F9F765D1</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>5D7A6FB9-B1A2-41E1-97B7-35F4F9F765D1.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>NordoMagazyn project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>NordoMagazyn</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Building project NordoMagazyn with scheme NordoMagazyn</string>
+			<key>timeStartedRecording</key>
+			<real>807593005.98889804</real>
+			<key>timeStoppedRecording</key>
+			<real>807593010.12629104</real>
+			<key>title</key>
+			<string>Building project NordoMagazyn with scheme NordoMagazyn</string>
+			<key>uniqueIdentifier</key>
+			<string>5D7A6FB9-B1A2-41E1-97B7-35F4F9F765D1</string>
+		</dict>
 		<key>B5C1E2FB-73A0-4E5A-BAD6-61A82F5BBC95</key>
 		<dict>
 			<key>className</key>

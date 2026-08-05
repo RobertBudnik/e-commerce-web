@@ -45,20 +45,40 @@ private enum Zakladka: String, CaseIterable {
 /// nawigacja zachowuje się jak w każdej aplikacji na iOS — gest przesunięcia,
 /// zapamiętana pozycja w każdej zakładce, pasek nad obszarem gestów — a
 /// jednocześnie zmiana w magazynie nie wymaga wgrywania aplikacji od nowa.
+///
+/// Przed zalogowaniem pasek się nie pokazuje: każda zakładka odbijałaby wtedy
+/// na ten sam ekran logowania, a trzy drogi do jednego miejsca to nie wybór,
+/// tylko zamieszanie.
 struct MagazynView: View {
     @State private var wybrana: Zakladka = .pakowanie
+    @State private var zalogowany = false
 
     var body: some View {
-        TabView(selection: $wybrana) {
-            ForEach(Zakladka.allCases, id: \.self) { zakladka in
-                WebTab(url: zakladka.url)
-                    .tabItem {
-                        Label(zakladka.etykieta, systemImage: zakladka.ikona)
+        Group {
+            if zalogowany {
+                TabView(selection: $wybrana) {
+                    ForEach(Zakladka.allCases, id: \.self) { zakladka in
+                        WebTab(url: zakladka.url, naSciezke: sprawdzDostep)
+                            .tabItem {
+                                Label(zakladka.etykieta, systemImage: zakladka.ikona)
+                            }
+                            .tag(zakladka)
                     }
-                    .tag(zakladka)
+                }
+            } else {
+                WebTab(url: Zakladka.pakowanie.url, naSciezke: sprawdzDostep)
             }
         }
         .tint(Color(red: 0.62, green: 0.29, blue: 0.13))
+        .animation(.easeInOut(duration: 0.2), value: zalogowany)
+    }
+
+    /// Stan logowania czytamy z adresu, pod którym wylądował widok. Serwer
+    /// odsyła nieuprawnionych na /logowanie, więc to on pozostaje jedynym
+    /// źródłem prawdy — aplikacja niczego nie ocenia po swojemu.
+    private func sprawdzDostep(_ sciezka: String) {
+        let wMagazynie = sciezka.hasPrefix("/magazyn")
+        if wMagazynie != zalogowany { zalogowany = wMagazynie }
     }
 }
 
@@ -66,12 +86,13 @@ struct MagazynView: View {
 /// przewijania. Przełączanie zakładek nie przeładowuje treści.
 private struct WebTab: View {
     let url: URL
+    var naSciezke: ((String) -> Void)? = nil
     @State private var laduje = true
     @State private var blad: String?
 
     var body: some View {
         ZStack {
-            WebView(url: url, laduje: $laduje, blad: $blad)
+            WebView(url: url, laduje: $laduje, blad: $blad, naSciezke: naSciezke)
 
             if let blad {
                 // Magazyn bez sieci jest bezużyteczny — nieaktualny status
@@ -112,6 +133,7 @@ struct WebView: UIViewRepresentable {
     let url: URL
     @Binding var laduje: Bool
     @Binding var blad: String?
+    var naSciezke: ((String) -> Void)? = nil
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -164,6 +186,7 @@ struct WebView: UIViewRepresentable {
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             rodzic.laduje = false
             webView.scrollView.refreshControl?.endRefreshing()
+            if let sciezka = webView.url?.path { rodzic.naSciezke?(sciezka) }
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {

@@ -2493,3 +2493,22 @@ code {
 
 /* Pasek stanu telefonu: treść musi zaczynać się pod zegarem, nie za nim. */
 .w-aplikacji main { padding-top: max(12px, env(safe-area-inset-top)); }
+
+/* ---------- Logowanie w powłoce ----------
+   To pierwszy ekran aplikacji, więc dostaje własny układ: jedna kolumna,
+   treść wyśrodkowana w pionie, duże pola. Kolumna z korzyściami z wersji
+   sklepowej znika — kto instaluje aplikację magazynową, jest już
+   przekonany. */
+.w-aplikacji .auth { display: block; max-width: 420px; margin-inline: auto; }
+.w-aplikacji .auth-aside { display: none; }
+.w-aplikacji .auth h1 { font-size: 30px; margin-bottom: 6px; }
+
+.w-aplikacji .auth input {
+  min-height: 52px;
+  font-size: 17px;   /* poniżej 16 px Safari sam przybliża stronę przy wejściu w pole */
+}
+.w-aplikacji .auth .btn { height: 52px; }
+
+/* Nadtytuł „KONTO" nad logowaniem: w aplikacji zbędny, bo to jedyny ekran
+   przed wejściem — nie ma czego rozróżniać. */
+.w-aplikacji .auth .label { display: none; }
