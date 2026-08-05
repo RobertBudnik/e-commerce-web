@@ -200,6 +200,20 @@ export function AdminPanel({ products, categories }: { products: Product[]; cate
                 <input id="a-stock" name="stock" type="number" min="0" required defaultValue={editing?.stock ?? 0} />
               </div>
               <div className="field">
+                <label htmlFor="a-barcode">Kod kreskowy</label>
+                <input
+                  id="a-barcode"
+                  name="barcode"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="EAN z opakowania"
+                  defaultValue={editing?.barcode ?? ''}
+                />
+              </div>
+            </div>
+
+            <div className="field-row">
+              <div className="field">
                 <label htmlFor="a-badge">Plakietka</label>
                 <input
                   id="a-badge"

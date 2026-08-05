@@ -7,7 +7,7 @@
         "key": "Brak połączenia",
         "location": {
           "startingColumn": 26,
-          "startingLine": 22
+          "startingLine": 25
         }
       },
       {
@@ -15,7 +15,7 @@
         "key": "Spróbuj ponownie",
         "location": {
           "startingColumn": 28,
-          "startingLine": 28
+          "startingLine": 31
         }
       }
     ]

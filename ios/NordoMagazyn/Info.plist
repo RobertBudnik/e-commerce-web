@@ -6,6 +6,8 @@
        Tu plik jest pisany ręcznie, więc muszą być wprost — bez nich
        devicectl odrzuca paczkę jako nieprawidłową. -->
   <key>CFBundleDevelopmentRegion</key><string>pl</string>
+  <!-- Adres magazynu; podmieniany flagą NORDO_URL przy budowaniu -->
+  <key>NordoURL</key><string>$(NORDO_URL)</string>
   <key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
   <key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
@@ -19,6 +21,15 @@
   <key>UISupportedInterfaceOrientations</key>
   <array><string>UIInterfaceOrientationPortrait</string></array>
   <!-- Skanowanie kodów kreskowych przy kompletowaniu paczki -->
+  <!-- Serwer deweloperski w sieci lokalnej chodzi po HTTP, nie HTTPS.
+       Wyjątek dotyczy wyłącznie adresów prywatnych — produkcja idzie po
+       HTTPS i nie korzysta z tej furtki. -->
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSAllowsLocalNetworking</key><true/>
+  </dict>
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>Połączenie z serwerem magazynu w sieci lokalnej podczas pracy nad aplikacją.</string>
   <key>NSCameraUsageDescription</key>
   <string>Aparat służy do skanowania kodów kreskowych przy pakowaniu zamówień.</string>
 </dict>

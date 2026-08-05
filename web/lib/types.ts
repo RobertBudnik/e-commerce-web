@@ -11,6 +11,7 @@ export type Product = {
   rating: number;
   reviews: number;
   stock: number;
+  barcode: string | null;
   icon: string;
   badge: string | null;
   specs: Record<string, string>;

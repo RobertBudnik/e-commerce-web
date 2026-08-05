@@ -166,6 +166,25 @@ export async function getStockLevels(): Promise<Product[]> {
 }
 
 /**
+ * Produkt po kodzie kreskowym. Skaner pyta o to przy każdym odczycie, więc
+ * zapytanie jest wąskie i trafia w indeks częściowy z migracji.
+ */
+export async function getProductByBarcode(barcode: string): Promise<Product | null> {
+  const kod = barcode.trim();
+  if (!kod) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('barcode', kod)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return toProduct(data as ProductRow, imageUrl);
+}
+
+/**
  * Zamówienia do obsłużenia w magazynie: opłacone i jeszcze niewysłane,
  * najstarsze na górze — kolejka pakowania, a nie historia sklepu.
  *

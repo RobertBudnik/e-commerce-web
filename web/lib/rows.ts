@@ -17,6 +17,7 @@ export type ProductRow = {
   old_price_cents: number | null;
   currency?: string;
   stock: number;
+  barcode: string | null;
   rating: number | string;
   reviews_count: number;
   icon: string | null;

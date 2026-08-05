@@ -30,6 +30,7 @@ export function toProduct(
     rating: Number(row.rating ?? 0),
     reviews: row.reviews_count ?? 0,
     stock: row.stock ?? 0,
+    barcode: row.barcode ?? null,
     icon: row.icon ?? 'grid',
     badge: row.badge ?? null,
     specs: row.specs ?? {},

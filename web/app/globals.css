@@ -2207,7 +2207,7 @@ code {
 /* ---------- Magazyn: przełącznik widoków ---------- */
 .mag-nav {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   margin-bottom: 18px;
   padding: 4px;
@@ -2309,3 +2309,60 @@ code {
 .stock-podglad { margin: 0; text-align: center; color: var(--ink-2); }
 .stock-podglad strong { color: var(--ink); font-size: 1.125rem; }
 .stock-error { margin: 0; color: var(--accent); font-size: .875rem; }
+
+/* ---------- Magazyn: skaner ---------- */
+.skan { display: grid; gap: 14px; }
+
+.skan-okno {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--r);
+  overflow: hidden;
+  background: var(--img);
+  border: 1px solid var(--line);
+}
+.skan-okno video { width: 100%; height: 100%; object-fit: cover; }
+
+.skan-zaslona { position: absolute; inset: 0; display: grid; place-items: center; color: var(--img-line); }
+.skan-zaslona svg { width: 22%; height: auto; }
+
+/* Ramka celownika. Kod trafia w kadr łatwiej, gdy widać, gdzie go przyłożyć. */
+.skan-celownik {
+  position: absolute;
+  inset: 22% 10%;
+  border: 2px solid var(--accent);
+  border-radius: var(--r-sm);
+  box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--ink) 34%, transparent);
+}
+
+.skan-info { margin: 0; color: var(--ink-2); font-size: .9375rem; text-align: center; }
+.skan-cta { height: 56px; }
+
+.skan-wynik {
+  display: grid;
+  gap: 10px;
+  padding: 18px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  text-align: center;
+}
+.skan-wynik-brak { border-color: var(--accent); }
+.skan-nazwa { margin: 0; font-size: 1.25rem; }
+.skan-kod { margin: 0; font-family: var(--mono); font-size: .8125rem; color: var(--ink-3); letter-spacing: .06em; }
+.skan-stan { margin: 4px 0; color: var(--ink-2); }
+.skan-stan strong { font-size: 1.75rem; color: var(--ink); }
+
+/* Dwa duże cele — przy skanowaniu obsługa idzie jednym kciukiem. */
+.skan-korekta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.skan-korekta button {
+  height: 60px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.skan-korekta button:active { background: var(--bg-soft); }

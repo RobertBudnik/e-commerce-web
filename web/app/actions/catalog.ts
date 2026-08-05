@@ -59,6 +59,9 @@ export async function saveProductAction(formData: FormData): Promise<CatalogResu
       ? Math.round(Number(formData.get('oldPrice')) * 100)
       : null,
     stock: Number(formData.get('stock') ?? 0),
+    // Pusty kod to NULL, nie pusty tekst — indeks unikalny pomija NULL-e,
+    // więc kilka produktów bez kodu ze sobą nie koliduje.
+    barcode: String(formData.get('barcode') ?? '').trim() || null,
     rating: Number(formData.get('rating') ?? 0),
     reviews_count: Number(formData.get('reviews') ?? 0),
     icon: String(formData.get('icon') ?? 'grid'),

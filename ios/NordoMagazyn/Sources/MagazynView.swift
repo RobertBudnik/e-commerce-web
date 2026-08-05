@@ -1,10 +1,13 @@
 import SwiftUI
 import WebKit
 
-/// Adres magazynu. Produkcja; do pracy nad kodem podmień na adres z sieci
-/// lokalnej, np. http://192.168.2.250:3000/magazyn — wtedy trzeba też
-/// zezwolić na HTTP w NSAppTransportSecurity.
-private let adresMagazynu = URL(string: "https://nordo-one.vercel.app/magazyn")!
+/// Adres magazynu z Info.plist, ustawiany flagą NORDO_URL przy budowaniu.
+/// Produkcja jest wartością domyślną projektu; build pod sieć lokalną
+/// nadpisuje ją w wierszu poleceń, więc repozytorium zostaje czyste.
+private let adresMagazynu: URL = {
+    let zPlist = Bundle.main.object(forInfoDictionaryKey: "NordoURL") as? String
+    return URL(string: zPlist ?? "") ?? URL(string: "https://nordo-one.vercel.app/magazyn")!
+}()
 
 struct MagazynView: View {
     @State private var laduje = true

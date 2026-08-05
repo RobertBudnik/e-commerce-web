@@ -36,5 +36,18 @@ przedłuża to do roku.
 
 ## Adres
 
-`MagazynView.swift`, stała `adresMagazynu`. Do pracy nad kodem podmień na
-adres z sieci lokalnej i dopisz zgodę na HTTP w `Info.plist`.
+Ustawienie projektu `NORDO_URL`, czytane przez `Info.plist` i stałą
+`adresMagazynu`. Domyślnie produkcja.
+
+Build pod serwer deweloperski w sieci lokalnej — wtedy każda zmiana w kodzie
+sklepu pojawia się w aplikacji po odświeżeniu, bez wgrywania od nowa:
+
+```bash
+xcodebuild -project NordoMagazyn.xcodeproj -scheme NordoMagazyn \
+  -destination 'id=<identyfikator-urządzenia>' -derivedDataPath build \
+  -allowProvisioningUpdates NORDO_URL="http://<ip-maca>:3000/magazyn" build
+```
+
+Adres Maca: `ipconfig getifaddr en0`. Telefon musi być w tej samej sieci Wi-Fi.
+Zgoda na HTTP obejmuje wyłącznie adresy prywatne (`NSAllowsLocalNetworking`) —
+produkcja idzie po HTTPS i z tej furtki nie korzysta.
