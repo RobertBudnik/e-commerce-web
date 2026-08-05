@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Icon } from '@/components/Icon';
 
 type Pozycja = { href: string; label: string };
@@ -68,7 +69,15 @@ export function MobileNav({ pozycje }: { pozycje: Pozycja[] }) {
         <Icon name="menu" />
       </button>
 
-      {otwarte && (
+      {/*
+        Panel jedzie portalem do <body>, a nie zostaje przy przycisku.
+        Nagłówek ma `backdrop-filter`, a element z filtrem staje się blokiem
+        zawierającym dla potomków `position: fixed` — `inset: 0` liczyło się
+        wtedy od nagłówka, więc szuflada miała 72 px wysokości i treść strony
+        przebijała spod niej. Mini-koszyk i szybki podgląd tego nie łapią,
+        bo są zamontowane wprost w layoucie.
+      */}
+      {otwarte && createPortal(
         <div
           className="navsheet"
           role="dialog"
@@ -101,7 +110,8 @@ export function MobileNav({ pozycje }: { pozycje: Pozycja[] }) {
               ))}
             </nav>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

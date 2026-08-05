@@ -120,6 +120,9 @@
      miejscu, żeby pasek zakupu nie wylądował nad modalem. */
   --z-header: 40;
   --z-buybar: 60;
+  /* Przyciemnione tło leży pod szufladą i modalem, ale nad nagłówkiem —
+     inaczej nagłówek zostawałby jasny nad przygaszoną stroną. */
+  --z-overlay: 70;
   --z-drawer: 80;
   --z-modal: 100;
   --z-toast: 120;
@@ -161,7 +164,9 @@ a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; }
 svg { display: block; }
 
-::selection { background: var(--ink); color: #fff; }
+/* Zaznaczenie odwraca kontrast strony, więc tekst bierze kolor tła, nie biel —
+   w ciemnym motywie `--ink` jest jasny i biały napis znikał na zaznaczeniu. */
+::selection { background: var(--ink); color: var(--bg); }
 
 :focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
 
@@ -480,7 +485,10 @@ p:last-child { margin-bottom: 0; }
   place-items: center;
   font-variant-numeric: tabular-nums;
 }
-.btn-ghost .cart-count { background: var(--ink); color: #fff; }
+/* Plakietka na przycisku obrysowym jedzie odwrotnie do tła strony. Cyfra
+   musi wziąć kolor z tokenu, nie z bieli — w ciemnym motywie `--ink` jest
+   jasny i biała cyfra znikała na jasnej plakietce. */
+.btn-ghost .cart-count { background: var(--ink); color: var(--bg); }
 .cart-count[hidden] { display: none; }
 
 @media (max-width: 900px) {
@@ -720,7 +728,10 @@ select:hover { border-color: var(--line-strong); }
   color: var(--ink-faint);
 }
 .breadcrumbs a:hover { color: var(--ink); }
-.breadcrumbs .sep { padding-inline: 7px; color: var(--line-strong); }
+/* Ukośnik to znak, nie kreska — token linii dawał mu 1.7:1 w ciemnym motywie
+   i ścieżka rozpadała się na luźne słowa. `--ink-3` jest równie stonowany,
+   tylko czytelny. */
+.breadcrumbs .sep { padding-inline: 7px; color: var(--ink-3); }
 
 .product {
   display: grid;
@@ -1026,7 +1037,7 @@ select:hover { border-color: var(--line-strong); }
   box-shadow: var(--shadow);
   opacity: 0;
   transition: transform .32s cubic-bezier(.2, .8, .2, 1), opacity .2s ease;
-  z-index: 100;
+  z-index: var(--z-toast);
 }
 .toast.show { transform: translate(-50%, 0); opacity: 1; }
 
@@ -1397,7 +1408,9 @@ select:hover { border-color: var(--line-strong); }
   gap: 14px;
 }
 
-.pill-admin { background: var(--ink); color: #fff; }
+/* Ta sama zasada co przy plakietce koszyka: napis bierze kolor tła strony,
+   inaczej w ciemnym motywie biel siada na jasnej pigułce. */
+.pill-admin { background: var(--ink); color: var(--bg); }
 
 .admin-link {
   display: flex;
@@ -1512,7 +1525,7 @@ code {
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: var(--z-overlay);
   background: color-mix(in srgb, var(--ink) 28%, transparent);
   opacity: 0;
   transition: opacity .28s ease;
@@ -1523,7 +1536,7 @@ code {
 .drawer {
   position: fixed;
   top: 0; right: 0;
-  z-index: 61;
+  z-index: var(--z-drawer);
   width: min(420px, 100vw);
   height: 100dvh;
   display: flex;
@@ -1610,7 +1623,7 @@ code {
 .quick {
   position: fixed;
   inset: 0;
-  z-index: 61;
+  z-index: var(--z-modal);
   display: grid;
   place-items: center;
   padding: var(--gutter);
@@ -1881,7 +1894,7 @@ code {
 .buy-bar {
   position: fixed;
   left: 0; right: 0; bottom: 0;
-  z-index: 40;
+  z-index: var(--z-buybar);
   border-top: 1px solid var(--line);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(8px);
