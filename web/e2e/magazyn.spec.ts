@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { KONTA, zaloguj } from './pomoce';
+import { KONTA, wyloguj, zaloguj } from './pomoce';
 
 /**
  * Magazyn — narzędzie zaplecza.
@@ -112,5 +112,61 @@ test.describe('Magazyn', () => {
 
     await expect(page.locator('.mag-blad')).toContainText('nie można zdjąć');
     await expect(page.getByRole('button', { name: /Zapisz zmianę/ })).toBeDisabled();
+  });
+});
+
+/**
+ * Zwrot zamyka obieg towaru: klient zgłasza w sklepie, magazyn przyjmuje,
+ * sztuki wracają na stan. Test idzie tą drogą w całości, bo każdy z tych
+ * trzech kroków osobno potrafi działać, a razem nie.
+ */
+test.describe('Zwroty', () => {
+  test('klient zgłasza zwrot, magazyn przyjmuje, stan rośnie', async ({ page }) => {
+    // Zwrot jest możliwy dopiero po dostarczeniu — zaplecze ustawia ten stan
+    await zaloguj(page, KONTA.zaplecze);
+    await page.getByRole('button', { name: /Zamówienia/ }).click();
+
+    const zamowienie = page.locator('.order').first();
+    const numer = await zamowienie.locator('.order-id').innerText();
+    await zamowienie.locator('.sortbox-btn').click();
+    await page.getByRole('option', { name: 'dostarczone' }).click();
+    // Pigułka przy zamówieniu, nie komunikat — komunikat znika sam po chwili
+    // i test bywa od niego wolniejszy.
+    await expect(zamowienie.locator('.pill')).toHaveText('dostarczone');
+
+    // Zwrotów do przyjęcia przed zgłoszeniem
+    await page.goto('/magazyn/zwroty');
+    const przed = await page.locator('.mag-karta').count();
+
+    await page.goto('/');
+    await wyloguj(page);
+
+    // Klient zgłasza zwrot jednej sztuki
+    await zaloguj(page, KONTA.klient);
+    const swoje = page.locator('.order', { hasText: numer });
+    await swoje.getByRole('button', { name: 'Zgłoś zwrot' }).click();
+
+    const okno = page.getByRole('dialog');
+    await expect(okno).toBeVisible();
+    await expect(okno.getByRole('button', { name: /Zaznacz, co odsy/ })).toBeDisabled();
+
+    await okno.getByRole('button', { name: /Więcej sztuk/ }).first().click();
+    await okno.getByRole('button', { name: /Zgłoś zwrot · 1 szt/ }).click();
+    await expect(page.getByText('Zwrot zgłoszony')).toBeVisible();
+
+    // Magazyn widzi zgłoszenie i przyjmuje je
+    await page.goto('/');
+    await wyloguj(page);
+
+    await zaloguj(page, KONTA.zaplecze);
+    await page.goto('/magazyn/zwroty');
+    await expect(page.locator('.mag-karta')).toHaveCount(przed + 1);
+
+    await page.getByRole('button', { name: /Przyjmij zwrot/ }).first().click();
+    await expect(page.locator('.mag-karta')).toHaveCount(przed);
+
+    // Sztuki wróciły na stan przez historię magazynu
+    await page.goto('/magazyn');
+    await expect(page.locator('.mag-karta').last()).toContainText('zwrot od klienta');
   });
 });

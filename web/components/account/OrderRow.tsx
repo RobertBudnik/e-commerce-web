@@ -1,12 +1,14 @@
 'use client';
 
 import { SortStack } from '@/components/ui/SortStack';
+import { ZgloszenieZwrotu } from './ZgloszenieZwrotu';
 import { formatDate, money } from '@/lib/format';
 import type { Order, OrderStatus } from '@/lib/types';
 
 export const ORDER_STATUSES: OrderStatus[] = [
   'nowe',
   'w realizacji',
+  'spakowane',
   'wysłane',
   'dostarczone',
   'anulowane',
@@ -70,13 +72,16 @@ export function OrderRow({
           {busy && <span className="muted">zapisuję…</span>}
         </div>
       ) : (
-        order.status === 'nowe' && (
-          <div className="order-actions">
+        /* Anulowanie ma sens, dopóki paczka nie ruszyła; zwrot dopiero gdy
+           dojechała. To dwie różne sytuacje i nigdy nie występują razem. */
+        <div className="order-actions">
+          {order.status === 'nowe' && (
             <button className="btn-link" type="button" disabled={busy} onClick={onCancel}>
               {busy ? 'Anuluję…' : 'Anuluj zamówienie'}
             </button>
-          </div>
-        )
+          )}
+          {order.status === 'dostarczone' && <ZgloszenieZwrotu order={order} />}
+        </div>
       )}
     </div>
   );

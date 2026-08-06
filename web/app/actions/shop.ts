@@ -110,3 +110,41 @@ export async function productsByIdsAction(ids: string[]): Promise<Product[]> {
     .map((row) => toProduct(row as ProductRow, imageUrl))
     .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 }
+
+/* ==========================================================================
+   Zwroty
+   ========================================================================== */
+
+export type ZgloszenieWynik = { ok: true; id: string } | { ok: false; blad: string };
+
+/**
+ * Zgłoszenie zwrotu przez klienta.
+ *
+ * Cała walidacja siedzi w `zglos_zwrot()`: że zamówienie należy do
+ * zgłaszającego i że nie odsyła więcej sztuk, niż kupił. Przeglądarka jest
+ * po stronie klienta i nie jest źródłem prawdy — tutaj odsiewamy tylko
+ * oczywiste puste zgłoszenia, żeby nie zajmować bazy.
+ */
+export async function zglosZwrotAction(
+  zamowienieId: string,
+  pozycje: { productId: string; qty: number }[],
+  powod: string
+): Promise<ZgloszenieWynik> {
+  const wybrane = pozycje.filter((p) => p.productId && p.qty > 0);
+  if (wybrane.length === 0) {
+    return { ok: false, blad: 'Zaznacz, co odsyłasz.' };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('zglos_zwrot', {
+    p_zamowienie: zamowienieId,
+    p_pozycje: wybrane.map((p) => ({ product_id: p.productId, qty: p.qty })),
+    p_powod: powod.trim() || null,
+  });
+
+  if (error) return { ok: false, blad: error.message };
+
+  revalidatePath('/konto');
+
+  return { ok: true, id: String(data) };
+}
