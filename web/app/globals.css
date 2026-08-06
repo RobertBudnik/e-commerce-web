@@ -3438,6 +3438,24 @@ code {
 .zwrot-nazwa { font-size: .9375rem; }
 .zwrot-poz .muted { font-size: .8125rem; }
 
+/* Na wąskim ekranie nazwa produktu i krok ilości walczyły o tę samą
+   szerokość — nazwa łamała się na trzy linie, a przyciski zjeżdżały
+   z osi. Poniżej 420 px nazwa dostaje własny wiersz, a pod nią stoją
+   obok siebie liczba kupionych sztuk i krok. */
+@media (max-width: 420px) {
+  .zwrot-lista li {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "nazwa nazwa" "kupione krok";
+    align-items: center;
+    gap: 8px 14px;
+  }
+  .zwrot-poz { display: contents; }
+  .zwrot-nazwa { grid-area: nazwa; }
+  .zwrot-poz .muted { grid-area: kupione; }
+  .zwrot-krok { grid-area: krok; }
+}
+
 /* Cele dotykowe 44 px także tutaj — zwrot zgłasza się z telefonu równie
    często co z komputera. */
 .zwrot-krok { flex: none; display: flex; align-items: center; gap: 4px; }
