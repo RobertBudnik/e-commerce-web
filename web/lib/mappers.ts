@@ -31,6 +31,10 @@ export function toProduct(
     reviews: row.reviews_count ?? 0,
     stock: row.stock ?? 0,
     barcode: row.barcode ?? null,
+    sku: row.sku ?? null,
+    // Brak progu w wierszu traktujemy jak domyślne pięć — tyle wynosiła stała
+    // wpisana w kodzie, zanim próg stał się kolumną.
+    progNiski: row.prog_niski ?? 5,
     icon: row.icon ?? 'grid',
     badge: row.badge ?? null,
     specs: row.specs ?? {},
@@ -69,6 +73,8 @@ export function toOrder(row: OrderRow): Order {
       qty: i.qty,
       price: i.unit_price_cents / 100,
     })),
+    operatorPlatnosci: row.payment_provider ?? null,
+    numerPrzesylki: row.numer_przesylki ?? null,
   };
 }
 

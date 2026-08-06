@@ -43,3 +43,118 @@ export async function adjustStockAction(
 
   return { ok: true, stock: typeof data === 'number' ? data : Number(data) };
 }
+
+/* ==========================================================================
+   Aplikacja zarządu
+   ========================================================================== */
+
+export type KorektaWynik =
+  | { ok: true; stan: number }
+  | { ok: false; blad: string };
+
+/** Powody korekty. Lista zamknięta — „inne" po pół roku znaczy tyle co nic. */
+export const POWODY_KOREKTY = [
+  'Przyjęcie dostawy',
+  'Zwrot od klienta',
+  'Ubytek lub uszkodzenie',
+  'Korekta inwentaryzacyjna',
+] as const;
+
+export type PowodKorekty = (typeof POWODY_KOREKTY)[number];
+
+/**
+ * Korekta stanu z aplikacji.
+ *
+ * Idzie przez `koryguj_stan()`, nie przez `adjust_stock()`, bo tamta ścina
+ * stan do zera po cichu — próba zdjęcia pięciu sztuk z trzech kończyła się
+ * zerem i komunikatem „zapisano". Tutaj baza odmawia, a interfejs pokazuje
+ * powód przy liczbie.
+ *
+ * `klucz` jest wystawiany przez przeglądarkę raz na otwarty ekran korekty.
+ * Drugie dotknięcie przycisku wysyła ten sam klucz, a baza oddaje stan
+ * bieżący zamiast dokładać drugi ruch.
+ */
+export async function korygujStanAction(
+  produktId: string,
+  delta: number,
+  powod: string,
+  notatka: string,
+  klucz: string
+): Promise<KorektaWynik> {
+  if (!Number.isInteger(delta) || delta === 0) {
+    return { ok: false, blad: 'Korekta musi być liczbą całkowitą różną od zera.' };
+  }
+  if (!POWODY_KOREKTY.includes(powod as PowodKorekty)) {
+    return { ok: false, blad: 'Wybierz powód korekty.' };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('koryguj_stan', {
+    p_produkt: produktId,
+    p_delta: delta,
+    p_powod: powod,
+    p_notatka: notatka.trim() || null,
+    p_klucz: klucz || null,
+  });
+
+  if (error) return { ok: false, blad: error.message };
+
+  revalidatePath('/magazyn');
+  revalidatePath('/magazyn/stany');
+  revalidatePath('/sklep');
+
+  return { ok: true, stan: Number(data) };
+}
+
+export type PrzesylkaWynik =
+  | { ok: true; numer: string }
+  | { ok: false; blad: string };
+
+/**
+ * Nadanie przesyłki. Numer listu i zmiana stanu idą jednym wywołaniem —
+ * gdyby to były dwa zapisy, drugi mógłby nie dojść i paczka wyjechałaby
+ * bez numeru albo numer wisiałby przy zamówieniu, które stoi w magazynie.
+ */
+export async function nadajPrzesylkeAction(
+  zamowienieId: string,
+  numer: string
+): Promise<PrzesylkaWynik> {
+  const czysty = numer.trim();
+  if (!czysty) return { ok: false, blad: 'Podaj numer przesyłki.' };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('nadaj_przesylke', {
+    p_zamowienie: zamowienieId,
+    p_numer: czysty,
+  });
+
+  if (error) return { ok: false, blad: error.message };
+
+  revalidatePath('/magazyn');
+  revalidatePath('/magazyn/zamowienia');
+
+  return { ok: true, numer: String(data) };
+}
+
+export type StanZamowieniaWynik =
+  | { ok: true; stan: string }
+  | { ok: false; blad: string };
+
+/** Zmiana stanu zamówienia w kolejce. Stan „wysłane" nadaje wyłącznie przesyłka. */
+export async function ustawStanZamowieniaAction(
+  zamowienieId: string,
+  stan: 'nowe' | 'spakowane'
+): Promise<StanZamowieniaWynik> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('ustaw_stan_zamowienia', {
+    p_zamowienie: zamowienieId,
+    p_stan: stan,
+  });
+
+  if (error) return { ok: false, blad: error.message };
+
+  revalidatePath('/magazyn');
+  revalidatePath('/magazyn/zamowienia');
+
+  return { ok: true, stan: String(data) };
+}

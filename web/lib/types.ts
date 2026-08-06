@@ -12,6 +12,10 @@ export type Product = {
   reviews: number;
   stock: number;
   barcode: string | null;
+  /** Symbol z etykiety magazynowej. Nie mylić ze `slug` ani z `barcode`. */
+  sku: string | null;
+  /** Stan, przy którym magazyn zapala ostrzeżenie. Zero wyłącza ostrzeganie. */
+  progNiski: number;
   icon: string;
   badge: string | null;
   specs: Record<string, string>;
@@ -26,7 +30,13 @@ export type Category = {
   icon: string;
 };
 
-export type OrderStatus = 'nowe' | 'w realizacji' | 'wysłane' | 'dostarczone' | 'anulowane';
+export type OrderStatus =
+  | 'nowe'
+  | 'w realizacji'
+  | 'spakowane'
+  | 'wysłane'
+  | 'dostarczone'
+  | 'anulowane';
 export type PaymentStatus = 'oczekuje' | 'opłacone' | 'nieudane' | 'zwrócone';
 
 export type OrderItem = {
@@ -51,6 +61,29 @@ export type Order = {
   shipping: number;
   total: number;
   items: OrderItem[];
+  /** Operator płatności ze zdarzenia Stripe'a. Puste dla zamówień bez płatności. */
+  operatorPlatnosci: string | null;
+  /** Numer listu przewozowego. Puste, dopóki paczka nie wyjechała. */
+  numerPrzesylki: string | null;
+};
+
+/** Pozycja historii magazynu. `delta` ze znakiem: plus przyjęcie, minus wydanie. */
+export type RuchMagazynowy = {
+  id: number;
+  produktId: string;
+  produkt: string;
+  delta: number;
+  powod: string;
+  notatka: string | null;
+  czas: string;
+};
+
+/** Pozycja zamówienia wzbogacona o pokrycie w magazynie. */
+export type PozycjaZPokryciem = OrderItem & {
+  sku: string | null;
+  stan: number;
+  /** Ile sztuk brakuje, żeby pozycję dało się spakować. Zero = jest komplet. */
+  brakuje: number;
 };
 
 export type Quote = {

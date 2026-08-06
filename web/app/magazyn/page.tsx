@@ -1,60 +1,98 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { InstallHint } from '@/components/magazyn/InstallHint';
-import { MagazynNav } from '@/components/magazyn/MagazynNav';
-import { PackCard } from '@/components/magazyn/PackCard';
-import { getOrdersToPack, getSessionUser } from '@/lib/queries';
+import Link from 'next/link';
+import { wymagajZaplecza } from '@/lib/magazyn-dostep';
+import { getPrzeglad } from '@/lib/queries';
 
 export const metadata: Metadata = {
-  title: 'Magazyn',
-  description: 'Kolejka pakowania — zamówienia do obsłużenia.',
+  title: 'Przegląd',
+  description: 'Stan magazynu i kolejka wysyłek.',
   robots: { index: false, follow: false },
 };
 
-/** Kolejka zmienia się przy każdym zamówieniu — nic tu nie może iść z cache. */
+/** Liczby zmieniają się przy każdym zamówieniu — nic tu nie może iść z cache. */
 export const dynamic = 'force-dynamic';
 
-const ZAPLECZE = ['owner', 'manager', 'staff'];
+const DATA = new Intl.DateTimeFormat('pl-PL', { day: '2-digit', month: 'long', year: 'numeric' });
+const GODZINA = new Intl.DateTimeFormat('pl-PL', { hour: '2-digit', minute: '2-digit' });
 
-export default async function Magazyn() {
-  const user = await getSessionUser();
-
-  // Przekierowanie to wyłącznie wygoda. Prawdziwej zapory pilnują polityki
-  // RLS: konto klienta nie zobaczy cudzych zamówień nawet po wpisaniu adresu
-  // z palca, bo baza mu ich nie odda.
-  if (!user) redirect('/logowanie?powrot=%2Fmagazyn');
-  if (!ZAPLECZE.includes(user.rawRole)) redirect('/konto');
-
-  const zamowienia = await getOrdersToPack();
-  const nowe = zamowienia.filter((z) => z.status === 'nowe').length;
+export default async function Przeglad() {
+  await wymagajZaplecza('/magazyn');
+  const dane = await getPrzeglad();
 
   return (
-    <main className="container magazyn">
-      <header className="magazyn-top">
-        <p className="label">Magazyn</p>
-        <h1>Do spakowania</h1>
-        <p className="magazyn-licznik num">
-          {zamowienia.length === 0
-            ? 'Kolejka pusta'
-            : `${zamowienia.length} w kolejce${nowe ? ` · ${nowe} nowych` : ''}`}
-        </p>
+    <main className="mag">
+      <header className="mag-top">
+        <h1>Przegląd</h1>
+        <p className="mag-podtytul">{DATA.format(new Date())}</p>
       </header>
 
-      <MagazynNav aktywny="zamowienia" />
+      <div className="mag-karta" style={{ marginTop: 12 }}>
+        <Link className="mag-wiersz" href="/magazyn/zamowienia?stan=nowe">
+          <span className="mag-dioda" style={{ background: 'var(--accent)' }} aria-hidden="true" />
+          <span className="mag-tresc">
+            <span className="mag-nazwa">Do wysłania</span>
+          </span>
+          <span className="mag-odczyt">{dane.doWyslania}</span>
+          <span className="mag-szewron" aria-hidden="true" />
+        </Link>
 
-      <InstallHint />
+        <Link className="mag-wiersz" href="/magazyn/stany?segment=niskie">
+          <span className="mag-dioda mag-dioda-uwaga" aria-hidden="true" />
+          <span className="mag-tresc">
+            <span className="mag-nazwa">Niskie stany</span>
+          </span>
+          <span className="mag-odczyt">{dane.niskieStany}</span>
+          <span className="mag-szewron" aria-hidden="true" />
+        </Link>
 
-      {zamowienia.length === 0 ? (
-        <p className="magazyn-pusto">
-          Nic nie czeka na wysyłkę. Nowe zamówienia pojawią się tutaj same.
-        </p>
+        <Link className="mag-wiersz" href="/magazyn/stany?segment=zero">
+          <span className="mag-dioda mag-dioda-zero" aria-hidden="true" />
+          <span className="mag-tresc">
+            <span className="mag-nazwa">Pozycje bez towaru</span>
+          </span>
+          <span className="mag-odczyt">{dane.zeroStany}</span>
+          <span className="mag-szewron" aria-hidden="true" />
+        </Link>
+      </div>
+
+      <h2 className="mag-sekcja">Dzisiaj</h2>
+      <div className="mag-kafle">
+        <div className="mag-kafel">
+          <span className="mag-kafel-liczba">{dane.paczkiDzis}</span>
+          <span className="mag-kafel-opis">wysłanych paczek</span>
+        </div>
+        <div className="mag-kafel">
+          <span className="mag-kafel-liczba">{dane.sztukiDzis}</span>
+          <span className="mag-kafel-opis">przyjętych sztuk</span>
+        </div>
+      </div>
+
+      <h2 className="mag-sekcja">Ostatnie ruchy</h2>
+      {dane.ruchy.length === 0 ? (
+        <p className="mag-pusto">Brak ruchów dzisiaj</p>
       ) : (
-        <div className="magazyn-lista">
-          {zamowienia.map((z) => (
-            <PackCard key={z.id} order={z} />
+        <div className="mag-karta">
+          {dane.ruchy.map((ruch) => (
+            <Link
+              key={ruch.id}
+              className="mag-wiersz"
+              href={`/magazyn/stany/${ruch.produktId}`}
+            >
+              <span className="mag-tresc">
+                <span className="mag-nazwa">{ruch.produkt}</span>
+                <span className="mag-meta">
+                  {ruch.powod} · {GODZINA.format(new Date(ruch.czas))}
+                </span>
+              </span>
+              <span className={`mag-delta ${ruch.delta > 0 ? 'mag-delta-plus' : 'mag-delta-minus'}`}>
+                {ruch.delta > 0 ? `+${ruch.delta}` : ruch.delta}
+              </span>
+            </Link>
           ))}
         </div>
       )}
+
+      <div className="mag-zapas" />
     </main>
   );
 }

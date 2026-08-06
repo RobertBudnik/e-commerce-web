@@ -5,8 +5,16 @@ import { cache } from 'react';
 import { createClient } from '@/utils/supabase/server';
 import { createPublicClient } from '@/utils/supabase/public';
 import { toOrder, toProduct, toSessionUser } from './mappers';
-import type { OrderRow, ProductRow } from './rows';
-import type { Category, Order, Product, SessionUser, StoreSettings } from './types';
+import type { OrderRow, ProductRow, RuchRow } from './rows';
+import type {
+  Category,
+  Order,
+  PozycjaZPokryciem,
+  Product,
+  RuchMagazynowy,
+  SessionUser,
+  StoreSettings,
+} from './types';
 
 const BUCKET = 'product-images';
 
@@ -286,5 +294,278 @@ export async function getProfile() {
     street: address?.street ?? '',
     zip: address?.postal_code ?? '',
     city: address?.city ?? '',
+  };
+}
+
+/* ==========================================================================
+   Magazyn — aplikacja zarządu
+
+   Wszystkie zapytania niżej filtrują i liczą po stronie bazy. Telefon ma
+   dostać gotowy wynik, a nie kilka tysięcy wierszy do przemielenia na
+   łączu komórkowym.
+   ========================================================================== */
+
+/** Stany, które w kolejce magazynu znaczą „jeszcze nie wyjechało". */
+const STANY_W_KOLEJCE = ['nowe', 'w realizacji', 'spakowane'] as const;
+
+/** Zamówienie w kolejce razem z pokryciem pozycji w magazynie. */
+export type ZamowienieWKolejce = Order & {
+  /** Ile sztuk brakuje w sumie, żeby dało się spakować. Zero = komplet. */
+  brakujeSztuk: number;
+  /** Nazwa pierwszej pozycji bez pokrycia — do komunikatu w wierszu. */
+  brakujacyProdukt: string | null;
+};
+
+/**
+ * Pokrycie pozycji zamówienia w magazynie.
+ *
+ * Liczone na jednym zapytaniu o produkty z tych zamówień, nie po jednym na
+ * pozycję: kolejka z dwudziestoma zamówieniami po trzy pozycje to inaczej
+ * sześćdziesiąt zapytań przy każdym wejściu na ekran.
+ */
+async function stanyProduktow(idProduktow: string[]): Promise<Map<string, number>> {
+  const unikalne = [...new Set(idProduktow.filter(Boolean))];
+  if (unikalne.length === 0) return new Map();
+
+  const supabase = await createClient();
+  const { data } = await supabase.from('products').select('id, stock').in('id', unikalne);
+
+  return new Map((data ?? []).map((r) => [String(r.id), Number(r.stock ?? 0)]));
+}
+
+/**
+ * Kolejka zamówień dla wybranej zakładki.
+ *
+ * „Nowe" i „Spakowane" to praca do zrobienia, więc najstarsze na górze.
+ * „Wysłane" to archiwum ostatnich dni — tam odwrotnie, bo szuka się tego,
+ * co przed chwilą wyjechało.
+ */
+export async function getKolejkaZamowien(
+  stan: 'nowe' | 'spakowane' | 'wysłane'
+): Promise<ZamowienieWKolejce[]> {
+  const supabase = await createClient();
+
+  // Zamówienia sprzed wprowadzenia stanu „spakowane" siedzą w „w realizacji";
+  // zakładka Nowe pokazuje jedno i drugie, żeby żadne nie wypadło z kolejki.
+  const stany = stan === 'nowe' ? ['nowe', 'w realizacji'] : [stan];
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, order_items(*)')
+    .in('status', stany)
+    .neq('payment_status', 'zwrócone')
+    .order('created_at', { ascending: stan !== 'wysłane' })
+    .limit(50);
+
+  if (error || !data) return [];
+
+  const zamowienia = data.map((row) => toOrder(row as OrderRow));
+  const stanyMap = await stanyProduktow(
+    zamowienia.flatMap((z) => z.items.map((p) => p.productId ?? ''))
+  );
+
+  return zamowienia.map((z) => {
+    let brakujeSztuk = 0;
+    let brakujacyProdukt: string | null = null;
+
+    for (const pozycja of z.items) {
+      if (!pozycja.productId) continue;
+      const stanTeraz = stanyMap.get(pozycja.productId) ?? 0;
+      const brak = Math.max(0, pozycja.qty - stanTeraz);
+      if (brak > 0) {
+        brakujeSztuk += brak;
+        if (!brakujacyProdukt) brakujacyProdukt = pozycja.name;
+      }
+    }
+
+    return { ...z, brakujeSztuk, brakujacyProdukt };
+  });
+}
+
+/** Liczniki przy segmentach — trzy zapytania zliczające, bez ściągania wierszy. */
+export async function getLicznikiZamowien(): Promise<Record<string, number>> {
+  const supabase = await createClient();
+
+  const zlicz = async (stany: string[]) => {
+    const { count } = await supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .in('status', stany)
+      .neq('payment_status', 'zwrócone');
+    return count ?? 0;
+  };
+
+  const [nowe, spakowane, wyslane] = await Promise.all([
+    zlicz(['nowe', 'w realizacji']),
+    zlicz(['spakowane']),
+    zlicz(['wysłane']),
+  ]);
+
+  return { nowe, spakowane, wysłane: wyslane };
+}
+
+/** Jedno zamówienie po numerze, z pokryciem każdej pozycji w magazynie. */
+export async function getZamowienieZPokryciem(
+  numer: string
+): Promise<{ zamowienie: Order; pozycje: PozycjaZPokryciem[] } | null> {
+  const zamowienie = await getOrderByNumber(numer);
+  if (!zamowienie) return null;
+
+  const supabase = await createClient();
+  const idProduktow = [...new Set(zamowienie.items.map((p) => p.productId).filter(Boolean))];
+
+  const { data } = idProduktow.length
+    ? await supabase.from('products').select('id, stock, sku').in('id', idProduktow as string[])
+    : { data: [] as { id: string; stock: number; sku: string | null }[] };
+
+  const wg = new Map((data ?? []).map((r) => [String(r.id), r]));
+
+  const pozycje: PozycjaZPokryciem[] = zamowienie.items.map((p) => {
+    const produkt = p.productId ? wg.get(p.productId) : undefined;
+    const stan = Number(produkt?.stock ?? 0);
+    return {
+      ...p,
+      sku: produkt?.sku ?? null,
+      stan,
+      brakuje: Math.max(0, p.qty - stan),
+    };
+  });
+
+  return { zamowienie, pozycje };
+}
+
+/**
+ * Stany magazynowe z filtrem i szukaniem.
+ *
+ * Szukanie idzie po nazwie i po symbolu jednym zapytaniem (`or`), a filtr
+ * progu po stronie bazy nie da się wyrazić prościej niż porównaniem dwóch
+ * kolumn — dlatego segment „niskie" domykamy w pamięci na już zawężonym
+ * zbiorze aktywnych produktów.
+ */
+export async function getStanyMagazynu(
+  szukaj = '',
+  segment: 'wszystko' | 'niskie' | 'zero' = 'wszystko'
+): Promise<Product[]> {
+  const supabase = await createClient();
+  let zapytanie = supabase.from('products').select('*').eq('is_active', true);
+
+  const fraza = szukaj.trim();
+  if (fraza) {
+    // `%` i `,` rozbijają składnię filtra PostgREST — usuwamy je z frazy.
+    const czysta = fraza.replace(/[%,]/g, ' ').trim();
+    if (czysta) zapytanie = zapytanie.or(`name.ilike.%${czysta}%,sku.ilike.%${czysta}%`);
+  }
+  if (segment === 'zero') zapytanie = zapytanie.eq('stock', 0);
+
+  const { data, error } = await zapytanie
+    .order('stock', { ascending: true })
+    .order('name', { ascending: true })
+    .limit(200);
+
+  if (error || !data) return [];
+
+  const produkty = data.map((row) => toProduct(row as ProductRow, imageUrl));
+  if (segment !== 'niskie') return produkty;
+
+  return produkty.filter((p) => p.progNiski > 0 && p.stock > 0 && p.stock <= p.progNiski);
+}
+
+/** Liczniki segmentów magazynu. Liczone z jednego przebiegu po aktywnych pozycjach. */
+export async function getLicznikiMagazynu(): Promise<{
+  wszystko: number;
+  niskie: number;
+  zero: number;
+}> {
+  const supabase = await createClient();
+  const { data } = await supabase.from('products').select('stock, prog_niski').eq('is_active', true);
+
+  const wiersze = data ?? [];
+  return {
+    wszystko: wiersze.length,
+    niskie: wiersze.filter((r) => {
+      const prog = Number(r.prog_niski ?? 5);
+      const stan = Number(r.stock ?? 0);
+      return prog > 0 && stan > 0 && stan <= prog;
+    }).length,
+    zero: wiersze.filter((r) => Number(r.stock ?? 0) === 0).length,
+  };
+}
+
+export async function getProduktPoId(id: string): Promise<Product | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('products').select('*').eq('id', id).maybeSingle();
+
+  if (error || !data) return null;
+  return toProduct(data as ProductRow, imageUrl);
+}
+
+/** Ostatnie ruchy magazynowe — historia, z której wynika stan. */
+export async function getOstatnieRuchy(limit = 3): Promise<RuchMagazynowy[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('inventory_movements')
+    .select('id, product_id, delta, reason, notatka, created_at, products(name)')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+
+  return (data as unknown as RuchRow[]).map((r) => {
+    // PostgREST oddaje dołączony wiersz raz jako obiekt, raz jako tablicę —
+    // zależnie od tego, jak rozpozna kardynalność relacji.
+    const produkt = Array.isArray(r.products) ? r.products[0] : r.products;
+    return {
+      id: r.id,
+      produktId: r.product_id,
+      produkt: produkt?.name ?? 'Produkt usunięty',
+      delta: r.delta,
+      powod: r.reason,
+      notatka: r.notatka,
+      czas: r.created_at,
+    };
+  });
+}
+
+/**
+ * Liczby na Przegląd. Wszystko z bazy — pustych kart z zerami nie rysujemy
+ * z założenia, więc ekran musi wiedzieć, czy dziś cokolwiek się wydarzyło.
+ */
+export async function getPrzeglad(): Promise<{
+  doWyslania: number;
+  niskieStany: number;
+  zeroStany: number;
+  paczkiDzis: number;
+  sztukiDzis: number;
+  ruchy: RuchMagazynowy[];
+}> {
+  const supabase = await createClient();
+  const poczatekDnia = new Date();
+  poczatekDnia.setHours(0, 0, 0, 0);
+  const odKiedy = poczatekDnia.toISOString();
+
+  const [liczniki, magazyn, ruchy, paczki, ruchyDzis] = await Promise.all([
+    getLicznikiZamowien(),
+    getLicznikiMagazynu(),
+    getOstatnieRuchy(3),
+    supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'wysłane')
+      .gte('updated_at', odKiedy),
+    supabase.from('inventory_movements').select('delta').gte('created_at', odKiedy),
+  ]);
+
+  const sztukiDzis = (ruchyDzis.data ?? [])
+    .map((r) => Number(r.delta ?? 0))
+    .filter((d) => d > 0)
+    .reduce((a, b) => a + b, 0);
+
+  return {
+    doWyslania: (liczniki.nowe ?? 0) + (liczniki.spakowane ?? 0),
+    niskieStany: magazyn.niskie,
+    zeroStany: magazyn.zero,
+    paczkiDzis: paczki.count ?? 0,
+    sztukiDzis,
+    ruchy,
   };
 }

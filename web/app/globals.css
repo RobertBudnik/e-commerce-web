@@ -2733,3 +2733,581 @@ code {
 .w-aplikacji .skan-wynik .label {
   color: var(--ink-2);
 }
+
+/* ==========================================================================
+   Magazyn — aplikacja
+
+   Narzędzie dla zarządu, nie mobilna odmiana sklepu. Wygląd trzyma się
+   konwencji systemu: listy grupowane jak w Ustawieniach, krój systemowy,
+   odczyty maszynowym. Pasek zakładek rysuje powłoka natywna — tutaj go nie
+   ma i nie może być, byłby drugim paskiem nad pierwszym.
+
+   Reguły działają zarówno w powłoce (`.w-aplikacji`, po User-Agencie albo
+   po `display-mode: standalone`), jak i w przeglądarce na wąskim ekranie —
+   magazyn ma wyglądać tak samo niezależnie od drogi wejścia.
+   ========================================================================== */
+
+.mag {
+  --mag-gutter: 16px;
+  min-height: 100dvh;
+  padding-inline: 0;
+  padding-block: max(8px, env(safe-area-inset-top)) 0;
+  background: var(--panel);
+  color: var(--ink);
+  font-family: -apple-system, "SF Pro Text", system-ui, var(--sans);
+}
+
+/* ---------- Tytuł ekranu ---------- */
+.mag-top { padding: 8px var(--mag-gutter) 4px; }
+.mag-top h1 {
+  margin: 0;
+  font-family: inherit;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+.mag-podtytul {
+  margin: 2px 0 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nagłówek sekcji: maszynowy, kapitaliki, ton drugorzędny. */
+.mag-sekcja {
+  margin: 22px 0 7px;
+  padding-inline: calc(var(--mag-gutter) + 4px);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ---------- Lista grupowana ---------- */
+.mag-karta {
+  margin-inline: var(--mag-gutter);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.mag-karta + .mag-karta { margin-top: 10px; }
+
+.mag-wiersz {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 14px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mag-wiersz + .mag-wiersz { border-top: 1px solid var(--line); }
+.mag-wiersz:disabled { cursor: default; }
+
+/* Treść wiersza rozpycha się na resztę szerokości, żeby odczyt i szewron
+   trzymały się prawej krawędzi niezależnie od długości nazwy. */
+.mag-tresc { flex: 1; min-width: 0; }
+.mag-nazwa {
+  display: block;
+  font-size: 15px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mag-meta {
+  display: block;
+  margin-top: 1px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+.mag-meta-brak { color: var(--accent); }
+
+/* Odczyty: wszystko, co jest liczbą albo symbolem. */
+.mag-odczyt {
+  flex: none;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.mag-odczyt-maly { font-size: 13px; font-weight: 500; }
+.mag-odczyt-uwaga { color: var(--accent); }
+.mag-odczyt-zero { color: var(--ink-3); }
+
+/* Szewron. Rysowany dwiema kreskami zamiast ikoną — jedna reguła zamiast
+   pliku, a przy tym zawsze w kolorze tekstu obok. */
+.mag-szewron {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--ink-3);
+  border-top: 2px solid var(--ink-3);
+  rotate: 45deg;
+  margin-left: 2px;
+}
+
+/* ---------- Dioda stanu ----------
+   Trzy znaczenia i ani jednego więcej: zielona w porządku, amber przy progu,
+   szara przy zerze. Pilne braki niesie liczba w --accent, nie czwarty kolor. */
+.mag-dioda {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.mag-dioda-uwaga { background: var(--uwaga); }
+.mag-dioda-zero { background: var(--ink-3); }
+
+/* ---------- Kafle liczbowe ---------- */
+.mag-kafle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-inline: var(--mag-gutter);
+}
+.mag-kafel {
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+.mag-kafel-liczba {
+  display: block;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.mag-kafel-opis {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+/* ---------- Segmenty ---------- */
+.mag-segmenty {
+  display: flex;
+  gap: 2px;
+  margin: 12px var(--mag-gutter) 0;
+  padding: 2px;
+  border-radius: 10px;
+  background: var(--bg-sunken);
+}
+.mag-segment {
+  flex: 1;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding-inline: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color .16s ease, background-color .16s ease;
+}
+.mag-segment[aria-selected="true"] {
+  background: var(--surface);
+  color: var(--ink);
+}
+.mag-segment-licznik {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.mag-segment[aria-selected="true"] .mag-segment-licznik { color: var(--ink-2); }
+
+/* ---------- Szukanie ---------- */
+.mag-szukaj {
+  margin: 10px var(--mag-gutter) 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding-inline: 12px;
+  border-radius: 10px;
+  background: var(--surface);
+}
+.mag-szukaj input {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  outline: none;
+  color: var(--ink);
+  /* Poniżej 16 px Safari przybliża stronę przy wejściu w pole. */
+  font-size: 16px;
+  font-family: inherit;
+}
+.mag-szukaj input::placeholder { color: var(--ink-3); }
+.mag-szukaj svg { width: 16px; height: 16px; flex: none; color: var(--ink-3); }
+
+/* ---------- Stan pusty ----------
+   Zamiast szkieletu i zamiast nagłówka nad pustką: jedno zdanie mówiące,
+   czego nie ma. */
+.mag-pusto {
+  margin: 10px var(--mag-gutter) 0;
+  padding: 22px 16px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ---------- Pasek powrotu ---------- */
+.mag-powrot {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding-inline: var(--mag-gutter);
+  color: var(--accent);
+  font-size: 15px;
+  text-decoration: none;
+}
+.mag-powrot::before {
+  content: "";
+  width: 7px; height: 7px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  rotate: 45deg;
+}
+
+/* ---------- Dolne akcje ----------
+   Przyklejone do dołu, nad obszarem gestu. Treść nad nimi dostaje
+   rezerwację wysokości, żeby ostatni wiersz listy dało się przeczytać. */
+.mag-akcje {
+  position: sticky;
+  bottom: 0;
+  margin-top: 18px;
+  padding: 12px var(--mag-gutter) calc(12px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+}
+.mag-zapas { height: 24px; }
+
+.mag-btn {
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding-inline: 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .16s ease;
+}
+.mag-btn:disabled { opacity: .4; cursor: default; }
+.mag-btn-link {
+  min-height: 44px;
+  background: none;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Komunikat błędu siedzi przy przycisku, nie w okienku — okienko zabiera
+   ekran i nie mówi, czego dotyczy. */
+.mag-blad {
+  margin: 0;
+  font-size: 13px;
+  color: var(--accent);
+  text-align: center;
+}
+
+/* ---------- Pigułka stanu ---------- */
+.mag-pigulka {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------- Wiersz danych (dostawa, płatność) ---------- */
+.mag-dane { margin: 0; }
+.mag-dane div {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 14px;
+}
+.mag-dane div + div { border-top: 1px solid var(--line); }
+.mag-dane dt { flex: none; min-width: 92px; font-size: 13px; color: var(--ink-2); }
+.mag-dane dd { margin: 0; flex: 1; font-size: 15px; }
+.mag-dane .mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+}
+
+/* ---------- Korekta stanu ---------- */
+.mag-korekta { margin-inline: var(--mag-gutter); padding: 16px 14px; border-radius: 12px; background: var(--surface); }
+.mag-korekta-gora {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.mag-korekta-srodek {
+  display: grid;
+  grid-template-columns: 64px 1fr 64px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.mag-korekta-wynik {
+  text-align: center;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1;
+}
+.mag-korekta-delta {
+  margin: 6px 0 0;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.mag-korekta-delta .plus { color: var(--ok-ink); }
+.mag-korekta-delta .minus { color: var(--accent); }
+
+.mag-krok {
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+.mag-krok-plus { background: var(--btn-bg); color: var(--btn-ink); border-color: var(--btn-bg); }
+.mag-krok:disabled { opacity: .35; cursor: default; }
+
+.mag-skroty {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 12px var(--mag-gutter) 0;
+}
+.mag-skrot {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.mag-skrot[aria-pressed="true"] { border-color: var(--ink); border-width: 2px; }
+
+/* Zaznaczenie w liście grupowanej: znacznik zamiast pola wyboru — pole
+   wyboru w liście iOS wygląda jak formularz, a to jest wybór jednej opcji. */
+.mag-wybor[aria-checked="true"] .mag-nazwa { font-weight: 600; }
+.mag-znacznik {
+  flex: none;
+  width: 14px;
+  height: 8px;
+  border-left: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  rotate: -45deg;
+  margin-right: 4px;
+}
+
+.mag-notatka {
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  resize: none;
+}
+.mag-notatka::placeholder { color: var(--ink-3); }
+
+.mag-drobne {
+  margin: 8px var(--mag-gutter) 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+/* ---------- Ruch w historii ---------- */
+.mag-delta {
+  flex: none;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 600;
+}
+.mag-delta-plus { color: var(--ok-ink); }
+.mag-delta-minus { color: var(--accent); }
+
+/* ---------- Skaner ---------- */
+.mag-skan { margin: 12px var(--mag-gutter) 0; }
+.mag-kadr {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #14130f;
+}
+.mag-kadr video { width: 100%; height: 100%; object-fit: cover; }
+
+/* Cztery klamry po 34 px. Dwa pseudoelementy, każdy bierze parę rogów
+   przez krawędź poziomą i pionową. */
+.mag-klamry { position: absolute; inset: 16%; }
+.mag-klamry::before,
+.mag-klamry::after {
+  content: "";
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--accent);
+}
+.mag-klamry::before {
+  top: 0; left: 0;
+  border-right: 0; border-bottom: 0;
+  border-radius: 4px 0 0 0;
+}
+.mag-klamry::after {
+  bottom: 0; right: 0;
+  border-left: 0; border-top: 0;
+  border-radius: 0 0 4px 0;
+}
+/* Druga para rogów: ten sam kształt odbity, na osobnym elemencie tła. */
+.mag-klamry-b { position: absolute; inset: 16%; }
+.mag-klamry-b::before,
+.mag-klamry-b::after {
+  content: "";
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--accent);
+}
+.mag-klamry-b::before {
+  top: 0; right: 0;
+  border-left: 0; border-bottom: 0;
+  border-radius: 0 4px 0 0;
+}
+.mag-klamry-b::after {
+  bottom: 0; left: 0;
+  border-right: 0; border-top: 0;
+  border-radius: 0 0 0 4px;
+}
+
+@keyframes mag-odczyt {
+  from { translate: 0 0; }
+  to   { translate: 0 calc(100% - 2px); }
+}
+.mag-linia {
+  position: absolute;
+  left: 16%; right: 16%;
+  top: 16%;
+  height: 68%;
+  border-top: 2px solid var(--accent);
+  animation: mag-odczyt 2.4s cubic-bezier(.4, 0, .6, 1) infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Nieruchoma linia to kreska w poprzek kadru — nic nie wnosi. */
+  .mag-linia { display: none; }
+}
+
+.mag-podpowiedz {
+  margin: 10px 0 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* Arkusz z wynikiem odczytu wjeżdża od dołu. */
+@keyframes mag-arkusz {
+  from { translate: 0 14px; opacity: 0; }
+}
+.mag-arkusz {
+  margin: 12px var(--mag-gutter) 0;
+  padding: 16px 14px;
+  border-radius: 12px;
+  background: var(--surface);
+  animation: mag-arkusz .22s cubic-bezier(.2, .7, .3, 1);
+}
+.mag-arkusz-gora { display: flex; align-items: center; gap: 10px; }
+.mag-arkusz-nazwa { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+.mag-arkusz-kod {
+  margin: 4px 0 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.mag-arkusz-stan {
+  margin: 10px 0 0;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 22px;
+  font-weight: 600;
+}
+.mag-arkusz-akcje { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.mag-arkusz-akcje .mag-btn { min-height: 56px; }
+.mag-arkusz-akcje .mag-btn-obrys {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mag-arkusz { animation: none; }
+}

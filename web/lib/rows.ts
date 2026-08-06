@@ -18,6 +18,8 @@ export type ProductRow = {
   currency?: string;
   stock: number;
   barcode: string | null;
+  sku?: string | null;
+  prog_niski?: number | null;
   rating: number | string;
   reviews_count: number;
   icon: string | null;
@@ -61,8 +63,27 @@ export type OrderRow = {
   total_cents: number;
   coupon_code?: string | null;
   shipping_address: ShippingAddress | null;
+  payment_provider?: string | null;
+  numer_przesylki?: string | null;
   created_at: string;
   order_items?: OrderItemRow[];
+};
+
+/**
+ * Ruch magazynowy. `delta` jest ze znakiem — plus to przyjęcie, minus
+ * wydanie. Stan produktu wynika z sumy ruchów, więc to ta tabela jest
+ * źródłem prawdy, a kolumna `products.stock` tylko jej podsumowaniem.
+ */
+export type RuchRow = {
+  id: number;
+  product_id: string;
+  delta: number;
+  reason: string;
+  notatka: string | null;
+  order_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  products?: { name: string } | { name: string }[] | null;
 };
 
 export type QuoteLineRow = {

@@ -12,28 +12,31 @@ private let bazowyAdres: URL = {
 }()
 
 private enum Zakladka: String, CaseIterable {
-    case pakowanie, stany, skaner
+    case przeglad, zamowienia, magazyn, skaner
 
     var sciezka: String {
         switch self {
-        case .pakowanie: return "magazyn"
-        case .stany: return "magazyn/stany"
+        case .przeglad: return "magazyn"
+        case .zamowienia: return "magazyn/zamowienia"
+        case .magazyn: return "magazyn/stany"
         case .skaner: return "magazyn/skan"
         }
     }
 
     var etykieta: String {
         switch self {
-        case .pakowanie: return "Do spakowania"
-        case .stany: return "Stany"
+        case .przeglad: return "Przegląd"
+        case .zamowienia: return "Zamówienia"
+        case .magazyn: return "Magazyn"
         case .skaner: return "Skaner"
         }
     }
 
     var ikona: String {
         switch self {
-        case .pakowanie: return "shippingbox"
-        case .stany: return "square.stack.3d.up"
+        case .przeglad: return "square.grid.2x2"
+        case .zamowienia: return "shippingbox"
+        case .magazyn: return "square.stack.3d.up"
         case .skaner: return "barcode.viewfinder"
         }
     }
@@ -50,7 +53,7 @@ private enum Zakladka: String, CaseIterable {
 /// na ten sam ekran logowania, a trzy drogi do jednego miejsca to nie wybór,
 /// tylko zamieszanie.
 struct MagazynView: View {
-    @State private var wybrana: Zakladka = .pakowanie
+    @State private var wybrana: Zakladka = .przeglad
     @State private var zalogowany = false
 
     var body: some View {
@@ -66,7 +69,7 @@ struct MagazynView: View {
                     }
                 }
             } else {
-                WebTab(url: Zakladka.pakowanie.url, naSciezke: sprawdzDostep)
+                WebTab(url: Zakladka.przeglad.url, naSciezke: sprawdzDostep)
             }
         }
         .tint(Color(red: 0.62, green: 0.29, blue: 0.13))
