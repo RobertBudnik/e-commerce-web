@@ -150,6 +150,10 @@ struct WebView: UIViewRepresentable {
 
         let web = WKWebView(frame: .zero, configuration: config)
         web.navigationDelegate = context.coordinator
+        // Bez delegata interfejsu WebKit odrzuca `getUserMedia` z miejsca —
+        // iOS nie zdąży nawet zapytać o zgodę na aparat, a skaner pokazuje
+        // „brak zgody" mimo że użytkownik o nic nie był proszony.
+        web.uiDelegate = context.coordinator
         web.allowsBackForwardNavigationGestures = true
         web.isOpaque = false
         web.backgroundColor = .clear
@@ -174,10 +178,28 @@ struct WebView: UIViewRepresentable {
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         private let rodzic: WebView
         weak var web: WKWebView?
         init(_ rodzic: WebView) { self.rodzic = rodzic }
+
+        /// Zgoda na aparat dla skanera kodów.
+        ///
+        /// Zgadzamy się wyłącznie dla własnego adresu — strona wczytana
+        /// z obcego hosta (przekierowanie, cudzy link) aparatu nie dostanie.
+        /// `.grant` zdejmuje tylko pytanie WebKitu; systemowe pytanie iOS-a
+        /// o dostęp do aparatu i tak pojawia się przy pierwszym użyciu,
+        /// z opisem z `NSCameraUsageDescription`.
+        func webView(
+            _ webView: WKWebView,
+            requestMediaCapturePermissionFor origin: WKSecurityOrigin,
+            initiatedByFrame frame: WKFrameInfo,
+            type: WKMediaCaptureType,
+            decisionHandler: @escaping (WKPermissionDecision) -> Void
+        ) {
+            let swoj = origin.host == rodzic.url.host && type == .camera
+            decisionHandler(swoj ? .grant : .deny)
+        }
 
         @objc func odswiez(_ kontrolka: UIRefreshControl) {
             web?.reload()

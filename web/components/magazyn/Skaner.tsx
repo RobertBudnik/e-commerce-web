@@ -14,6 +14,23 @@ type Stan =
   | { faza: 'brak'; kod: string; komunikat: string }
   | { faza: 'blad'; komunikat: string };
 
+/**
+ * Ścieżka do zgody na aparat zależy od tego, gdzie widok jest oglądany.
+ * W powłoce na iPhonie nie ma żadnych „ustawień przeglądarki" — odesłanie
+ * tam zostawia magazyniera z instrukcją, której nie da się wykonać.
+ * Powłokę rozpoznajemy po klasie, którą layout dokłada na podstawie
+ * User-Agenta; tu czytamy ją z DOM-u, bo komponent jest kliencki.
+ */
+function brakZgody(): string {
+  const wPowloce =
+    typeof document !== 'undefined' &&
+    document.documentElement.classList.contains('w-aplikacji');
+
+  return wPowloce
+    ? 'Brak zgody na aparat. Włącz ją w Ustawieniach iPhone’a: Nordo → Aparat.'
+    : 'Brak zgody na aparat. Włącz ją w ustawieniach przeglądarki dla tej strony.';
+}
+
 export function Skaner() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const czytnikRef = useRef<{ stop: () => void } | null>(null);
@@ -54,7 +71,7 @@ export function Skaner() {
         faza: 'blad',
         komunikat:
           e instanceof Error && e.name === 'NotAllowedError'
-            ? 'Brak zgody na aparat. Włącz ją w ustawieniach przeglądarki dla tej strony.'
+            ? brakZgody()
             : 'Nie udało się uruchomić aparatu.',
       });
     }
