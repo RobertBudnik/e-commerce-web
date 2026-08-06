@@ -2930,13 +2930,14 @@ code {
   background: var(--surface);
   color: var(--ink);
 }
+/* Licznik siedzi na wpuszczonym torze segmentów, a `--ink-3` daje tam
+   4.1:1 w obu motywach — stopień wyżej i próg jest z zapasem. */
 .mag-segment-licznik {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
   font-size: 12px;
-  color: var(--ink-3);
+  color: var(--ink-2);
 }
-.mag-segment[aria-selected="true"] .mag-segment-licznik { color: var(--ink-2); }
 
 /* ---------- Szukanie ---------- */
 .mag-szukaj {
