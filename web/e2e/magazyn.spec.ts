@@ -170,3 +170,50 @@ test.describe('Zwroty', () => {
     await expect(page.locator('.mag-karta').last()).toContainText('zwrot od klienta');
   });
 });
+
+test.describe('Nadanie przesyłki', () => {
+  test('arkusz przyjmuje numer, zamówienie idzie do wysłanych', async ({ page }) => {
+    await zaloguj(page, KONTA.zaplecze);
+
+    // Seed nie trzyma żadnego zamówienia w kolejce — wszystkie są już
+    // dostarczone albo wysłane. Cofamy jedno do „nowe", żeby test nie
+    // zależał od tego, co akurat zostawiły poprzednie przebiegi.
+    await page.getByRole('button', { name: /Zamówienia/ }).click();
+    const wKoncie = page.locator('.order').first();
+    await wKoncie.locator('.sortbox-btn').click();
+    await page.getByRole('option', { name: 'nowe' }).click();
+    await expect(wKoncie.locator('.pill')).toHaveText('nowe');
+
+    await page.goto('/magazyn/zamowienia?stan=nowe');
+
+    const pierwsze = page.locator('.mag-karta .mag-wiersz').first();
+    await expect(pierwsze).toBeVisible();
+    await pierwsze.click();
+    await expect(page).toHaveURL(/\/magazyn\/zamowienia\/[^/]+/);
+
+    // Arkusz otwiera się dopiero na żądanie — karta zamówienia nie nosi
+    // pustego pola na numer przy każdym otwarciu
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Nadaj przesyłkę' }).click();
+
+    const arkusz = page.getByRole('dialog');
+    await expect(arkusz).toBeVisible();
+    await expect(arkusz.getByRole('button', { name: 'Nadaj przesyłkę' })).toBeDisabled();
+
+    // Escape zamyka, tak jak każdą nakładkę w tym projekcie
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Nadaj przesyłkę' }).click();
+    await page.getByPlaceholder('Numer listu przewozowego').fill('JVGL0099887766');
+    await page.getByRole('dialog').getByRole('button', { name: 'Nadaj przesyłkę' }).click();
+
+    // Numer wylądował w danych dostawy, a akcje ustąpiły miejsca informacji
+    await expect(page.getByText('JVGL0099887766')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('paczka nadana')).toBeVisible();
+
+    // I zamówienie przeniosło się do zakładki wysłanych
+    await page.goto('/magazyn/zamowienia?stan=wysłane');
+    await expect(page.locator('.mag-karta .mag-wiersz').first()).toBeVisible();
+  });
+});
