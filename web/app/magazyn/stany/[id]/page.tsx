@@ -39,7 +39,7 @@ export default async function Korekta({
         Magazyn
       </Link>
 
-      <header className="mag-top">
+      <header className="mag-top mag-top-kolumna">
         <h1 style={{ fontSize: 26 }}>{produkt.name}</h1>
         <p className="mag-podtytul">
           {[produkt.sku ?? produkt.barcode, produkt.category].filter(Boolean).join(' · ')}

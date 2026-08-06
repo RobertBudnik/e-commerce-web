@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 /** Liczby zmieniają się przy każdym zamówieniu — nic tu nie może iść z cache. */
 export const dynamic = 'force-dynamic';
 
-const DATA = new Intl.DateTimeFormat('pl-PL', { day: '2-digit', month: 'long', year: 'numeric' });
+const DATA = new Intl.DateTimeFormat('pl-PL', { day: 'numeric', month: 'long' });
 const GODZINA = new Intl.DateTimeFormat('pl-PL', { hour: '2-digit', minute: '2-digit' });
 
 export default async function Przeglad() {
@@ -86,6 +86,7 @@ export default async function Przeglad() {
               </span>
               <span className={`mag-delta ${ruch.delta > 0 ? 'mag-delta-plus' : 'mag-delta-minus'}`}>
                 {ruch.delta > 0 ? `+${ruch.delta}` : ruch.delta}
+                <span className="mag-delta-jednostka"> szt.</span>
               </span>
             </Link>
           ))}

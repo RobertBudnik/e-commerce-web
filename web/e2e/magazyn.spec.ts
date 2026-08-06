@@ -89,9 +89,10 @@ test.describe('Magazyn', () => {
     await page.reload();
     await expect(page.locator('.mag-korekta-wynik')).toHaveText(String(przed + 1));
 
-    // I widać go w historii na przeglądzie
+    // I widać go w historii na przeglądzie. Powód jedzie małą literą, bo
+    // w wierszu czyta się jak zdanie, a nie jak nagłówek.
     await page.goto('/magazyn');
-    await expect(page.locator('.mag-karta').last()).toContainText('Przyjęcie dostawy');
+    await expect(page.locator('.mag-karta').last()).toContainText('przyjęcie dostawy');
   });
 
   test('stan nie schodzi poniżej zera, a komunikat stoi przy liczbie', async ({ page }) => {

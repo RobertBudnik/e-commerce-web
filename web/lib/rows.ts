@@ -32,6 +32,8 @@ export type ProductRow = {
 
 export type ShippingAddress = {
   recipient?: string;
+  /** Nazwa punktu odbioru, gdy przesyłka idzie do paczkomatu, nie kurierem. */
+  pickup_point?: string | null;
   street?: string;
   postal_code?: string;
   city?: string;
@@ -84,6 +86,7 @@ export type RuchRow = {
   created_by: string | null;
   created_at: string;
   products?: { name: string } | { name: string }[] | null;
+  orders?: { order_number: string } | { order_number: string }[] | null;
 };
 
 export type QuoteLineRow = {

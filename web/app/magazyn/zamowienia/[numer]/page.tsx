@@ -37,7 +37,7 @@ export default async function Zamowienie({
         Zamówienia
       </Link>
 
-      <header className="mag-top">
+      <header className="mag-top mag-top-kolumna">
         <h1 style={{ fontFamily: 'var(--mono)', fontSize: 24, letterSpacing: 0 }}>
           {zamowienie.number}
         </h1>
@@ -57,7 +57,9 @@ export default async function Zamowienie({
             <span className="mag-tresc">
               <span className="mag-nazwa">{p.name}</span>
               <span className={`mag-meta${p.brakuje > 0 ? ' mag-meta-brak' : ''}`}>
-                {[p.sku, `stan ${p.stan} szt.`].filter(Boolean).join(' · ')}
+                {[p.sku ? `SKU ${p.sku}` : null, `stan ${p.stan} szt.`]
+                  .filter(Boolean)
+                  .join(' · ')}
                 {p.brakuje > 0 ? ` · brakuje ${p.brakuje}` : ''}
               </span>
             </span>
@@ -74,8 +76,13 @@ export default async function Zamowienie({
             <dd>{zamowienie.customer}</dd>
           </div>
           <div>
-            <dt>Adres</dt>
-            <dd>{zamowienie.address || '—'}</dd>
+            <dt>Punkt</dt>
+            <dd>
+              {zamowienie.punktOdbioru ?? 'Kurier'}
+              {zamowienie.address && (
+                <span className="mag-drugalinia">{zamowienie.address}</span>
+              )}
+            </dd>
           </div>
           <div>
             <dt>Telefon</dt>
@@ -96,21 +103,17 @@ export default async function Zamowienie({
 
       <h2 className="mag-sekcja">Płatność</h2>
       <div className="mag-karta">
-        <dl className="mag-dane">
-          <div>
-            <dt>Status</dt>
-            <dd>
-              {zamowienie.paymentStatus}
-              {zamowienie.operatorPlatnosci ? ` · ${zamowienie.operatorPlatnosci}` : ''}
-            </dd>
-          </div>
-          <div>
-            <dt>Kwota</dt>
-            <dd className="mono" style={{ fontSize: 17, fontWeight: 600 }}>
-              {money(zamowienie.total)}
-            </dd>
-          </div>
-        </dl>
+        <div className="mag-platnosc">
+          <span
+            className={`mag-dioda${zamowienie.paymentStatus === 'opłacone' ? '' : ' mag-dioda-uwaga'}`}
+            aria-hidden="true"
+          />
+          <span className="mag-platnosc-opis">
+            {zamowienie.paymentStatus.charAt(0).toUpperCase() + zamowienie.paymentStatus.slice(1)}
+            {zamowienie.operatorPlatnosci ? ` · ${zamowienie.operatorPlatnosci}` : ''}
+          </span>
+          <span className="mag-platnosc-kwota">{money(zamowienie.total)}</span>
+        </div>
       </div>
 
       <AkcjeZamowienia

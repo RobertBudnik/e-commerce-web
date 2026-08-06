@@ -515,7 +515,7 @@ export async function getOstatnieRuchy(limit = 3): Promise<RuchMagazynowy[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('inventory_movements')
-    .select('id, product_id, delta, reason, notatka, created_at, products(name)')
+    .select('id, product_id, delta, reason, notatka, created_at, products(name), orders(order_number)')
     .order('created_at', { ascending: false })
     .limit(limit);
 
@@ -525,12 +525,22 @@ export async function getOstatnieRuchy(limit = 3): Promise<RuchMagazynowy[]> {
     // PostgREST oddaje dołączony wiersz raz jako obiekt, raz jako tablicę —
     // zależnie od tego, jak rozpozna kardynalność relacji.
     const produkt = Array.isArray(r.products) ? r.products[0] : r.products;
+    const zam = Array.isArray(r.orders) ? r.orders[0] : r.orders;
+
+    // Ruch wynikający z zamówienia opisuje się numerem, nie powodem:
+    // „zamówienie #NOR-2026-0418" mówi magazynierowi więcej niż „sprzedaż",
+    // bo pozwala tę paczkę odnaleźć. Powody z listy lecą małą literą, żeby
+    // czytały się jak zdanie, a nie jak nagłówek.
+    const zrodlo = zam?.order_number
+      ? `zamówienie ${zam.order_number}`
+      : r.reason.charAt(0).toLowerCase() + r.reason.slice(1);
+
     return {
       id: r.id,
       produktId: r.product_id,
       produkt: produkt?.name ?? 'Produkt usunięty',
       delta: r.delta,
-      powod: r.reason,
+      powod: zrodlo,
       notatka: r.notatka,
       czas: r.created_at,
     };

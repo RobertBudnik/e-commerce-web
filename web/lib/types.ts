@@ -65,6 +65,8 @@ export type Order = {
   operatorPlatnosci: string | null;
   /** Numer listu przewozowego. Puste, dopóki paczka nie wyjechała. */
   numerPrzesylki: string | null;
+  /** Punkt odbioru; puste znaczy dostawę kurierem pod adres. */
+  punktOdbioru: string | null;
 };
 
 /** Pozycja historii magazynu. `delta` ze znakiem: plus przyjęcie, minus wydanie. */

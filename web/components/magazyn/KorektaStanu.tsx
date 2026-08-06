@@ -84,7 +84,11 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
       <div className="mag-korekta">
         <p className="mag-korekta-gora">
           <span>Stan po zapisie</span>
-          <span>{progNiski > 0 ? `próg ${progNiski}` : 'bez progu'}</span>
+          {progNiski > 0 ? (
+            <span className="mag-korekta-prog">próg {progNiski}</span>
+          ) : (
+            <span>bez progu</span>
+          )}
         </p>
 
         <div className="mag-korekta-srodek">

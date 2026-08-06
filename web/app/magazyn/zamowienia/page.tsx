@@ -2,7 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { wymagajZaplecza } from '@/lib/magazyn-dostep';
 import { getKolejkaZamowien, getLicznikiZamowien } from '@/lib/queries';
-import { money } from '@/lib/format';
+/* W kolejce waluta jest ta sama w każdym wierszu, więc powtarzanie „zł"
+   trzydzieści razy tylko zabiera miejsce liczbie. Symbol wraca na karcie
+   zamówienia, gdzie kwota jest pojedyncza i ma wagę. */
+const KWOTA = new Intl.NumberFormat('pl-PL', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 export const metadata: Metadata = {
   title: 'Zamówienia',
@@ -95,7 +101,7 @@ export default async function Zamowienia({
                 </span>
                 <span style={{ textAlign: 'right', flex: 'none' }}>
                   <span className="mag-odczyt" style={{ fontSize: 15, display: 'block' }}>
-                    {money(z.total)}
+                    {KWOTA.format(z.total)}
                   </span>
                   <span className="mag-segment-licznik">{GODZINA.format(new Date(z.date))}</span>
                 </span>

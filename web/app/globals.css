@@ -2757,8 +2757,19 @@ code {
   font-family: -apple-system, "SF Pro Text", system-ui, var(--sans);
 }
 
-/* ---------- Tytuł ekranu ---------- */
-.mag-top { padding: 8px var(--mag-gutter) 4px; }
+/* ---------- Tytuł ekranu ----------
+   Tytuł i licznik w jednym rzędzie: licznik jest podpisem tytułu, nie
+   osobnym wierszem treści, więc siada przy prawej krawędzi na jego linii.
+
+   Wyjątek robią ekrany szczegółu — tam podtytuł opisuje rzecz z tytułu
+   (symbol produktu, kategoria), więc należy do niego i idzie pod spód. */
+.mag-top {
+  padding: 8px var(--mag-gutter) 4px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
 .mag-top h1 {
   margin: 0;
   font-family: inherit;
@@ -2767,10 +2778,23 @@ code {
   letter-spacing: -0.5px;
   line-height: 1.15;
 }
+.mag-top-kolumna {
+  display: block;
+}
+.mag-top-kolumna .mag-podtytul {
+  max-width: none;
+  text-align: left;
+  margin-top: 2px;
+}
+
 .mag-podtytul {
-  margin: 2px 0 0;
+  margin: 0;
+  flex: none;
+  max-width: 40%;
   font-family: var(--mono);
   font-size: 12px;
+  line-height: 1.35;
+  text-align: right;
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
@@ -2930,13 +2954,14 @@ code {
   background: var(--surface);
   color: var(--ink);
 }
-/* Licznik siedzi na wpuszczonym torze segmentów, a `--ink-3` daje tam
-   4.1:1 w obu motywach — stopień wyżej i próg jest z zapasem. */
+/* Licznik w kolorze akcentu: to jedyna liczba na tym pasku i mówi, ile
+   pracy czeka w danej zakładce. `--ink-3` dawał na wpuszczonym torze 4.1:1,
+   więc i tak nie mógł zostać; akcent trzyma próg z zapasem w obu motywach. */
 .mag-segment-licznik {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
   font-size: 12px;
-  color: var(--ink-2);
+  color: var(--accent);
 }
 
 /* ---------- Szukanie ---------- */
@@ -3061,6 +3086,32 @@ code {
   font-weight: 600;
 }
 
+/* Płatność mieści się w jednym wierszu: status ze źródłem po lewej, kwota
+   po prawej. Rozbicie na dwa wiersze robiło z jednej informacji dwie. */
+.mag-platnosc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+}
+.mag-platnosc-opis { flex: 1; min-width: 0; font-size: 15px; }
+.mag-platnosc-kwota {
+  flex: none;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* Adres punktu odbioru drugą linią — nazwa punktu i ulica to dwie różne
+   rzeczy, a magazynier czyta najpierw nazwę. */
+.mag-dane .mag-drugalinia {
+  display: block;
+  margin-top: 1px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
 /* ---------- Wiersz danych (dostawa, płatność) ---------- */
 .mag-dane { margin: 0; }
 .mag-dane div {
@@ -3082,7 +3133,7 @@ code {
 .mag-korekta { margin-inline: var(--mag-gutter); padding: 16px 14px; border-radius: 12px; background: var(--surface); }
 .mag-korekta-gora {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   font-family: var(--mono);
@@ -3091,6 +3142,17 @@ code {
   text-transform: uppercase;
   color: var(--ink-3);
 }
+/* Kropka przy progu to ta sama dioda co w liście — próg jest stanem
+   ostrzegawczym i ma ten sam znak w obu miejscach. */
+.mag-korekta-prog { display: inline-flex; align-items: center; gap: 6px; }
+.mag-korekta-prog::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--uwaga);
+}
+
 .mag-korekta-srodek {
   display: grid;
   grid-template-columns: 64px 1fr 64px;
@@ -3116,12 +3178,15 @@ code {
 .mag-korekta-delta .plus { color: var(--ok-ink); }
 .mag-korekta-delta .minus { color: var(--accent); }
 
+/* Oba kroki są wypełnione, różnią się kierunkiem kontrastu: minus jedzie
+   powierzchnią wpuszczoną, plus odwróconą. Biały przycisk na białej karcie
+   ginął — było widać samą ramkę. */
 .mag-krok {
   width: 64px;
   height: 64px;
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg-sunken);
   color: var(--ink);
   font-size: 26px;
   line-height: 1;
@@ -3139,7 +3204,7 @@ code {
 .mag-skrot {
   min-height: 44px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-pill);
   background: var(--surface);
   color: var(--ink);
   font-family: var(--mono);
@@ -3196,6 +3261,13 @@ code {
 }
 .mag-delta-plus { color: var(--ok-ink); }
 .mag-delta-minus { color: var(--accent); }
+/* Jednostka jest stała i nie niesie informacji — nie może ciągnąć wzroku
+   tak samo jak liczba, która się zmienia. */
+.mag-delta-jednostka { font-weight: 400; opacity: .8; }
+
+/* Wiersz historii nie prowadzi dalej niż do karty produktu, ale w makiecie
+   nie ma szewronu — ruch jest zapisem, nie pozycją do otwarcia. */
+.mag-wiersz-ruch { cursor: default; }
 
 /* ---------- Skaner ---------- */
 .mag-skan { margin: 12px var(--mag-gutter) 0; }
@@ -3211,13 +3283,16 @@ code {
 /* Cztery klamry po 34 px. Dwa pseudoelementy, każdy bierze parę rogów
    przez krawędź poziomą i pionową. */
 .mag-klamry { position: absolute; inset: 16%; }
+/* Klamry są jasne, nie w kolorze akcentu: na obrazie z kamery mają
+   wyznaczać kadr, a nie konkurować ze smugą odczytu, która jedyna coś
+   sygnalizuje. */
 .mag-klamry::before,
 .mag-klamry::after {
   content: "";
   position: absolute;
   width: 34px;
   height: 34px;
-  border: 2px solid var(--accent);
+  border: 2px solid rgba(255, 255, 255, .92);
 }
 .mag-klamry::before {
   top: 0; left: 0;
@@ -3237,7 +3312,7 @@ code {
   position: absolute;
   width: 34px;
   height: 34px;
-  border: 2px solid var(--accent);
+  border: 2px solid rgba(255, 255, 255, .92);
 }
 .mag-klamry-b::before {
   top: 0; right: 0;

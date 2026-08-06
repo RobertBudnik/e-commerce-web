@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Icon } from '@/components/Icon';
 
 /**
  * Pole szukania piszące do adresu, nie do stanu komponentu.
@@ -35,7 +34,8 @@ export function SzukajStanow({ startowa }: { startowa: string }) {
 
   return (
     <label className="mag-szukaj">
-      <Icon name="search" />
+      {/* Bez ikony lupy: pole jest jedyne na ekranie i podpisane wprost,
+          a ikona zabierała szerokość frazie na wąskim telefonie. */}
       <span className="sr-only">Szukaj nazwy lub SKU</span>
       <input
         type="search"

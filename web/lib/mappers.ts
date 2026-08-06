@@ -75,6 +75,7 @@ export function toOrder(row: OrderRow): Order {
     })),
     operatorPlatnosci: row.payment_provider ?? null,
     numerPrzesylki: row.numer_przesylki ?? null,
+    punktOdbioru: addr.pickup_point ?? null,
   };
 }
 
