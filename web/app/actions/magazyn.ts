@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
+import { POWODY_KOREKTY, type PowodKorekty } from '@/lib/magazyn-powody';
 
 export type MagazynResult = { ok: true; stock: number } | { ok: false; error: string };
 
@@ -51,16 +52,6 @@ export async function adjustStockAction(
 export type KorektaWynik =
   | { ok: true; stan: number }
   | { ok: false; blad: string };
-
-/** Powody korekty. Lista zamknięta — „inne" po pół roku znaczy tyle co nic. */
-export const POWODY_KOREKTY = [
-  'Przyjęcie dostawy',
-  'Zwrot od klienta',
-  'Ubytek lub uszkodzenie',
-  'Korekta inwentaryzacyjna',
-] as const;
-
-export type PowodKorekty = (typeof POWODY_KOREKTY)[number];
 
 /**
  * Korekta stanu z aplikacji.

@@ -1,41 +1,50 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Icon } from '@/components/Icon';
+import Link from 'next/link';
+import { korygujStanAction } from '@/app/actions/magazyn';
 import { znajdzPoKodzieAction } from '@/app/actions/skan';
-import { adjustStockAction } from '@/app/actions/magazyn';
 import type { Product } from '@/lib/types';
 
 type Stan =
   | { faza: 'gotowy' }
   | { faza: 'skanuje' }
   | { faza: 'szuka'; kod: string }
-  | { faza: 'znaleziony'; kod: string; product: Product; stan: number }
-  | { faza: 'brak'; kod: string; komunikat: string }
+  | { faza: 'znaleziony'; kod: string; produkt: Product; stan: number }
+  | { faza: 'nieznany'; kod: string }
+  | { faza: 'brak-zgody' }
   | { faza: 'blad'; komunikat: string };
+
+/**
+ * Powód dla korekty ze skanera.
+ *
+ * Skanowanie regału i poprawianie po jednej sztuce to liczenie towaru,
+ * a nie przyjęcie dostawy ani ubytek — z zamkniętej listy powodów pasuje
+ * dokładnie jeden i nie zgadujemy za magazyniera.
+ */
+const POWOD_SKANERA = 'Korekta inwentaryzacyjna';
 
 /**
  * Ścieżka do zgody na aparat zależy od tego, gdzie widok jest oglądany.
  * W powłoce na iPhonie nie ma żadnych „ustawień przeglądarki" — odesłanie
  * tam zostawia magazyniera z instrukcją, której nie da się wykonać.
- * Powłokę rozpoznajemy po klasie, którą layout dokłada na podstawie
- * User-Agenta; tu czytamy ją z DOM-u, bo komponent jest kliencki.
  */
-function brakZgody(): string {
+function instrukcjaZgody(): string {
   const wPowloce =
     typeof document !== 'undefined' &&
     document.documentElement.classList.contains('w-aplikacji');
 
   return wPowloce
-    ? 'Brak zgody na aparat. Włącz ją w Ustawieniach iPhone’a: Nordo → Aparat.'
-    : 'Brak zgody na aparat. Włącz ją w ustawieniach przeglądarki dla tej strony.';
+    ? 'Włącz aparat w Ustawieniach iPhone’a: Nordo → Aparat.'
+    : 'Włącz aparat w ustawieniach przeglądarki dla tej strony.';
 }
 
 export function Skaner() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const czytnikRef = useRef<{ stop: () => void } | null>(null);
   const [stan, setStan] = useState<Stan>({ faza: 'gotowy' });
-  const [czekaZapis, setCzekaZapis] = useState(false);
+  const [zapis, setZapis] = useState(false);
+  const [blad, setBlad] = useState<string | null>(null);
 
   const zatrzymaj = useCallback(() => {
     czytnikRef.current?.stop();
@@ -48,6 +57,7 @@ export function Skaner() {
   useEffect(() => zatrzymaj, [zatrzymaj]);
 
   async function start() {
+    setBlad(null);
     setStan({ faza: 'skanuje' });
     try {
       // Import leniwy: biblioteka waży ~200 kB i nie ma powodu, żeby ciążyła
@@ -55,7 +65,7 @@ export function Skaner() {
       const { BrowserMultiFormatReader } = await import('@zxing/browser');
       const czytnik = new BrowserMultiFormatReader();
 
-      const kontrola = await czytnik.decodeFromVideoDevice(
+      czytnikRef.current = await czytnik.decodeFromVideoDevice(
         undefined,
         videoRef.current!,
         (wynik) => {
@@ -65,125 +75,209 @@ export function Skaner() {
           void szukaj(kod);
         }
       );
-      czytnikRef.current = kontrola;
     } catch (e) {
-      setStan({
-        faza: 'blad',
-        komunikat:
-          e instanceof Error && e.name === 'NotAllowedError'
-            ? brakZgody()
-            : 'Nie udało się uruchomić aparatu.',
-      });
+      setStan(
+        e instanceof Error && e.name === 'NotAllowedError'
+          ? { faza: 'brak-zgody' }
+          : { faza: 'blad', komunikat: 'Nie udało się uruchomić aparatu.' }
+      );
     }
   }
 
   async function szukaj(kod: string) {
     setStan({ faza: 'szuka', kod });
     const wynik = await znajdzPoKodzieAction(kod);
+
     if (wynik.ok) {
-      setStan({ faza: 'znaleziony', kod, product: wynik.product, stan: wynik.product.stock });
+      setStan({ faza: 'znaleziony', kod, produkt: wynik.product, stan: wynik.product.stock });
       // Krótkie potwierdzenie dotykiem — przy hałasie magazynu dźwięku i tak
       // nie słychać, a wzrok jest zajęty kartonem.
       navigator.vibrate?.(40);
     } else {
-      setStan({ faza: 'brak', kod, komunikat: wynik.error });
+      setStan({ faza: 'nieznany', kod });
       navigator.vibrate?.([60, 50, 60]);
     }
   }
 
-  function koryguj(delta: number) {
+  async function koryguj(delta: number) {
     if (stan.faza !== 'znaleziony') return;
-    setCzekaZapis(true);
-    const id = stan.product.id;
-    void adjustStockAction(id, delta, 'skaner w magazynie').then((w) => {
-      setCzekaZapis(false);
-      if (w.ok) {
-        setStan((s) => (s.faza === 'znaleziony' ? { ...s, stan: w.stock } : s));
-        navigator.vibrate?.(25);
-      }
-    });
+    setBlad(null);
+    setZapis(true);
+
+    const wynik = await korygujStanAction(
+      stan.produkt.id,
+      delta,
+      POWOD_SKANERA,
+      '',
+      // Każde dotknięcie to świadoma osobna korekta o jedną sztukę, więc
+      // każde dostaje własny klucz. Idempotencji pilnuje tu blokada wiersza
+      // w bazie, nie powtarzalność żądania.
+      crypto.randomUUID()
+    );
+    setZapis(false);
+
+    if (!wynik.ok) {
+      // Po błędzie liczba wraca do stanu z bazy — inaczej magazynier patrzy
+      // na wartość, której nigdzie nie ma.
+      setStan({ ...stan, stan: stan.produkt.stock });
+      setBlad(wynik.blad);
+      return;
+    }
+
+    setStan({ ...stan, stan: wynik.stan });
+    navigator.vibrate?.(25);
   }
 
+  const skanuje = stan.faza === 'skanuje';
+
   return (
-    <div className="skan">
-      <div className="skan-okno">
+    <div className="mag-skan">
+      <div className="mag-kadr">
         <video ref={videoRef} playsInline muted />
-        {stan.faza === 'skanuje' && <div className="skan-celownik" aria-hidden="true" />}
-        {stan.faza !== 'skanuje' && (
-          <div className="skan-zaslona">
-            <Icon name="search" />
-          </div>
+        {skanuje && (
+          <>
+            <div className="mag-klamry" aria-hidden="true" />
+            <div className="mag-klamry-b" aria-hidden="true" />
+            <div className="mag-linia" aria-hidden="true" />
+          </>
         )}
       </div>
 
       {stan.faza === 'gotowy' && (
         <>
-          <p className="skan-info">
-            Przyłóż kod kreskowy z opakowania do kadru. Aparat poprosi o zgodę przy
-            pierwszym uruchomieniu.
-          </p>
-          <button type="button" className="btn btn-block skan-cta" onClick={start}>
-            Włącz aparat
-          </button>
+          <p className="mag-podpowiedz">ustaw kod EAN w kadrze</p>
+          <div className="mag-akcje">
+            <button type="button" className="mag-btn" onClick={start}>
+              Włącz aparat
+            </button>
+          </div>
         </>
       )}
 
-      {stan.faza === 'skanuje' && (
+      {skanuje && (
         <>
-          <p className="skan-info">Szukam kodu w kadrze…</p>
-          <button type="button" className="btn btn-ghost btn-block" onClick={() => { zatrzymaj(); setStan({ faza: 'gotowy' }); }}>
-            Przerwij
-          </button>
+          <p className="mag-podpowiedz">ustaw kod EAN w kadrze</p>
+          <div className="mag-akcje">
+            <button
+              type="button"
+              className="mag-btn mag-btn-link"
+              onClick={() => {
+                zatrzymaj();
+                setStan({ faza: 'gotowy' });
+              }}
+            >
+              Przerwij
+            </button>
+          </div>
         </>
       )}
 
-      {stan.faza === 'szuka' && <p className="skan-info num">Sprawdzam {stan.kod}…</p>}
-
-      {stan.faza === 'brak' && (
-        <div className="skan-wynik skan-wynik-brak">
-          <p className="label">Nieznany kod</p>
-          <p className="num skan-kod">{stan.kod}</p>
-          <p className="skan-info">{stan.komunikat}</p>
-          <p className="skan-info">
-            Dopisz go do produktu w panelu na komputerze, wtedy skaner go rozpozna.
-          </p>
-          <button type="button" className="btn btn-block" onClick={start}>
-            Skanuj następny
-          </button>
-        </div>
-      )}
+      {stan.faza === 'szuka' && <p className="mag-podpowiedz">sprawdzam {stan.kod}…</p>}
 
       {stan.faza === 'znaleziony' && (
-        <div className="skan-wynik">
-          <p className="label">Znaleziono</p>
-          <h2 className="skan-nazwa">{stan.product.name}</h2>
-          <p className="num skan-kod">{stan.kod}</p>
+        <div className="mag-arkusz">
+          <div className="mag-arkusz-gora">
+            <span
+              className={`mag-dioda${
+                stan.stan === 0
+                  ? ' mag-dioda-zero'
+                  : stan.produkt.progNiski > 0 && stan.stan <= stan.produkt.progNiski
+                    ? ' mag-dioda-uwaga'
+                    : ''
+              }`}
+              aria-hidden="true"
+            />
+            <h2 className="mag-arkusz-nazwa">{stan.produkt.name}</h2>
+          </div>
 
-          <p className="skan-stan num">
-            Na stanie: <strong>{stan.stan}</strong>
+          <p className="mag-arkusz-kod">
+            {[stan.kod, stan.produkt.sku].filter(Boolean).join(' · ')}
           </p>
 
-          <div className="skan-korekta">
-            <button type="button" onClick={() => koryguj(-1)} disabled={czekaZapis} aria-label="Zdejmij jedną sztukę">
+          <p className="mag-arkusz-stan" aria-live="polite">
+            {stan.stan} szt.
+          </p>
+
+          <div className="mag-arkusz-akcje">
+            <button
+              type="button"
+              className="mag-btn mag-btn-obrys"
+              onClick={() => koryguj(-1)}
+              disabled={zapis}
+              aria-label="Zdejmij jedną sztukę"
+            >
               −1
             </button>
-            <button type="button" onClick={() => koryguj(1)} disabled={czekaZapis} aria-label="Dodaj jedną sztukę">
+            <button
+              type="button"
+              className="mag-btn"
+              onClick={() => koryguj(1)}
+              disabled={zapis}
+              aria-label="Dodaj jedną sztukę"
+            >
               +1
             </button>
           </div>
 
-          <button type="button" className="btn btn-block" onClick={start}>
+          {blad && <p className="mag-blad" style={{ marginTop: 10 }}>{blad}</p>}
+
+          <Link className="mag-btn mag-btn-link" href={`/magazyn/stany/${stan.produkt.id}`}>
+            Otwórz kartę produktu
+          </Link>
+
+          <button type="button" className="mag-btn mag-btn-link" onClick={start}>
             Skanuj następny
           </button>
         </div>
       )}
 
-      {stan.faza === 'blad' && (
-        <div className="skan-wynik skan-wynik-brak">
-          <p className="skan-info">{stan.komunikat}</p>
-          <button type="button" className="btn btn-block" onClick={start}>
+      {stan.faza === 'nieznany' && (
+        <div className="mag-arkusz">
+          <h2 className="mag-arkusz-nazwa">Nie znam tego kodu</h2>
+          {/* Kod musi dać się skopiować — w powłoce zaznaczanie jest wyłączone
+              wszędzie poza takimi miejscami. */}
+          <p className="mag-arkusz-kod" style={{ userSelect: 'text', WebkitUserSelect: 'text' }}>
+            {stan.kod}
+          </p>
+
+          {/* Przypisanie kodu to edycja produktu, a ta mieszka w panelu.
+              Aplikacja prowadzi tam zamiast udawać, że zrobi to sama. */}
+          <Link className="mag-btn" href="/panel" style={{ marginTop: 12 }}>
+            Przypisz do produktu
+          </Link>
+
+          <button type="button" className="mag-btn mag-btn-link" onClick={start}>
+            Skanuj następny
+          </button>
+        </div>
+      )}
+
+      {stan.faza === 'brak-zgody' && (
+        <div className="mag-arkusz">
+          <h2 className="mag-arkusz-nazwa">Brak zgody na aparat</h2>
+          <p className="mag-arkusz-kod">{instrukcjaZgody()}</p>
+
+          <button type="button" className="mag-btn" style={{ marginTop: 12 }} onClick={start}>
             Spróbuj ponownie
           </button>
+          {/* Bez aparatu skaner jest ślepy, ale magazyn działa dalej —
+              wyjście stąd musi istnieć, inaczej zostaje czarny prostokąt. */}
+          <Link className="mag-btn mag-btn-link" href="/magazyn/stany">
+            Przejdź do listy magazynu
+          </Link>
+        </div>
+      )}
+
+      {stan.faza === 'blad' && (
+        <div className="mag-arkusz">
+          <h2 className="mag-arkusz-nazwa">Aparat nie ruszył</h2>
+          <p className="mag-arkusz-kod">{stan.komunikat}</p>
+          <button type="button" className="mag-btn" style={{ marginTop: 12 }} onClick={start}>
+            Spróbuj ponownie
+          </button>
+          <Link className="mag-btn mag-btn-link" href="/magazyn/stany">
+            Przejdź do listy magazynu
+          </Link>
         </div>
       )}
     </div>

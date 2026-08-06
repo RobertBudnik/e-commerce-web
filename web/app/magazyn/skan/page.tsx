@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { MagazynNav } from '@/components/magazyn/MagazynNav';
 import { Skaner } from '@/components/magazyn/Skaner';
-import { getSessionUser } from '@/lib/queries';
+import { wymagajZaplecza } from '@/lib/magazyn-dostep';
 
 export const metadata: Metadata = {
   title: 'Skaner',
@@ -12,22 +10,15 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-const ZAPLECZE = ['owner', 'manager', 'staff'];
-
 export default async function Skan() {
-  const user = await getSessionUser();
-
-  if (!user) redirect('/logowanie?powrot=%2Fmagazyn%2Fskan');
-  if (!ZAPLECZE.includes(user.rawRole)) redirect('/konto');
+  await wymagajZaplecza('/magazyn/skan');
 
   return (
-    <main className="container magazyn">
-      <header className="magazyn-top">
-        <p className="label">Magazyn</p>
+    <main className="mag">
+      <header className="mag-top">
         <h1>Skaner</h1>
       </header>
 
-      <MagazynNav aktywny="skan" />
       <Skaner />
     </main>
   );

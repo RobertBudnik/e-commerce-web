@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { korygujStanAction, POWODY_KOREKTY } from '@/app/actions/magazyn';
+import { korygujStanAction } from '@/app/actions/magazyn';
+import { POWODY_KOREKTY } from '@/lib/magazyn-powody';
 
 type Props = {
   produktId: string;
