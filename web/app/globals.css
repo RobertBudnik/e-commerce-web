@@ -142,6 +142,13 @@
 :root { --line-strong: #d3ccbe; }
 .dark { --line-strong: #413c36; }
 
+/* Próg ostrzegawczy w magazynie — trzeci stan obok „w porządku" i „zero".
+   Nie da się go zrobić istniejącymi tokenami: `--ok` to zieleń dostępności,
+   a `--accent` niesie już „pilne", więc dioda przy progu wyglądałaby jak
+   brak towaru. Amber jest wyłącznie sygnałem stanu; literom go nie dajemy. */
+:root { --uwaga: oklch(0.58 0.14 78); --uwaga-soft: oklch(0.93 0.05 85); }
+.dark { --uwaga: oklch(0.80 0.12 92); --uwaga-soft: oklch(0.31 0.05 92); }
+
 /* ---------- Reset / base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 
