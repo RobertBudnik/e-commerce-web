@@ -470,6 +470,17 @@ export async function getStanyMagazynu(
   return produkty.filter((p) => p.progNiski > 0 && p.stock > 0 && p.stock <= p.progNiski);
 }
 
+/** Zwroty czekające na przyjęcie w magazynie. */
+export async function getLiczbaZwrotow(): Promise<number> {
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from('zwroty')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'zgłoszony');
+
+  return count ?? 0;
+}
+
 /** Liczniki segmentów magazynu. Liczone z jednego przebiegu po aktywnych pozycjach. */
 export async function getLicznikiMagazynu(): Promise<{
   wszystko: number;
@@ -533,7 +544,7 @@ export async function getOstatnieRuchy(limit = 3): Promise<RuchMagazynowy[]> {
 export async function getPrzeglad(): Promise<{
   doWyslania: number;
   niskieStany: number;
-  zeroStany: number;
+  zwroty: number;
   paczkiDzis: number;
   sztukiDzis: number;
   ruchy: RuchMagazynowy[];
@@ -543,9 +554,10 @@ export async function getPrzeglad(): Promise<{
   poczatekDnia.setHours(0, 0, 0, 0);
   const odKiedy = poczatekDnia.toISOString();
 
-  const [liczniki, magazyn, ruchy, paczki, ruchyDzis] = await Promise.all([
+  const [liczniki, magazyn, zwroty, ruchy, paczki, ruchyDzis] = await Promise.all([
     getLicznikiZamowien(),
     getLicznikiMagazynu(),
+    getLiczbaZwrotow(),
     getOstatnieRuchy(3),
     supabase
       .from('orders')
@@ -563,9 +575,53 @@ export async function getPrzeglad(): Promise<{
   return {
     doWyslania: (liczniki.nowe ?? 0) + (liczniki.spakowane ?? 0),
     niskieStany: magazyn.niskie,
-    zeroStany: magazyn.zero,
+    zwroty,
     paczkiDzis: paczki.count ?? 0,
     sztukiDzis,
     ruchy,
   };
+}
+
+/** Zwrot do przyjęcia razem z pozycjami i numerem zamówienia. */
+export type ZwrotDoPrzyjecia = {
+  id: string;
+  numerZamowienia: string;
+  klient: string;
+  powod: string | null;
+  zgloszony: string;
+  pozycje: { name: string; qty: number }[];
+  sztuk: number;
+};
+
+/**
+ * Zwroty czekające w kolejce. Pozycje dołączane jednym zapytaniem — lista
+ * zwrotów bez zawartości nie mówi magazynierowi, czego się spodziewać.
+ */
+export async function getZwroty(): Promise<ZwrotDoPrzyjecia[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('zwroty')
+    .select('id, powod, created_at, orders(order_number, email, shipping_address), zwroty_pozycje(name, qty)')
+    .eq('status', 'zgłoszony')
+    .order('created_at', { ascending: true })
+    .limit(50);
+
+  if (error || !data) return [];
+
+  return data.map((z) => {
+    // PostgREST oddaje dołączony wiersz raz jako obiekt, raz jako tablicę.
+    const zam = Array.isArray(z.orders) ? z.orders[0] : z.orders;
+    const pozycje = (z.zwroty_pozycje ?? []) as { name: string; qty: number }[];
+    const adres = (zam?.shipping_address ?? {}) as { recipient?: string };
+
+    return {
+      id: String(z.id),
+      numerZamowienia: zam?.order_number ?? '—',
+      klient: adres.recipient || zam?.email || '—',
+      powod: z.powod ?? null,
+      zgloszony: z.created_at as string,
+      pozycje,
+      sztuk: pozycje.reduce((a, p) => a + Number(p.qty ?? 0), 0),
+    };
+  });
 }

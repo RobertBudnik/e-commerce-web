@@ -45,12 +45,12 @@ export default async function Przeglad() {
           <span className="mag-szewron" aria-hidden="true" />
         </Link>
 
-        <Link className="mag-wiersz" href="/magazyn/stany?segment=zero">
+        <Link className="mag-wiersz" href="/magazyn/zwroty">
           <span className="mag-dioda mag-dioda-zero" aria-hidden="true" />
           <span className="mag-tresc">
-            <span className="mag-nazwa">Pozycje bez towaru</span>
+            <span className="mag-nazwa">Zwroty do przyjęcia</span>
           </span>
-          <span className="mag-odczyt">{dane.zeroStany}</span>
+          <span className="mag-odczyt">{dane.zwroty}</span>
           <span className="mag-szewron" aria-hidden="true" />
         </Link>
       </div>

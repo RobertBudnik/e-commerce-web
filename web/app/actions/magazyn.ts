@@ -149,3 +149,27 @@ export async function ustawStanZamowieniaAction(
 
   return { ok: true, stan: String(data) };
 }
+
+export type ZwrotWynik = { ok: true; sztuk: number } | { ok: false; blad: string };
+
+/**
+ * Przyjęcie zwrotu w magazynie.
+ *
+ * Sztuki wracają na stan przez `inventory_movements`, tym samym kanałem co
+ * korekta ręczna — historia magazynu tłumaczy każdą sztukę niezależnie od
+ * tego, którędy przyszła. Powtórne dotknięcie oddaje zero i nie dubluje
+ * ruchu, bo funkcja patrzy na stan zwrotu, nie na klucz żądania.
+ */
+export async function przyjmijZwrotAction(zwrotId: string): Promise<ZwrotWynik> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('przyjmij_zwrot', { p_zwrot: zwrotId });
+
+  if (error) return { ok: false, blad: error.message };
+
+  revalidatePath('/magazyn');
+  revalidatePath('/magazyn/zwroty');
+  revalidatePath('/magazyn/stany');
+  revalidatePath('/sklep');
+
+  return { ok: true, sztuk: Number(data) };
+}
