@@ -54,6 +54,16 @@ const SKRYPT_MOTYWU = `
     var ciemny = zapis === 'dark' ||
       (zapis !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
     if (ciemny) document.documentElement.classList.add('dark');
+
+    // Skrót z ekranu początkowego to też aplikacja, tylko uruchamiana przez
+    // Safari — nie niesie więc User-Agenta powłoki i serwer nie ma po czym
+    // jej poznać. Bez tego magazyn otwarty z ikony dostawał wygląd strony:
+    // nadtytuł, szeryfowy nagłówek i pasek zakładek w HTML-u, mimo że pasek
+    // adresu był schowany. Klasa jest ta sama, więc reguły powłoki obejmują
+    // obie drogi bez dublowania.
+    if (matchMedia('(display-mode: standalone)').matches) {
+      document.documentElement.classList.add('w-aplikacji');
+    }
   } catch (e) {}
 })();
 `;

@@ -2525,3 +2525,204 @@ code {
 /* Nadtytuł „KONTO" nad logowaniem: w aplikacji zbędny, bo to jedyny ekran
    przed wejściem — nie ma czego rozróżniać. */
 .w-aplikacji .auth .label { display: none; }
+
+/* ==========================================================================
+   Powłoka: charakter przyrządu
+
+   Magazyn to narzędzie pracy, nie witryna — ma się czytać jak wyświetlacz
+   skanera, a nie jak karta produktu. Charakter budujemy trzema rzeczami,
+   wszystkie już są w systemie: krojem maszynowym na każdej zmiennej
+   wartości, wpuszczonymi polami odczytu zamiast płaskiego tekstu oraz
+   kontrolkami stanu zamiast opisów słownych.
+
+   Czego tu nie ma i nie będzie: gradientów, neonów i kolorowych cieni.
+   „Gadżeciarsko" robi się typografią i światłem, nie świeceniem — a paleta
+   zostaje ta sama co w sklepie, więc obie skóry pozostają jedną rodziną.
+   ========================================================================== */
+
+/* ---------- Odczyty: wszystko, co się zmienia, jedzie maszynowym ---------- */
+.w-aplikacji .stock-count,
+.w-aplikacji .pack-nr,
+.w-aplikacji .skan-kod,
+.w-aplikacji .stock-delta-val,
+.w-aplikacji .stock-podglad,
+.w-aplikacji .magazyn-licznik,
+.w-aplikacji .skan-stan strong {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+}
+
+/* Stan na wyświetlaczu: liczba wpuszczona w pole, nie postawiona na tle.
+   Wcięcie robi z niej wskazanie przyrządu — wzrok trafia w nie od razu
+   przy przewijaniu listy kciukiem. */
+.w-aplikacji .stock-count {
+  min-width: 52px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+  text-align: center;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+.w-aplikacji .stock-brak .stock-count {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ---------- Kontrolka stanu zamiast paska przy krawędzi ----------
+   Pasek z boku ginął w liście grupowanej, bo rzędy stykają się bokami.
+   Dioda przy nazwie czyta się jak lampka na urządzeniu i nie zabiera
+   szerokości wierszowi. */
+.w-aplikacji .stock-brak,
+.w-aplikacji .stock-niski { border-left: 0; }
+.w-aplikacji .stock-brak .stock-head,
+.w-aplikacji .stock-niski .stock-head { padding-left: var(--gutter); }
+
+/* Dioda dokłada trzecie dziecko do rzędu, a ten rozdzielał miejsce równo
+   między wszystkie — nazwa lądowała na środku. Niech zabiera resztę
+   szerokości, wtedy odczyt zostaje przy prawej krawędzi. */
+.w-aplikacji .stock-name { flex: 1; }
+
+.w-aplikacji .stock-row .stock-head::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-right: 2px;
+  border-radius: 50%;
+  background: var(--ok);
+  /* Otoczka w kolorze diody, nie cień — cień kolorowy jest poza paletą,
+     a pierścień daje ten sam efekt lampki pod szkłem. */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent);
+}
+.w-aplikacji .stock-niski .stock-head::before {
+  background: var(--ink-3);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink-3) 22%, transparent);
+}
+.w-aplikacji .stock-brak .stock-head::before {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+/* ---------- Kadr skanera: celownik z narożników ----------
+   Pełna ramka zamykała obraz jak zdjęcie w passe-partout. Cztery narożniki
+   zostawiają kadr otwarty i wyglądają jak podgląd z czytnika. */
+.w-aplikacji .skan-okno {
+  aspect-ratio: 1 / 1;
+  background: var(--bg-sunken);
+}
+.w-aplikacji .skan-celownik {
+  inset: 18% 12%;
+  border: 0;
+  border-radius: 0;
+  /* Przyciemnienie pola poza kadrem zostaje — bez niego celownik gubi się
+     na jasnym obrazie z kamery. */
+  box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--ink) 38%, transparent);
+}
+/* Klamry u góry i u dołu, boki otwarte. Kod kreskowy jest szerszy niż
+   wyższy, więc to te dwie krawędzie mówią, gdzie go przyłożyć — pełna
+   ramka tylko zamykałaby obraz. */
+.w-aplikacji .skan-celownik::before,
+.w-aplikacji .skan-celownik::after {
+  content: "";
+  position: absolute;
+  left: -2px; right: -2px;
+  height: 26px;
+  border: 2px solid var(--accent);
+}
+.w-aplikacji .skan-celownik::before {
+  top: -2px;
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+}
+.w-aplikacji .skan-celownik::after {
+  bottom: -2px;
+  border-top: 0;
+  border-radius: 0 0 6px 6px;
+}
+
+/* Smuga odczytu — jedyny ruch w tym widoku; mówi wprost, że urządzenie
+   pracuje. Element ma wysokość całego kadru, a widoczna jest wyłącznie
+   jego górna krawędź: dzięki temu `translate` w procentach przesuwa
+   kreskę przez cały kadr, a nie o własne dwa piksele. Ruch idzie na
+   `translate`, więc nie rusza układu. */
+@keyframes skan-smuga {
+  from { translate: 0 0; }
+  to   { translate: 0 calc(100% - 2px); }
+}
+.w-aplikacji .skan-okno:has(.skan-celownik)::after {
+  content: "";
+  position: absolute;
+  left: 12%; right: 12%;
+  top: 18%;
+  height: 64%;
+  border-top: 2px solid var(--accent);
+  opacity: .8;
+  animation: skan-smuga 2.4s cubic-bezier(.4, 0, .6, 1) infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Nieruchoma smuga jest tylko kreską w poprzek kadru — bez ruchu nic
+     nie wnosi, więc znika w całości zamiast zastygać w losowym miejscu. */
+  .w-aplikacji .skan-okno:has(.skan-celownik)::after { display: none; }
+}
+
+/* ---------- Wynik odczytu jako wyświetlacz ----------
+   Panel wpuszczony w tło, wyrównany do lewej: tak wygląda odczyt na
+   urządzeniu. Wyśrodkowanie zostawiamy komunikatom, nie danym. */
+.w-aplikacji .skan-wynik {
+  text-align: left;
+  padding: 16px;
+  background: var(--bg-sunken);
+  border-radius: var(--radius);
+}
+.w-aplikacji .skan-wynik .label { display: block; }
+.w-aplikacji .skan-nazwa { font-size: 1.0625rem; font-weight: 600; letter-spacing: -.01em; }
+.w-aplikacji .skan-kod {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  justify-self: start;
+  color: var(--ink-2);
+}
+/* Stan po odczycie to główna liczba na ekranie — dostaje wielkość
+   wskazania, nie akapitu. */
+.w-aplikacji .skan-stan {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 6px 0 2px;
+}
+.w-aplikacji .skan-stan strong { font-size: 2.25rem; line-height: 1; font-weight: 600; }
+.w-aplikacji .skan-wynik-brak { background: var(--accent-soft); }
+.w-aplikacji .skan-wynik-brak .skan-info { text-align: left; }
+
+/* ---------- Numer zamówienia jak etykieta na paczce ---------- */
+.w-aplikacji .pack-nr {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+  font-size: .8125rem;
+}
+
+/* Podgląd korekty: to wskazanie, a nie zdanie — dostaje wpuszczone pole
+   na całą szerokość, żeby dało się je odczytać bez czytania. */
+.w-aplikacji .stock-podglad {
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+}
+
+/* Najsłabszy stopień tuszu jest liczony pod tło strony, nie pod wpuszczone
+   pole — na `--bg-sunken` schodzi do 4.2:1 w obu motywach. Wszystko, co
+   wylądowało na wpuszczonym tle, dostaje stopień wyżej. Dotyczy to samych
+   etykiet i numerów, więc różnicy w hierarchii nie widać. */
+.w-aplikacji .pack-nr,
+.w-aplikacji .stock-podglad,
+.w-aplikacji .skan-wynik .label {
+  color: var(--ink-2);
+}
