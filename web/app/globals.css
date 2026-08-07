@@ -2871,6 +2871,32 @@ body:has(.mag) { background: var(--panel); }
   .mag { padding-block-start: 24px; }
 }
 
+/* ---------- Miejsce pod natywnym paskiem zakładek ----------
+ * W powłoce widok sieciowy sięga krawędzi ekranu, a pasek zakładek rysuje się
+ * nad nim. Bez rezerwy ostatni wiersz listy chowa się pod „Skanerem".
+ *
+ * 49 pt to wysokość paska, `env(safe-area-inset-bottom)` dokłada obszar gestu.
+ * Reguła obejmuje wyłącznie `.w-powloce` — w skrócie z ekranu początkowego
+ * paska nie ma i ta sama rezerwa byłaby dziurą na dole ekranu.
+ */
+/* Wcięcie górne siedzi na `body`, nie na ekranie magazynu. Widok sieciowy
+   sięga krawędzi, więc odstęp od wyspy dynamicznej musi dostać KAŻDA strona
+   otwarta w powłoce — również logowanie, które `.mag` nie używa i któremu
+   nagłówek wjeżdżał pod zegarek. */
+.w-powloce body { padding-top: env(safe-area-inset-top); }
+.w-powloce .mag {
+  /* Wcięcie dodaje już `body`; tu zostaje sam oddech nad tytułem. */
+  padding-block-start: 8px;
+  min-height: calc(100dvh - env(safe-area-inset-top));
+  padding-block-end: calc(49px + env(safe-area-inset-bottom));
+}
+
+/* Przyklejony pasek akcji musi usiąść nad paskiem zakładek, nie pod nim. */
+.w-powloce .mag-akcje {
+  bottom: calc(49px + env(safe-area-inset-bottom));
+  padding-bottom: 12px;
+}
+
 /* ---------- Tytuł ekranu ----------
    Tytuł i licznik w jednym rzędzie: licznik jest podpisem tytułu, nie
    osobnym wierszem treści, więc siada przy prawej krawędzi na jego linii.

@@ -134,8 +134,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // ekranu, narysowany przez system — powtarzanie go w HTML-u byłoby dublem.
   const wAplikacji = (naglowki.get('user-agent') ?? '').includes('NordoApp');
 
+  // `w-aplikacji` obejmuje też skrót z ekranu początkowego, a tam nie ma
+  // natywnego paska zakładek. Osobna klasa dla powłoki pozwala zarezerwować
+  // miejsce pod paskiem wyłącznie tam, gdzie ten pasek naprawdę jest.
+  const klasy = [
+    display.variable,
+    sans.variable,
+    mono.variable,
+    wAplikacji ? 'w-aplikacji w-powloce' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <html lang="pl" className={`${display.variable} ${sans.variable} ${mono.variable}${wAplikacji ? ' w-aplikacji' : ''}`} suppressHydrationWarning>
+    <html lang="pl" className={klasy} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SKRYPT_MOTYWU }} />
       </head>
