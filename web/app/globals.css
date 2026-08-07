@@ -2824,14 +2824,51 @@ code {
    magazyn ma wyglądać tak samo niezależnie od drogi wejścia.
    ========================================================================== */
 
+/* ---------- Fundament układu magazynu ----------
+ * Trzy rzeczy, na których stoi cała responsywność tego narzędzia:
+ *
+ * 1. Margines boczny płynie z szerokością ekranu zamiast siedzieć na 16 px.
+ *    Na iPhonie SE (320 px) zjadał 10% szerokości wiersza, na iPadzie był
+ *    śmiesznie wąski. `clamp` daje 12 px na najwęższym i 24 px na szerokim.
+ *
+ * 2. Treść ma górny limit szerokości i jest wyśrodkowana. Lista pozycji
+ *    rozciągnięta na 1024 px to nie lista, tylko tabela z pustką w środku —
+ *    oko traci związek między nazwą po lewej a liczbą po prawej. 34rem to
+ *    mniej więcej szerokość dużego telefonu i tyle wystarczy.
+ *
+ * 3. Wnętrze mierzy się zapytaniami o kontener, nie o okno. Dzięki temu ten
+ *    sam wiersz zachowuje się tak samo w powłoce, w Safari i w podglądzie
+ *    obok innej treści — liczy się miejsce, które faktycznie dostał.
+ */
 .mag {
-  --mag-gutter: 16px;
+  --mag-gutter: clamp(12px, 4vw, 24px);
+  --mag-maxw: 34rem;
+  container: magazyn / inline-size;
   min-height: 100dvh;
   padding-inline: 0;
   padding-block: max(8px, env(safe-area-inset-top)) 0;
   background: var(--panel);
   color: var(--ink);
   font-family: -apple-system, "SF Pro Text", system-ui, var(--sans);
+}
+
+/* Kolumnę wyznacza sam ekran, nie jego dzieci: karty i wiersze mają już
+   własne `margin-inline: var(--mag-gutter)` i próba centrowania ich osobno
+   biłaby się z tymi regułami. Limit siedzi więc na `.mag`, a marginesy
+   liczą się od jego krawędzi tak samo jak dotąd. */
+.mag {
+  max-width: calc(var(--mag-maxw) + 2 * var(--mag-gutter));
+  margin-inline: auto;
+}
+
+/* Ekran magazynu ma własne tło, a po wyśrodkowaniu kolumny zostają boki.
+   Bez tego na tablecie po obu stronach świeciłby kremowy kolor sklepu. */
+body:has(.mag) { background: var(--panel); }
+
+/* Powyżej szerokości telefonu ekran dostaje oddech u góry — inaczej tytuł
+   przykleja się do krawędzi tabletu tak samo jak do notcha. */
+@container magazyn (min-width: 520px) {
+  .mag { padding-block-start: 24px; }
 }
 
 /* ---------- Tytuł ekranu ----------
@@ -2971,6 +3008,10 @@ code {
 }
 .mag-dioda-uwaga { background: var(--uwaga); }
 .mag-dioda-zero { background: var(--ink-3); }
+/* W kolejce zamówień dioda mówi „to czeka na ruch", a nie „stan jest dobry".
+   Zieleń niosła tam odwrotny komunikat: paczka nietknięta wyglądała jak
+   załatwiona. Makieta 02 ma przy nowych zamówieniach rdzę. */
+.mag-dioda-pilne { background: var(--accent); }
 
 /* ---------- Kafle liczbowe ---------- */
 .mag-kafle {
@@ -3034,14 +3075,23 @@ code {
 /* Licznik w kolorze akcentu: to jedyna liczba na tym pasku i mówi, ile
    pracy czeka w danej zakładce. `--ink-3` dawał na wpuszczonym torze 4.1:1,
    więc i tak nie mógł zostać; akcent trzyma próg z zapasem w obu motywach. */
+/* Licznik przy zakładce — ile pracy czeka. Rdzawy zgodnie z makietami:
+   „Nowe 7" i „Niskie 3" mają liczbę w akcencie, bo to ona woła o ruch.
+   Kontrast 5,05:1 na wpuszczonym torze w jasnym, 8,15:1 w ciemnym. */
 .mag-segment-licznik {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
   font-size: 12px;
-  /* `--ink-2`, nie `--accent`. Rdzawy niesie w tej palecie „przecena, pilne",
-     a licznik przy zakładce i godzina przy zamówieniu to informacje neutralne —
-     na liście wyglądały jak alerty. Kontrast trzyma z zapasem: 5,36:1 na
-     wpuszczonym torze w motywie jasnym, 6,63:1 w ciemnym. */
+  color: var(--accent);
+}
+
+/* Godzina przy zamówieniu to nie alarm, tylko znacznik czasu — szara.
+   Wcześniej dzieliła klasę z licznikiem zakładki i cała kolumna wyglądała
+   na liście jak ostrzeżenie. Makieta 02 ma ją w szarości. */
+.mag-godzina {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
   color: var(--ink-2);
 }
 

@@ -86,7 +86,9 @@ export default async function Zamowienia({
                 href={`/magazyn/zamowienia/${encodeURIComponent(z.number)}?stan=${stan}`}
               >
                 <span
-                  className={`mag-dioda${brak ? ' mag-dioda-uwaga' : stan === 'wysłane' ? ' mag-dioda-zero' : ''}`}
+                  className={`mag-dioda${
+                    brak ? ' mag-dioda-uwaga' : stan === 'wysłane' ? ' mag-dioda-zero' : ' mag-dioda-pilne'
+                  }`}
                   aria-hidden="true"
                 />
                 <span className="mag-tresc">
@@ -104,7 +106,7 @@ export default async function Zamowienia({
                   <span className="mag-odczyt" style={{ fontSize: 15, display: 'block' }}>
                     {KWOTA.format(z.total)}
                   </span>
-                  <span className="mag-segment-licznik">{GODZINA.format(new Date(z.date))}</span>
+                  <span className="mag-godzina">{GODZINA.format(new Date(z.date))}</span>
                 </span>
                 <span className="mag-szewron" aria-hidden="true" />
               </Link>
