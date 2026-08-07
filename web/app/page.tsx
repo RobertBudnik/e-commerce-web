@@ -3,6 +3,7 @@ import { Icon } from '@/components/Icon';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { getCategories, getProducts } from '@/lib/queries';
+import { ile, PRODUKTY } from '@/lib/odmiana';
 
 /** Katalog zmienia się rzadko — strona główna może stać w cache przez minutę. */
 export const revalidate = 60;
@@ -90,7 +91,7 @@ export default async function HomePage() {
               <strong>{c.name}</strong>
               <span>{c.desc}</span>
               <span className="muted">
-                {products.filter((p) => p.category === c.id).length} produktów
+                {ile(products.filter((p) => p.category === c.id).length, PRODUKTY)}
               </span>
             </Link>
           ))}

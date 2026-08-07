@@ -5,6 +5,7 @@ import { Icon } from '@/components/Icon';
 import { ProductGrid } from './ProductGrid';
 import { SortStack } from '@/components/ui/SortStack';
 import type { Category, Product } from '@/lib/types';
+import { ile, PRODUKTY } from '@/lib/odmiana';
 
 const SORTERS: Record<string, (a: Product, b: Product) => number> = {
   popular: (a, b) => b.reviews - a.reviews,
@@ -105,7 +106,7 @@ export function ShopBrowser({
       </div>
 
       <p className="muted num" style={{ marginBottom: 24 }}>
-        {visible.length} {visible.length === 1 ? 'produkt' : 'produktów'}
+        {ile(visible.length, PRODUKTY)}
       </p>
 
       <ProductGrid products={visible} categories={categories} />

@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { SzukajStanow } from '@/components/magazyn/SzukajStanow';
 import { wymagajZaplecza } from '@/lib/magazyn-dostep';
 import { getLicznikiMagazynu, getStanyMagazynu } from '@/lib/queries';
+import { ile, POZYCJE } from '@/lib/odmiana';
 
 export const metadata: Metadata = {
   title: 'Magazyn',
@@ -59,7 +60,7 @@ export default async function Stany({
     <main className="mag">
       <header className="mag-top">
         <h1>Magazyn</h1>
-        <p className="mag-podtytul">{liczniki.wszystko} pozycji</p>
+        <p className="mag-podtytul">{ile(liczniki.wszystko, POZYCJE)}</p>
       </header>
 
       <Suspense fallback={null}>

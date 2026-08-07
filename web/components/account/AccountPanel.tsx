@@ -10,6 +10,7 @@ import { cancelOrderAction, setOrderStatusAction } from '@/app/actions/account';
 import { toast } from '@/components/ui/ToastHost';
 import { money } from '@/lib/format';
 import type { Category, Order, OrderStatus, Product, SessionUser } from '@/lib/types';
+import { ile, ZAMOWIENIA } from '@/lib/odmiana';
 
 type Profile = {
   name: string;
@@ -253,7 +254,7 @@ export function AccountPanel({
                       {money(own.reduce((s, x) => s + x.total, 0))}
                     </div>
                     <div className="order-items">
-                      {o.address} · {own.length} zamówień
+                      {o.address} · {ile(own.length, ZAMOWIENIA)}
                     </div>
                   </div>
                 );

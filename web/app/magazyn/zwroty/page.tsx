@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { PrzyjmijZwrot } from '@/components/magazyn/PrzyjmijZwrot';
 import { wymagajZaplecza } from '@/lib/magazyn-dostep';
 import { getZwroty } from '@/lib/queries';
+import { ile, ZWROTY } from '@/lib/odmiana';
 
 export const metadata: Metadata = {
   title: 'Zwroty',
@@ -27,7 +28,7 @@ export default async function Zwroty() {
       <header className="mag-top">
         <h1>Zwroty</h1>
         <p className="mag-podtytul">
-          {zwroty.length === 0 ? 'nic nie czeka' : `${zwroty.length} do przyjęcia`}
+          {zwroty.length === 0 ? 'nic nie czeka' : `${ile(zwroty.length, ZWROTY)} do przyjęcia`}
         </p>
       </header>
 

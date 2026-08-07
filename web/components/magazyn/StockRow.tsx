@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { Icon } from '@/components/Icon';
 import { adjustStockAction } from '@/app/actions/magazyn';
 import type { Product } from '@/lib/types';
+import { ile, SZTUKI } from '@/lib/odmiana';
 
 /** Poniżej tej ilości produkt trafia na górę listy jako wymagający uwagi. */
 const PROG_NISKI = 5;
@@ -51,7 +52,7 @@ export function StockRow({ product }: { product: Product }) {
         aria-expanded={otwarte}
       >
         <span className="stock-name">{product.name}</span>
-        <span className="stock-count num" aria-label={`Stan: ${stan} sztuk`}>
+        <span className="stock-count num" aria-label={`Stan: ${ile(stan, SZTUKI)}`}>
           {stan}
         </span>
       </button>

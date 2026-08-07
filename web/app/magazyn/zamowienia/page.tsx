@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { wymagajZaplecza } from '@/lib/magazyn-dostep';
 import { getKolejkaZamowien, getLicznikiZamowien } from '@/lib/queries';
+import { ile, POZYCJE } from '@/lib/odmiana';
 /* W kolejce waluta jest ta sama w każdym wierszu, więc powtarzanie „zł"
    trzydzieści razy tylko zabiera miejsce liczbie. Symbol wraca na karcie
    zamówienia, gdzie kwota jest pojedyncza i ma wagę. */
@@ -96,7 +97,7 @@ export default async function Zamowienia({
                   <span className={`mag-meta${brak ? ' mag-meta-brak' : ''}`}>
                     {brak
                       ? `brak ${z.brakujeSztuk} szt. ${z.brakujacyProdukt} w magazynie`
-                      : `${z.items.length} pozycji · ${sposobDostawy(z.address)}`}
+                      : `${ile(z.items.length, POZYCJE)} · ${sposobDostawy(z.address)}`}
                   </span>
                 </span>
                 <span style={{ textAlign: 'right', flex: 'none' }}>
