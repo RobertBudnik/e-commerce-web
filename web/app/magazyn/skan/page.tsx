@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Skaner } from '@/components/magazyn/Skaner';
+import { EkranSkanera } from '@/components/magazyn/EkranSkanera';
 import { wymagajZaplecza } from '@/lib/magazyn-dostep';
 
 export const metadata: Metadata = {
@@ -13,13 +13,7 @@ export const dynamic = 'force-dynamic';
 export default async function Skan() {
   await wymagajZaplecza('/magazyn/skan');
 
-  return (
-    <main className="mag">
-      <header className="mag-top">
-        <h1>Skaner</h1>
-      </header>
-
-      <Skaner />
-    </main>
-  );
+  // Nagłówek i wybór motywu rysuje powłoka kliencka — motyw obejmuje cały
+  // ekran, więc musi siedzieć nad nagłówkiem, nie pod nim.
+  return <EkranSkanera />;
 }

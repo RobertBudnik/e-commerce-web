@@ -217,3 +217,34 @@ test.describe('Nadanie przesyłki', () => {
     await expect(page.locator('.mag-karta .mag-wiersz').first()).toBeVisible();
   });
 });
+
+test.describe('Motyw skanera', () => {
+  test('wybór wyłamuje ekran z motywu aplikacji i przeżywa przeładowanie', async ({ page }) => {
+    await zaloguj(page, KONTA.zaplecze);
+    await page.goto('/magazyn/skan');
+
+    const ekran = page.locator('main.mag');
+    // Domyślnie „Auto" — ekran idzie za motywem aplikacji i nie nosi klasy
+    await expect(page.getByRole('tab', { name: 'Auto' })).toHaveAttribute('aria-selected', 'true');
+    await expect(ekran).not.toHaveClass(/motyw-(ciemny|jasny)/);
+
+    await page.getByRole('tab', { name: 'Ciemny' }).click();
+    await expect(ekran).toHaveClass(/motyw-ciemny/);
+
+    // Tło naprawdę się zmienia, nie tylko klasa
+    const ciemne = await ekran.evaluate((el) => getComputedStyle(el).backgroundColor);
+
+    await page.getByRole('tab', { name: 'Jasny' }).click();
+    await expect(ekran).toHaveClass(/motyw-jasny/);
+    const jasne = await ekran.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(jasne).not.toBe(ciemne);
+
+    // Wybór zostaje przy telefonie
+    await page.reload();
+    await expect(page.getByRole('tab', { name: 'Jasny' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    await expect(page.locator('main.mag')).toHaveClass(/motyw-jasny/);
+  });
+});

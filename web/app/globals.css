@@ -7,8 +7,14 @@
    ciemny wariant nie wymaga ani jednej dodatkowej reguły w komponentach.
    ========================================================================== */
 
-/* ---------- Tokeny bazowe: motyw jasny ---------- */
-:root {
+/* ---------- Tokeny bazowe: motyw jasny ----------
+   `.motyw-jasny` i `.motyw-ciemny` niżej pozwalają wyłamać pojedynczy
+   fragment strony z motywu całości — używa tego skaner, bo obraz z kamery
+   czyta się inaczej niż lista. Kolejność reguł nie ma tu znaczenia:
+   właściwość niestandardowa zadeklarowana na samym elemencie zawsze bije
+   tę odziedziczoną po przodku, niezależnie od swoistości. */
+:root,
+.motyw-jasny {
   color-scheme: light;
 
   /* powierzchnie */
@@ -55,7 +61,8 @@
 }
 
 /* ---------- Tokeny bazowe: motyw ciemny ---------- */
-.dark {
+.dark,
+.motyw-ciemny {
   color-scheme: dark;
 
   --bg: #121110;
@@ -2963,6 +2970,11 @@ code {
   font-size: 12px;
   color: var(--accent);
 }
+
+/* Wariant wąski: przełącznik motywu skanera nie jest nawigacją, tylko
+   ustawieniem, więc nie może ważyć tyle co segmenty kolejki. */
+.mag-segmenty-waskie { margin-top: 8px; }
+.mag-segmenty-waskie .mag-segment { min-height: 32px; font-size: 12px; }
 
 /* ---------- Szukanie ---------- */
 .mag-szukaj {
