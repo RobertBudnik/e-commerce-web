@@ -77,10 +77,17 @@ Deno.serve(async (req) => {
 
     // Stripe Checkout. BLIK i Przelewy24 włącza się w panelu Stripe;
     // przy pustej liście operator sam dobiera metody do kraju i waluty.
+    //
+    // Adresy powrotu celują w trasy App Routera. Wcześniej stały tu
+    // `/order-confirmed.html` i `/cart.html` ze statycznej wersji sklepu —
+    // obie odpowiadają dziś 404. Klient płacił i wracał na stronę błędu,
+    // mimo że webhook zdążył już oznaczyć zamówienie jako opłacone. Ta
+    // ścieżka nie była nigdy przeklikana, bo bez klucza Stripe kod idzie
+    // gałęzią „bez płatności", a tam przekierowanie składa front.
     const params = new URLSearchParams({
       mode: 'payment',
-      success_url: `${SITE_URL}/order-confirmed.html?order=${order.order_number}`,
-      cancel_url: `${SITE_URL}/cart.html`,
+      success_url: `${SITE_URL}/zamowienie/${encodeURIComponent(order.order_number)}`,
+      cancel_url: `${SITE_URL}/koszyk`,
       customer_email: order.email,
       client_reference_id: order.id,
       'metadata[order_id]': order.id,
