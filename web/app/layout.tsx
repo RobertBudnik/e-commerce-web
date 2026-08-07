@@ -51,9 +51,18 @@ const SKRYPT_MOTYWU = `
 (function () {
   try {
     var zapis = localStorage.getItem('nordo-theme');
-    var ciemny = zapis === 'dark' ||
-      (zapis !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+    var pytanie = matchMedia('(prefers-color-scheme: dark)');
+    var ciemny = zapis === 'dark' || (zapis !== 'light' && pytanie.matches);
     if (ciemny) document.documentElement.classList.add('dark');
+
+    // Ustawienie systemu potrafi zmienić się przy działającej stronie —
+    // w powłoce na telefonie o zmierzchu robi to sam iOS. Bez nasłuchu strona
+    // zostawała w motywie z chwili wczytania: system ciemny, sklep jasny.
+    // Zapis użytkownika wygrywa, więc kto wybrał motyw ręcznie, ten go trzyma.
+    pytanie.addEventListener('change', function (e) {
+      if (localStorage.getItem('nordo-theme')) return;
+      document.documentElement.classList.toggle('dark', e.matches);
+    });
 
     // Skrót z ekranu początkowego to też aplikacja, tylko uruchamiana przez
     // Safari — nie niesie więc User-Agenta powłoki i serwer nie ma po czym

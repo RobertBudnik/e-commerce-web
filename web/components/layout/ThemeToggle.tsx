@@ -19,6 +19,17 @@ export function ThemeToggle() {
   useEffect(() => {
     setCiemny(document.documentElement.classList.contains('dark'));
     setGotowy(true);
+
+    // Skrypt z layoutu przełącza klasę, gdy system zmieni ustawienie i nie ma
+    // zapisanego wyboru. Bez tego samego nasłuchu tutaj ikona zostawałaby
+    // z poprzedniego motywu — księżyc na ciemnym tle.
+    const pytanie = matchMedia('(prefers-color-scheme: dark)');
+    const zmiana = (e: MediaQueryListEvent) => {
+      if (localStorage.getItem(KLUCZ)) return;
+      setCiemny(e.matches);
+    };
+    pytanie.addEventListener('change', zmiana);
+    return () => pytanie.removeEventListener('change', zmiana);
   }, []);
 
   // Dopóki nie wiemy, który motyw jest aktywny, ikona byłaby zgadywana —
