@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { wymagajZaplecza } from '@/lib/magazyn-dostep';
 import { getPrzeglad } from '@/lib/queries';
 import { zeZnakiem } from '@/lib/format';
+import { MotywAplikacji } from '@/components/magazyn/MotywAplikacji';
 
 export const metadata: Metadata = {
   title: 'Przegląd',
@@ -93,6 +94,11 @@ export default async function Przeglad() {
           ))}
         </div>
       )}
+
+      {/* Ustawienie urządzenia, nie treść pracy — więc na końcu przeglądu,
+          pod tym, po co magazynier tu wchodzi. Osobnej zakładki nie zakłada,
+          bo jedno ustawienie nie jest ekranem. */}
+      <MotywAplikacji />
 
       <div className="mag-zapas" />
     </main>
