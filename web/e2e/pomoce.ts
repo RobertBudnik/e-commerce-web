@@ -1,5 +1,17 @@
 import { expect, type Page } from '@playwright/test';
 
+/**
+ * Zapas na złożenie zamówienia i dojście na stronę potwierdzenia.
+ *
+ * Trzy testy czekały tu zaszyte 20 sekund. Lokalnie z zapasem wystarcza,
+ * ale na runnerze CI serwer deweloperski kompiluje `/zamowienie/[numer]`
+ * przy pierwszym wejściu i sam ten krok potrafi zjeść cały limit — cały
+ * zestaw schodzi tam w 7,4 minuty wobec 2,3 minuty lokalnie. Limit zaszyty
+ * w teście nadpisuje ustawienia z konfiguracji, więc musi wiedzieć o CI
+ * tak samo jak one.
+ */
+export const CZAS_ZAMOWIENIA = process.env.CI ? 60_000 : 20_000;
+
 /** Konta z seeda lokalnego. Na produkcji nie istnieją. */
 export const KONTA = {
   klient: { email: 'klient@nordo.pl', haslo: 'nordo-local-dev' },

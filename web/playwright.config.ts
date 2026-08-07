@@ -20,9 +20,29 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'list' : [['list'], ['html', { open: 'never' }]],
 
+  /**
+   * Limity czasu podniesione na maszynie CI.
+   *
+   * Testy chodzą po serwerze deweloperskim, a ten kompiluje trasę przy
+   * pierwszym wejściu. Lokalnie cały zestaw schodzi w 2,3 minuty; na runnerze
+   * GitHuba te same 29 testów zajmuje 7,4 minuty i pojedyncze `page.goto`
+   * potrafi przekroczyć domyślne 30 sekund — nie dlatego, że sklep jest
+   * zepsuty, tylko dlatego, że akurat kompiluje `/koszyk`.
+   *
+   * Podnosimy sufit zamiast ścigać się z kompilatorem. Gdyby to przestało
+   * wystarczać, właściwym krokiem jest puszczenie e2e po buildzie
+   * produkcyjnym (`next start`) zamiast po `next dev` — wtedy znika cała
+   * kompilacja na żądanie.
+   */
+  timeout: process.env.CI ? 90_000 : 30_000,
+  expect: { timeout: process.env.CI ? 15_000 : 5_000 },
+
   use: {
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:3000',
     locale: 'pl-PL',
+    // Nawigacja i akcje też dostają zapas na wolnym runnerze.
+    navigationTimeout: process.env.CI ? 45_000 : 30_000,
+    actionTimeout: process.env.CI ? 20_000 : 0,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },

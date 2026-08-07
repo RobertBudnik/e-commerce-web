@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { dodajPierwszyDoKoszyka, KONTA, wyloguj, zaloguj } from './pomoce';
+import { CZAS_ZAMOWIENIA, dodajPierwszyDoKoszyka, KONTA, wyloguj, zaloguj } from './pomoce';
 
 /**
  * Magazyn — narzędzie zaplecza.
@@ -136,7 +136,7 @@ test.describe('Zwroty', () => {
     await page.getByLabel('Kod pocztowy').fill('00-001');
     await page.getByLabel('Miasto').fill('Warszawa');
     await page.getByRole('button', { name: /Zamawiam i płacę/ }).click();
-    await page.waitForURL(/\/zamowienie\/NOR-/, { timeout: 20_000 });
+    await page.waitForURL(/\/zamowienie\/NOR-/, { timeout: CZAS_ZAMOWIENIA });
 
     const numer = (await page.getByText(/NOR-\d{4}-\d{4}/).first().innerText()).match(
       /NOR-\d{4}-\d{4}/

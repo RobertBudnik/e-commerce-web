@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { dodajPierwszyDoKoszyka, gosc, kwota, wyczyscStanPrzegladarki } from './pomoce';
+import { CZAS_ZAMOWIENIA, dodajPierwszyDoKoszyka, gosc, kwota, wyczyscStanPrzegladarki } from './pomoce';
 
 test.describe('Ścieżka zakupu', () => {
   test.beforeEach(async ({ page }) => {
@@ -61,7 +61,7 @@ test.describe('Ścieżka zakupu', () => {
 
     await page.getByRole('button', { name: /Zamawiam i płacę/ }).click();
 
-    await page.waitForURL(/\/zamowienie\/NOR-/, { timeout: 20_000 });
+    await page.waitForURL(/\/zamowienie\/NOR-/, { timeout: CZAS_ZAMOWIENIA });
     await expect(page.getByRole('heading', { name: 'Zamówienie przyjęte' })).toBeVisible();
     await expect(page.getByText(/NOR-\d{4}-\d{4}/)).toBeVisible();
 

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { KONTA, dodajPierwszyDoKoszyka, wyczyscStanPrzegladarki, zaloguj } from './pomoce';
+import { CZAS_ZAMOWIENIA, KONTA, dodajPierwszyDoKoszyka, wyczyscStanPrzegladarki, zaloguj } from './pomoce';
 
 test.describe('Konto i uprawnienia', () => {
   test.beforeEach(async ({ page }) => {
@@ -104,7 +104,7 @@ test.describe('Konto i uprawnienia', () => {
     await page.getByLabel('Kod pocztowy').fill('00-001');
     await page.getByLabel('Miasto').fill('Warszawa');
     await page.getByRole('button', { name: /Zamawiam i płacę/ }).click();
-    await page.waitForURL(/\/zamowienie\/NOR-/, { timeout: 20_000 });
+    await page.waitForURL(/\/zamowienie\/NOR-/, { timeout: CZAS_ZAMOWIENIA });
 
     const numer = (await page.getByText(/NOR-\d{4}-\d{4}/).first().innerText()).match(
       /NOR-\d{4}-\d{4}/
