@@ -69,7 +69,18 @@ const nextConfig: NextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          /**
+           * Aparat zostaje otwarty dla własnego pochodzenia — bez tego skaner
+           * kodów w magazynie nie ma prawa wystartować. Wcześniej stało tu
+           * `camera=()`, czyli zakaz dla wszystkich łącznie z nami: w silniku
+           * Blink `permissionsPolicy.allowsFeature('camera')` zwracało `false`,
+           * więc skaner działał wyłącznie w WebKicie, który tego nagłówka nie
+           * egzekwuje. Funkcja stała na tym, że przeglądarka nie przestrzega
+           * naszej własnej deklaracji.
+           *
+           * Mikrofon i lokalizacja zostają zamknięte — nic ich nie używa.
+           */
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
           // HSTS działa tylko po HTTPS; lokalnie przeglądarka go zignoruje
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
         ],
