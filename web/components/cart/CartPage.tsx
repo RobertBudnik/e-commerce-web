@@ -261,7 +261,12 @@ export function CartPage({ defaults }: { defaults: Defaults }) {
             className="btn btn-block"
             type="submit"
             style={{ marginTop: 20 }}
-            disabled={sending || shortages.length > 0 || !quote}
+            /* `!quote.lines.length` jest tu osobno od `!quote`: przy koszyku
+               z samych wycofanych produktów wycena wraca poprawna, tylko pusta,
+               i przycisk zapraszał do zapłacenia 0,00 zł. Sprzątanie takich
+               pozycji siedzi w useCartQuote, ale zanim wróci pierwsza wycena,
+               przycisk nie ma czego składać. */
+            disabled={sending || shortages.length > 0 || !quote || !quote.lines.length}
           >
             {sending ? 'Składam zamówienie…' : `Zamawiam i płacę · ${money(quote?.total ?? 0)}`}
           </button>
