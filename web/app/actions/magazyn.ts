@@ -4,51 +4,6 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
 import { POWODY_KOREKTY, type PowodKorekty } from '@/lib/magazyn-powody';
 
-export type MagazynResult = { ok: true; stock: number } | { ok: false; error: string };
-
-/**
- * Korekta stanu magazynowego.
- *
- * Idzie przez `adjust_stock()`, a nie przez UPDATE na products, z dwóch
- * powodów. Funkcja sprawdza uprawnienie `inventory.write` po swojej stronie,
- * więc odmowa przychodzi z bazy, nie z interfejsu. I zapisuje ruch
- * w `inventory_movements` razem z powodem — bez tego stan po tygodniu jest
- * liczbą, której nikt nie umie wytłumaczyć.
- *
- * Delta, nie wartość docelowa: dwie osoby liczące ten sam regał wpiszą
- * „+3" i „+2", a nie dwie różne sumy, z których jedna nadpisze drugą.
- */
-export async function adjustStockAction(
-  productId: string,
-  delta: number,
-  reason: string
-): Promise<MagazynResult> {
-  if (!Number.isInteger(delta) || delta === 0) {
-    return { ok: false, error: 'Korekta musi być liczbą całkowitą różną od zera.' };
-  }
-  if (!reason.trim()) {
-    return { ok: false, error: 'Podaj powód korekty.' };
-  }
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc('adjust_stock', {
-    p_product_id: productId,
-    p_delta: delta,
-    p_reason: reason.trim(),
-  });
-
-  if (error) return { ok: false, error: error.message };
-
-  revalidatePath('/magazyn/stany');
-  revalidatePath('/sklep');
-
-  return { ok: true, stock: typeof data === 'number' ? data : Number(data) };
-}
-
-/* ==========================================================================
-   Aplikacja zarządu
-   ========================================================================== */
-
 export type KorektaWynik =
   | { ok: true; stan: number }
   | { ok: false; blad: string };
@@ -56,10 +11,10 @@ export type KorektaWynik =
 /**
  * Korekta stanu z aplikacji.
  *
- * Idzie przez `koryguj_stan()`, nie przez `adjust_stock()`, bo tamta ścina
- * stan do zera po cichu — próba zdjęcia pięciu sztuk z trzech kończyła się
- * zerem i komunikatem „zapisano". Tutaj baza odmawia, a interfejs pokazuje
- * powód przy liczbie.
+ * Idzie przez `koryguj_stan()`, która nie ścina stanu do zera po cichu —
+ * poprzedniczka (`adjust_stock`, skasowana razem ze starym widokiem stanów)
+ * na próbie zdjęcia pięciu sztuk z trzech kończyła zerem i komunikatem
+ * „zapisano". Tutaj baza odmawia, a interfejs pokazuje powód przy liczbie.
  *
  * `klucz` jest wystawiany przez przeglądarkę raz na otwarty ekran korekty.
  * Drugie dotknięcie przycisku wysyła ten sam klucz, a baza oddaje stan

@@ -175,26 +175,6 @@ export async function getOrders(): Promise<Order[]> {
 }
 
 /**
- * Stany magazynowe: najpierw to, czego brakuje.
- *
- * Sortowanie rosnąco po ilości, nie alfabetycznie — magazynier otwiera ten
- * widok, żeby zobaczyć, co się kończy, a nie żeby przeglądać katalog.
- * Produkty wycofane pomijamy: ich stan nikogo nie obchodzi.
- */
-export async function getStockLevels(): Promise<Product[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('is_active', true)
-    .order('stock', { ascending: true })
-    .order('name', { ascending: true });
-
-  if (error || !data) return [];
-  return data.map((row) => toProduct(row as ProductRow, imageUrl));
-}
-
-/**
  * Produkt po kodzie kreskowym. Skaner pyta o to przy każdym odczycie, więc
  * zapytanie jest wąskie i trafia w indeks częściowy z migracji.
  */
@@ -211,27 +191,6 @@ export async function getProductByBarcode(barcode: string): Promise<Product | nu
 
   if (error || !data) return null;
   return toProduct(data as ProductRow, imageUrl);
-}
-
-/**
- * Zamówienia do obsłużenia w magazynie: opłacone i jeszcze niewysłane,
- * najstarsze na górze — kolejka pakowania, a nie historia sklepu.
- *
- * Filtr idzie do bazy, nie do przeglądarki. Telefon ma ściągnąć dwadzieścia
- * wierszy, a nie cały rok sprzedaży, żeby wybrać z nich pięć.
- */
-export async function getOrdersToPack(): Promise<Order[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*, order_items(*)')
-    .in('status', ['nowe', 'w realizacji'])
-    .neq('payment_status', 'zwrócone')
-    .order('created_at', { ascending: true })
-    .limit(50);
-
-  if (error || !data) return [];
-  return data.map((row) => toOrder(row as OrderRow));
 }
 
 /**
@@ -304,9 +263,6 @@ export async function getProfile() {
    dostać gotowy wynik, a nie kilka tysięcy wierszy do przemielenia na
    łączu komórkowym.
    ========================================================================== */
-
-/** Stany, które w kolejce magazynu znaczą „jeszcze nie wyjechało". */
-const STANY_W_KOLEJCE = ['nowe', 'w realizacji', 'spakowane'] as const;
 
 /** Zamówienie w kolejce razem z pokryciem pozycji w magazynie. */
 export type ZamowienieWKolejce = Order & {
