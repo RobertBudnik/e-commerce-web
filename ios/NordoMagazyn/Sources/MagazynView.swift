@@ -73,6 +73,10 @@ struct MagazynView: View {
             }
         }
         .tint(Color(red: 0.62, green: 0.29, blue: 0.13))
+        // Widok sieciowy maluje już swoje tło, ale nie sięga pod pasek stanu
+        // ani pod uchwyt ekranu głównego — te wcięcia rysuje kontener. Bez tego
+        // nad kremową stroną zostaje biały pasek, a w ciemnym motywie czarny.
+        .background(Color(UIColor.tloNordo).ignoresSafeArea())
         .animation(.easeInOut(duration: 0.2), value: zalogowany)
     }
 
@@ -132,6 +136,17 @@ extension Notification.Name {
     static let odswiezMagazyn = Notification.Name("odswiezMagazyn")
 }
 
+extension UIColor {
+    /// Tło strony w obu motywach — te same wartości co `--bg` w `globals.css`.
+    /// Dynamiczny kolor, więc zmiana motywu systemu przemalowuje wcięcia bez
+    /// przeładowania widoku.
+    static let tloNordo = UIColor { cechy in
+        cechy.userInterfaceStyle == .dark
+            ? UIColor(red: 0.071, green: 0.067, blue: 0.063, alpha: 1)  // #121110
+            : UIColor(red: 0.980, green: 0.976, blue: 0.969, alpha: 1)  // #faf9f7
+    }
+}
+
 struct WebView: UIViewRepresentable {
     let url: URL
     @Binding var laduje: Bool
@@ -158,9 +173,13 @@ struct WebView: UIViewRepresentable {
         // „brak zgody" mimo że użytkownik o nic nie był proszony.
         web.uiDelegate = context.coordinator
         web.allowsBackForwardNavigationGestures = true
-        web.isOpaque = false
-        web.backgroundColor = .clear
-        web.scrollView.backgroundColor = .clear
+        // Przezroczysty widok pokazywał w obszarach bezpiecznych tło SwiftUI,
+        // a nie tło strony: przy ciemnym systemie nad paskiem stanu i pod
+        // treścią leżały czarne pasy, a między nimi kremowy magazyn. Widok
+        // dostaje więc własne tło w kolorach sklepu i sam zamalowuje wcięcia.
+        web.isOpaque = true
+        web.backgroundColor = .tloNordo
+        web.scrollView.backgroundColor = .tloNordo
         // Odświeżanie gestem — odruch każdego, kto trzyma telefon
         let odswiez = UIRefreshControl()
         odswiez.addTarget(context.coordinator, action: #selector(Coordinator.odswiez(_:)), for: .valueChanged)
