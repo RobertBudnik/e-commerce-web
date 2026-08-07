@@ -4,6 +4,16 @@ const currency = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: '
 
 export const money = (value: number) => currency.format(value);
 
+/**
+ * Liczba ze znakiem, do ruchów magazynowych.
+ *
+ * JavaScript wypisuje liczbę ujemną z dywizem (`-1`), a to znak przenoszenia
+ * wyrazu, nie minus. W kroju maszynowym jest wyraźnie krótszy i wyżej niż
+ * plus, więc kolumna „+1 / −1" traciła pion. Makiety mają tam minus
+ * typograficzny U+2212 i tego się trzymamy — ta sama szerokość co plus.
+ */
+export const zeZnakiem = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : `${n}`);
+
 export const stars = (rating: number) =>
   '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
 

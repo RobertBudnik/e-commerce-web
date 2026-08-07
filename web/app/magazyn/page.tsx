@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { wymagajZaplecza } from '@/lib/magazyn-dostep';
 import { getPrzeglad } from '@/lib/queries';
+import { zeZnakiem } from '@/lib/format';
 
 export const metadata: Metadata = {
   title: 'Przegląd',
@@ -85,7 +86,7 @@ export default async function Przeglad() {
                 </span>
               </span>
               <span className={`mag-delta ${ruch.delta > 0 ? 'mag-delta-plus' : 'mag-delta-minus'}`}>
-                {ruch.delta > 0 ? `+${ruch.delta}` : ruch.delta}
+                {zeZnakiem(ruch.delta)}
                 <span className="mag-delta-jednostka"> szt.</span>
               </span>
             </Link>

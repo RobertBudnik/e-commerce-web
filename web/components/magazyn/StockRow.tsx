@@ -5,6 +5,7 @@ import { Icon } from '@/components/Icon';
 import { adjustStockAction } from '@/app/actions/magazyn';
 import type { Product } from '@/lib/types';
 import { ile, SZTUKI } from '@/lib/odmiana';
+import { zeZnakiem } from '@/lib/format';
 
 /** Poniżej tej ilości produkt trafia na górę listy jako wymagający uwagi. */
 const PROG_NISKI = 5;
@@ -72,7 +73,7 @@ export function StockRow({ product }: { product: Product }) {
               −
             </button>
             <span className={`stock-delta-val num${delta > 0 ? ' plus' : delta < 0 ? ' minus' : ''}`}>
-              {delta > 0 ? `+${delta}` : delta}
+              {zeZnakiem(delta)}
             </span>
             <button
               type="button"

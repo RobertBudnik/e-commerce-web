@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { korygujStanAction } from '@/app/actions/magazyn';
 import { POWODY_KOREKTY } from '@/lib/magazyn-powody';
+import { zeZnakiem } from '@/lib/format';
 
 type Props = {
   produktId: string;
@@ -45,8 +46,7 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
 
   const opisDelty = useMemo(() => {
     if (delta === 0) return `było ${stan}`;
-    const znak = delta > 0 ? `+${delta}` : `${delta}`;
-    return `było ${stan} · ${znak}`;
+    return `było ${stan} · ${zeZnakiem(delta)}`;
   }, [delta, stan]);
 
   function zmien(o: number) {
@@ -208,7 +208,7 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
             ? 'Zapisuję…'
             : delta === 0
               ? 'Zapisz zmianę'
-              : `Zapisz zmianę · ${delta > 0 ? '+' : ''}${delta} szt.`}
+              : `Zapisz zmianę · ${zeZnakiem(delta)} szt.`}
         </button>
         {blad && <p className="mag-blad">{blad}</p>}
         <p className="mag-drobne" style={{ margin: 0 }}>
