@@ -16,7 +16,16 @@ jobs:
     name: Testy dymne
     # Zdarzenie przychodzi też dla stanów `pending` i `failure` — te nas
     # nie interesują, bo nie ma czego odpytywać.
-    if: github.event.deployment_status.state == 'success'
+    #
+    # Wyłącznie wdrożenia produkcyjne. Adresy podglądu Vercela stoją za
+    # ochroną wdrożeń: żądanie bez sesji dostaje 302 na logowanie, więc każdy
+    # test szukał treści w formularzu SSO i wszystkie padały. Ten workflow był
+    # przez to czerwony na każdym przebiegu w historii repozytorium, także na
+    # commitach z zieloną resztą CI — czyli nie mówił niczego poza tym, że
+    # zawsze świeci na czerwono.
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment_status.environment == 'Production'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -39,9 +48,14 @@ jobs:
       - name: Przeglądarka do Playwrighta
         run: npx --prefix web playwright install --with-deps chromium
 
+      # `environment_url` niesie adres pojedynczego wdrożenia
+      # (nordo-<hash>-<konto>.vercel.app), a ten jest chroniony niezależnie od
+      # tego, czy wdrożenie jest produkcyjne. Publiczny jest dopiero alias, więc
+      # bierzemy go ze zmiennej repozytorium — zmiana domeny to wtedy wpis
+      # w ustawieniach, nie commit. Wartość awaryjna celuje w obecny adres.
       - name: Dym
         env:
-          E2E_BASE_URL: ${{ github.event.deployment_status.environment_url }}
+          E2E_BASE_URL: ${{ vars.SMOKE_BASE_URL || 'https://nordo-one.vercel.app' }}
         run: npm --prefix web run test:smoke
 
       - name: Ślady nieudanych testów
