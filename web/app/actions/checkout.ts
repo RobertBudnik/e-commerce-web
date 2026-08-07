@@ -26,8 +26,24 @@ export type CheckoutResult =
  * rabat, dostawę i rezerwację towaru liczy `create_order()` w bazie.
  * Wywołanie idzie z serwera, więc token sesji nie musi opuszczać ciasteczka.
  */
+/**
+ * Format polskiego kodu pocztowego. Adres z literówką w kodzie nie zatrzymuje
+ * zamówienia w bazie — zatrzymuje paczkę u kuriera, czyli tydzień później
+ * i drożej. Reszta pól zostaje bez wzorca: nazwiska i nazwy ulic mają
+ * za dużo prawidłowych kształtów, żeby je zgadywać wyrażeniem regularnym.
+ */
+const KOD_POCZTOWY = /^\d{2}-\d{3}$/;
+
 export async function checkoutAction(input: CheckoutInput): Promise<CheckoutResult> {
   if (!input.lines.length) return { ok: false, error: 'Koszyk jest pusty.' };
+
+  // Formularz ma `required`, ale to atrybut przeglądarki. Akcja serwerowa
+  // jest wywoływalna bez formularza, więc puste pole sprawdzamy tutaj.
+  const zip = input.zip.trim();
+  if (!input.name.trim()) return { ok: false, error: 'Podaj imię i nazwisko odbiorcy.' };
+  if (!input.street.trim()) return { ok: false, error: 'Podaj ulicę i numer.' };
+  if (!input.city.trim()) return { ok: false, error: 'Podaj miasto.' };
+  if (!KOD_POCZTOWY.test(zip)) return { ok: false, error: 'Kod pocztowy w formacie 00-001.' };
 
   const supabase = await createClient();
 
@@ -38,10 +54,10 @@ export async function checkoutAction(input: CheckoutInput): Promise<CheckoutResu
       phone: input.phone || null,
       coupon: input.coupon,
       shipping_address: {
-        recipient: input.name,
-        street: input.street,
-        postal_code: input.zip,
-        city: input.city,
+        recipient: input.name.trim(),
+        street: input.street.trim(),
+        postal_code: zip,
+        city: input.city.trim(),
         country: 'PL',
         phone: input.phone || null,
       },
