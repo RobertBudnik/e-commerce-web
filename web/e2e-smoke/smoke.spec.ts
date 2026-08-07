@@ -36,7 +36,11 @@ test.describe('Dym po wdrożeniu', () => {
 
     await page.waitForURL(/\/produkt\//);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expect(page.locator('.price').first()).toBeVisible();
+    // `.price` jest klasą kafelka w siatce, nie strony produktu — tu cena
+    // nazywa się `product-price`. Selektor klasy dopasowuje cały token, więc
+    // `.price` nie łapało ani `.price-old`, ani `.price-row`, i asercja padała
+    // od pierwszego dnia istnienia tego testu.
+    await expect(page.locator('.product-price').first()).toBeVisible();
   });
 
   test('koszyk gościa jest dostępny i pusty', async ({ page }) => {
