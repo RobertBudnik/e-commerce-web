@@ -101,7 +101,7 @@ export function AkcjeZamowienia({ zamowienieId, stan, numerPrzesylki }: Props) {
     return (
       <div className="mag-akcje">
         <p className="mag-drobne" style={{ margin: 0 }}>
-          paczka nadana · numer listu w sekcji „dostawa"
+          paczka nadana · numer listu w sekcji „dostawa&rdquo;
         </p>
       </div>
     );

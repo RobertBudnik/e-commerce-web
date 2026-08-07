@@ -41,6 +41,12 @@ jobs:
       - name: Typy
         run: npm run typecheck
 
+      # ESLint chodzi na płaskiej konfiguracji (web/eslint.config.mjs).
+      # Wcześniej `npm run lint` wywoływał `next lint`, które bez konfiguracji
+      # wchodziło w interaktywny kreator — czyli w CI wisiało do timeoutu.
+      - name: Lint
+        run: npm --prefix web run lint
+
   # Zastępnik CodeQL na czas, gdy repozytorium jest prywatne — skanowanie kodu
   # wymaga tam Advanced Security. `npm audit` działa zawsze i wyłapuje znane
   # dziury w zależnościach.

@@ -23,6 +23,16 @@ const nextConfig: NextConfig = {
    * których build już nie ma („Cannot find module ./vendor-chunks/…").
    */
   distDir: process.env.NEXT_DIST_DIR ?? '.next',
+
+  /**
+   * Repozytorium ma dwa pliki `package-lock.json` — jeden w katalogu głównym
+   * (CLI Supabase, skrypty), drugi tutaj. Next zgadywał wtedy katalog główny
+   * i wybierał ten wyżej, ostrzegając o tym przy każdym buildzie. Wskazanie
+   * wprost ucina ostrzeżenie i pilnuje, żeby ślad plików do wdrożenia
+   * obejmował wyłącznie front.
+   */
+  outputFileTracingRoot: __dirname,
+
   experimental: {
     // Zdjęcia produktów idą przez Server Action; domyślny limit 1 MB
     // odrzucałby wszystko powyżej miniatury. Kubełek i tak tnie na 5 MB.

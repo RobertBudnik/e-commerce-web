@@ -51,8 +51,11 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
             ) : null}
 
             <p>
-              {/* Zwykłe przeładowanie, nie `reset()`: skoro padł layout,
-                  ponowne renderowanie tego samego drzewa padnie tak samo. */}
+              {/* Zwykłe przeładowanie, nie `reset()` i nie `<Link>`: skoro padł
+                  layout, ponowne renderowanie tego samego drzewa padnie tak samo,
+                  a nawigacja kliencka zostałaby w tym samym, zepsutym drzewie.
+                  Pełne przeładowanie jest tu jedyną drogą wyjścia. */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a className="btn" href="/">
                 Wróć na stronę główną
               </a>
