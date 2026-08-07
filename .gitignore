@@ -7,3 +7,7 @@ supabase/.temp/
 .DS_Store
 supabase/functions/.env
 zrzuty-frontu/
+
+# Wyniki xcodebuild — 286 plików i 61 MB binariów z symbolami debugowania.
+# Trafiły do repozytorium przed dodaniem tej reguły.
+ios/build/

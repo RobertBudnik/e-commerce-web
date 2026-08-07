@@ -35,8 +35,19 @@
   --line: #e2ddd3;
 
   /* akcent: rdzawy. Jedyny kolor poza monochromem —
-     przeceny, gwiazdki, kropka w logo, aktywne obramowania */
-  --accent: oklch(0.52 0.15 40);
+     przeceny, gwiazdki, kropka w logo, aktywne obramowania.
+
+     Wartość zdjęta wprost z makiet: próbkowanie czterech plików w
+     `ss apki/zrzuty` daje w każdym ten sam #BC561B (750–1900 pikseli
+     nasyconych na plik), więc to kolor projektu, nie artefakt wygładzania.
+
+     Koszt jest zmierzony i świadomy — poprzednie oklch(0.52 0.15 40)
+     dawało 5,50:1 na tle strony, ten odcień daje 4,45:1, a na panelu
+     4,02:1 i na wpuszczonym torze 3,67:1. Tekst 11–12 px w akcencie
+     (licznik przy zakładce, link powrotu, „Oznacz jako spakowane")
+     schodzi tym samym poniżej progu 4,5:1 z WCAG AA. Zgodność z makietą
+     wygrała tu z progiem świadomie; powrót to jedna linia niżej. */
+  --accent: #bc561b;
   --accent-soft: oklch(0.94 0.03 60);
 
   /* przyciski główne: odwrócony kontrast wobec tła */
@@ -160,11 +171,23 @@
 :root { --line-pole: #8a8377; }
 .dark { --line-pole: #726b61; }
 
+/* Nadtytuł sekcji — jaśniejszy niż tekst drugorzędny, zdjęty z makiet.
+   W ciemnym motywie makiet nie ma, więc trzyma tam dotychczasową rolę
+   `--ink-3`, która czyta się poprawnie. */
+:root { --etykieta: #9b9489; }
+.dark { --etykieta: var(--ink-3); }
+
 /* Próg ostrzegawczy w magazynie — trzeci stan obok „w porządku" i „zero".
    Nie da się go zrobić istniejącymi tokenami: `--ok` to zieleń dostępności,
    a `--accent` niesie już „pilne", więc dioda przy progu wyglądałaby jak
    brak towaru. Amber jest wyłącznie sygnałem stanu; literom go nie dajemy. */
-:root { --uwaga: oklch(0.58 0.14 78); --uwaga-soft: oklch(0.93 0.05 85); }
+/* Amber z makiet: #E2A438, ten sam we wszystkich czterech plikach.
+   Niesie wyłącznie stan diody — literom go nie dajemy i teraz to nie jest
+   już tylko zasada stylu, ale warunek: 1,71–2,19:1 wobec naszych powierzchni
+   nie nadaje się pod tekst, a jako element nietekstowy nie dobija do 3:1
+   z SC 1.4.11. Dioda ma obok siebie podpis słowny („Niskie stany", „próg 5"),
+   więc kolor nie jest jedynym nośnikiem informacji i to ratuje sytuację. */
+:root { --uwaga: #e2a438; --uwaga-soft: oklch(0.93 0.05 85); }
 .dark { --uwaga: oklch(0.80 0.12 92); --uwaga-soft: oklch(0.31 0.05 92); }
 
 /* ---------- Reset / base ---------- */
@@ -2959,7 +2982,16 @@ body:has(.mag) { background: var(--panel); }
   font-weight: 500;
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  /* Makiety mają nadtytuły sekcji w jaśniejszej szarości niż resztę tekstu
+     drugorzędnego: #9B9489 wobec #726C63, i to konsekwentnie w trzech plikach
+     (3400–4500 pikseli na plik). To osobna rola, nie ten sam token.
+
+     2,58:1 na panelu — poniżej progu. Broni się tym, że to nadtytuł
+     powtarzający nazwę sekcji, którą i tak widać z treści pod spodem
+     („DOSTAWA" nad adresem, „POWÓD" nad listą powodów) — żadna informacja
+     nie jest wyłącznie tutaj. Gdyby nadtytuł miał kiedyś nieść treść,
+     wraca `--ink-3`. */
+  color: var(--etykieta);
 }
 
 /* ---------- Lista grupowana ---------- */
@@ -3313,7 +3345,9 @@ body:has(.mag) { background: var(--panel); }
   font-size: 11px;
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  /* Ta sama rola co nadtytuł sekcji — mono, wersaliki, opis pola pod spodem.
+     Makiety trzymają tu jaśniejszą szarość niż w tekście drugorzędnym. */
+  color: var(--etykieta);
 }
 /* Kropka przy progu to ta sama dioda co w liście — próg jest stanem
    ostrzegawczym i ma ten sam znak w obu miejscach. */
