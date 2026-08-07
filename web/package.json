@@ -14,10 +14,11 @@
     "test:e2e:ui": "playwright test --ui",
     "test:smoke": "playwright test --config playwright.smoke.config.ts"
   },
-  "comment:overrides": "Next ciągnie własne postcss i sharp, oba z aktywnymi CVE. `npm audit fix` chciałby cofnąć Next do wersji 9 — zamiast tego podnosimy same zależności przechodnie. Do usunięcia, gdy Next podbije je u siebie.",
+  "comment:overrides": "Next ciągnie własne postcss, sharp i nanoid (to ostatnie przez postcss), wszystkie z aktywnymi CVE. `npm audit fix` chciałby cofnąć Next do wersji 9 — zamiast tego podnosimy same zależności przechodnie. Do usunięcia, gdy Next podbije je u siebie.",
   "overrides": {
     "postcss": "^8.5.25",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "nanoid": "^3.3.17"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.69.0",
