@@ -83,7 +83,7 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
     <>
       <div className="mag-korekta">
         <p className="mag-korekta-gora">
-          <span>Stan po zapisie</span>
+          <span>Po zapisie</span>
           {progNiski > 0 ? (
             <span className="mag-korekta-prog">próg {progNiski}</span>
           ) : (
@@ -129,34 +129,40 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
             Na stanie jest {stan} szt., nie można zdjąć {Math.abs(delta)}
           </p>
         )}
+
+        {/* Skoki siedzą w tej samej karcie co licznik — należą do niego,
+            a nie do ekranu. Poza kartą wyglądały jak osobna sekcja. */}
+        <div className="mag-skroty">
+          {SKROTY.map((krok) => (
+            <button
+              key={krok}
+              type="button"
+              className="mag-skrot"
+              aria-pressed={delta === krok * kierunek}
+              onClick={() => {
+                setBlad(null);
+                setDelta(krok * kierunek);
+              }}
+            >
+              {kierunek > 0 ? `+${krok}` : `−${krok}`}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="mag-skroty">
-        {SKROTY.map((krok) => (
-          <button
-            key={krok}
-            type="button"
-            className="mag-skrot"
-            aria-pressed={delta === krok * kierunek}
-            onClick={() => {
-              setBlad(null);
-              setDelta(krok * kierunek);
-            }}
-          >
-            {kierunek > 0 ? `+${krok}` : `−${krok}`}
-          </button>
-        ))}
-      </div>
-
+      {/* Kierunek zmienia znaczenie skoków. Makieta pokazuje wyłącznie stan
+          dodawania, więc przełącznik jest tu cicho, jako podpis karty —
+          ale zostaje: bez niego zdjęcie pięćdziesięciu sztuk to pięćdziesiąt
+          dotknięć minusa. */}
       <button
         type="button"
-        className="mag-btn mag-btn-link"
+        className="mag-kierunek"
         onClick={() => {
           setWDol((w) => !w);
           setDelta(0);
         }}
       >
-        {wDol ? 'Przełącz na dodawanie' : 'Przełącz na odejmowanie'}
+        {wDol ? 'przełącz na dodawanie' : 'przełącz na odejmowanie'}
       </button>
 
       <h2 className="mag-sekcja">Powód</h2>
@@ -192,6 +198,10 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
         />
       </div>
 
+      {/* Pasek zapisu jest przyklejony do dołu; bez zapasu ostatni wiersz
+          notatki chowałby się pod nim przy końcu przewijania. */}
+      <div className="mag-zapas" />
+
       <div className="mag-akcje">
         <button type="button" className="mag-btn" onClick={zapisz} disabled={!mozeZapisac}>
           {zapisuje
@@ -202,7 +212,7 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
         </button>
         {blad && <p className="mag-blad">{blad}</p>}
         <p className="mag-drobne" style={{ margin: 0 }}>
-          zmiana jest widoczna w sklepie od razu
+          zmiana widoczna w sklepie od razu
         </p>
       </div>
     </>

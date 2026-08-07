@@ -37,16 +37,16 @@ export default async function Zamowienie({
         Zamówienia
       </Link>
 
-      <header className="mag-top mag-top-kolumna">
-        <h1 style={{ fontFamily: 'var(--mono)', fontSize: 24, letterSpacing: 0 }}>
-          {zamowienie.number}
-        </h1>
-        <p style={{ margin: '8px 0 0' }}>
-          <span className="mag-pigulka">{zamowienie.status}</span>
-        </p>
+      {/* Numer i status w jednym wierszu, tak jak w makiecie 03: status jest
+          przymiotnikiem numeru, nie osobnym akapitem. `wrap` zostawiony, bo
+          przy długim numerze i szerokiej plakietce na 320 px muszą się złamać. */}
+      <header className="mag-top mag-naglowek-zamowienia">
+        <h1 className="mag-numer">{zamowienie.number}</h1>
+        <span className="mag-pigulka">{zamowienie.status}</span>
       </header>
 
-      <h2 className="mag-sekcja">Pozycje</h2>
+      {/* Bez nagłówka „Pozycje" — makieta wchodzi w listę wprost spod numeru,
+          a karta z diodami i krotnością sama mówi, czym jest. */}
       <div className="mag-karta">
         {pozycje.map((p, i) => (
           <div className="mag-wiersz" key={`${p.productId ?? 'brak'}-${i}`}>

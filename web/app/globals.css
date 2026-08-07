@@ -2884,6 +2884,17 @@ body:has(.mag) { background: var(--panel); }
   justify-content: space-between;
   gap: 12px;
 }
+/* Nagłówek karty zamówienia: numer krojem maszynowym, plakietka statusu tuż
+   przy nim. `flex-wrap` ratuje najwęższe ekrany — przy 320 px długi numer
+   i status „w realizacji" nie zmieszczą się w jednym wierszu i wtedy status
+   schodzi niżej, zamiast rozpychać kolumnę. */
+.mag-naglowek-zamowienia { flex-wrap: wrap; align-items: center; row-gap: 8px; }
+.mag-numer {
+  font-family: var(--mono);
+  font-size: clamp(20px, 6cqi, 24px);
+  letter-spacing: 0;
+}
+
 .mag-top h1 {
   margin: 0;
   font-family: inherit;
@@ -3331,17 +3342,23 @@ body:has(.mag) { background: var(--panel); }
 .mag-krok-plus { background: var(--btn-bg); color: var(--btn-ink); border-color: var(--btn-bg); }
 .mag-krok:disabled { opacity: .35; cursor: default; }
 
+/* Skoki leżą wewnątrz karty licznika, więc margines boczny bierze z niej,
+   nie z ekranu. Cztery równe kolumny — przy `1fr` najdłuższa etykieta (+50)
+   wyznacza rytm, a pozostałe się do niej dostrajają. */
 .mag-skroty {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  margin: 12px var(--mag-gutter) 0;
+  margin-top: 14px;
 }
 .mag-skrot {
   min-height: 44px;
-  border: 1px solid var(--line);
+  /* Wewnątrz białej karty biały przycisk z hairline'em znikał — została sama
+     ledwie widoczna kreska. Obwódka idzie na mocniejszą linię, tło na
+     przezroczyste, a wybrany skok bierze pełny kontrast tuszu. */
+  border: 1px solid var(--line-strong);
   border-radius: var(--r-pill);
-  background: var(--surface);
+  background: transparent;
   color: var(--ink);
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
@@ -3350,6 +3367,25 @@ body:has(.mag) { background: var(--panel); }
   cursor: pointer;
 }
 .mag-skrot[aria-pressed="true"] { border-color: var(--ink); border-width: 2px; }
+
+/* Przełącznik kierunku. Wcześniej był pełnowymiarowym rdzawym przyciskiem
+   i przykuwał wzrok mocniej niż licznik, wokół którego kręci się ten ekran.
+   Teraz czyta się jak podpis karty — ale nadal jest celem na 44 px. */
+.mag-kierunek {
+  display: block;
+  width: fit-content;
+  margin: 10px auto 0;
+  min-height: 44px;
+  padding-inline: 14px;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .02em;
+  cursor: pointer;
+}
+.mag-kierunek:hover { color: var(--ink); }
 
 /* Zaznaczenie w liście grupowanej: znacznik zamiast pola wyboru — pole
    wyboru w liście iOS wygląda jak formularz, a to jest wybór jednej opcji. */

@@ -32,12 +32,15 @@ private enum Zakladka: String, CaseIterable {
         }
     }
 
+    /// Symbole dobrane pod makiety. Ikony w projekcie nie są SF Symbols, tylko
+    /// rysunkami liniowymi, więc bierzemy najbliższe systemowe odpowiedniki
+    /// kształtu: prostokąt z poprzeczką, domek, ramka celownika.
     var ikona: String {
         switch self {
         case .przeglad: return "square.grid.2x2"
-        case .zamowienia: return "shippingbox"
-        case .magazyn: return "square.stack.3d.up"
-        case .skaner: return "barcode.viewfinder"
+        case .zamowienia: return "archivebox"
+        case .magazyn: return "house"
+        case .skaner: return "viewfinder"
         }
     }
 
