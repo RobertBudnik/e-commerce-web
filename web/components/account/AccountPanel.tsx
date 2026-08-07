@@ -109,22 +109,22 @@ export function AccountPanel({
     <div className="account-layout">
       <nav className="side-nav" aria-label="Sekcje konta">
         {staff && (
-          <button type="button" aria-selected={tab === 'overview'} onClick={() => open('overview')}>
+          <button type="button" aria-current={tab === 'overview' ? 'page' : undefined} onClick={() => open('overview')}>
             <Icon name="user" /> Przegląd
           </button>
         )}
-        <button type="button" aria-selected={tab === 'orders'} onClick={() => open('orders')}>
+        <button type="button" aria-current={tab === 'orders' ? 'page' : undefined} onClick={() => open('orders')}>
           <Icon name="box" /> Zamówienia
         </button>
         {staff && (
-          <button type="button" aria-selected={tab === 'customers'} onClick={() => open('customers')}>
+          <button type="button" aria-current={tab === 'customers' ? 'page' : undefined} onClick={() => open('customers')}>
             <Icon name="pin" /> Klienci i adresy
           </button>
         )}
-        <button type="button" aria-selected={tab === 'wishlist'} onClick={() => open('wishlist')}>
+        <button type="button" aria-current={tab === 'wishlist' ? 'page' : undefined} onClick={() => open('wishlist')}>
           <Icon name="heart" /> Lista życzeń
         </button>
-        <button type="button" aria-selected={tab === 'settings'} onClick={() => open('settings')}>
+        <button type="button" aria-current={tab === 'settings' ? 'page' : undefined} onClick={() => open('settings')}>
           <Icon name="shield" /> Dane i hasło
         </button>
         {staff && (

@@ -1410,9 +1410,12 @@ select {
   transition: background .14s ease, color .14s ease;
 }
 .side-nav button:hover { background: var(--bg-soft); color: var(--ink); }
-.side-nav button[aria-selected="true"] { background: var(--bg-sunken); color: var(--ink); }
+/* aria-current, nie aria-selected: to nawigacja po sekcjach konta, a nie lista
+   wyboru. Czytnik ekranu ignoruje aria-selected na zwykłym przycisku, więc
+   aktywna sekcja nie była w ogóle ogłaszana. */
+.side-nav button[aria-current="page"] { background: var(--bg-sunken); color: var(--ink); }
 .side-nav svg { width: 16px; height: 16px; color: var(--ink-faint); }
-.side-nav button[aria-selected="true"] svg { color: var(--ink); }
+.side-nav button[aria-current="page"] svg { color: var(--ink); }
 .side-nav .menu-sep { margin: 10px 0; }
 
 .panel { max-width: 620px; }
