@@ -601,6 +601,160 @@ const cancelledByOwner = await db.query(`select status from public.cancel_order(
 check('klient anuluje własne zamówienie', cancelledByOwner.rows[0].status === 'anulowane', `${cancelledByOwner.rows[0].status}`);
 
 // ---------------------------------------------------------------------------
+// Granice stanów — migracja 20260807160000
+//
+// Interfejs pokazywał „Anuluj" tylko przy zamówieniu w stanie „nowe", a zwrot
+// tylko przy „dostarczone". Funkcje sprawdzały wyłącznie, KTO woła, nigdy
+// W JAKIM STANIE jest zamówienie — a RPC jest wywoływalne z palca kluczem
+// `anon`, który leży w kodzie strony. Te przypadki pilnują, żeby granica
+// została po stronie bazy.
+// ---------------------------------------------------------------------------
+console.log('\nGranice stanów zamówień');
+
+/** Świeże zamówienie klienta w zadanym stanie, bez przechodzenia przez sklep. */
+async function zamowienieKlienta(status = 'nowe', payment = 'oczekuje') {
+  await asService();
+  const { rows: [row] } = await db.query(
+    `insert into public.orders (user_id, email, status, payment_status)
+     values ($1, 'klient@example.com', $2, $3) returning id`,
+    [customer.id, status, payment]
+  );
+  return row.id;
+}
+
+const oplacone = await zamowienieKlienta('nowe', 'opłacone');
+await asUser(customer.id);
+await throws(
+  'klient nie anuluje opłaconego zamówienia',
+  () => db.query(`select * from public.cancel_order($1)`, [oplacone]),
+  'opłacone'
+);
+
+const wRealizacji = await zamowienieKlienta('spakowane');
+await asUser(customer.id);
+await throws(
+  'klient nie anuluje zamówienia, które ruszyło',
+  () => db.query(`select * from public.cancel_order($1)`, [wRealizacji]),
+  'w realizacji'
+);
+
+// Zaplecze zostaje bez ograniczeń — anulowanie wysłanej paczki po telefonie
+// od klienta to zwykła praca obsługi.
+const wyslane = await zamowienieKlienta('wysłane', 'opłacone');
+await asUser(owner.id);
+const anulowanePrzezZaplecze = await db.query(`select status from public.cancel_order($1)`, [wyslane]);
+check(
+  'zaplecze anuluje wysłane zamówienie',
+  anulowanePrzezZaplecze.rows[0].status === 'anulowane',
+  `${anulowanePrzezZaplecze.rows[0].status}`
+);
+
+// Surowy UPDATE omijał zwrot towaru: status leciał na „anulowane", a magazyn
+// zostawał bez zmian. Wyzwalacz zamyka tę drogę także zapleczu.
+const doUpdate = await zamowienieKlienta('nowe');
+await asUser(owner.id);
+await throws(
+  'surowy UPDATE na „anulowane" odrzucony',
+  () => db.query(`update public.orders set status = 'anulowane' where id = $1`, [doUpdate]),
+  'cancel_order'
+);
+
+// Kolejka pakowania przestawia wyłącznie stany kolejki
+await throws(
+  'kolejka nie ustawia „dostarczone"',
+  () => db.query(`select public.ustaw_stan_zamowienia($1, 'dostarczone')`, [doUpdate]),
+  'wyłącznie'
+);
+const wKolejce = await db.query(`select public.ustaw_stan_zamowienia($1, 'spakowane') as stan`, [doUpdate]);
+check('kolejka ustawia „spakowane"', wKolejce.rows[0].stan === 'spakowane', `${wKolejce.rows[0].stan}`);
+
+// Anulowana paczka nie dostaje listu przewozowego — towar wrócił na magazyn
+await asUser(owner.id);
+await throws(
+  'nie nadajemy przesyłki na anulowane zamówienie',
+  () => db.query(`select public.nadaj_przesylke($1, 'PACZKA-TEST')`, [wyslane]),
+  'anulowane'
+);
+
+// Zwroty: dopiero po dostarczeniu i tylko do wysokości tego, co zostało
+await asService();
+await db.query(`update public.products set stock = 20 where id = $1`, [bulb.id]);
+await asUser(customer.id);
+const doZwrotu = (
+  await db.query(`select * from public.create_order($1::jsonb, $2, null, null, null)`, [
+    JSON.stringify([{ product_id: bulb.id, qty: 2 }]),
+    'klient@example.com',
+  ])
+).rows[0];
+
+await throws(
+  'zwrot przed dostarczeniem odrzucony',
+  () =>
+    db.query(`select public.zglos_zwrot($1, $2::jsonb, null)`, [
+      doZwrotu.id,
+      JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
+    ]),
+  'po dostarczeniu'
+);
+
+await asService();
+await db.query(`update public.orders set status = 'dostarczone' where id = $1`, [doZwrotu.id]);
+
+await asUser(customer.id);
+const pierwszyZwrot = await db.query(`select public.zglos_zwrot($1, $2::jsonb, null) as id`, [
+  doZwrotu.id,
+  JSON.stringify([{ product_id: bulb.id, qty: 2 }]),
+]);
+check('zwrot całego zamówienia przechodzi', Boolean(pierwszyZwrot.rows[0].id));
+
+// Ta sama pozycja drugi raz: wcześniej przechodziło bez ograniczeń i magazyn
+// przyjmował sztuki, których nikt nie kupił.
+await throws(
+  'ten sam zwrot drugi raz odrzucony',
+  () =>
+    db.query(`select public.zglos_zwrot($1, $2::jsonb, null)`, [
+      doZwrotu.id,
+      JSON.stringify([{ product_id: bulb.id, qty: 2 }]),
+    ]),
+  'zgłoszono już'
+);
+
+// Kupon z limitem użyć: sprawdzenie i licznik w jednej instrukcji
+await asService();
+await db.query(
+  `insert into public.coupons (code, percent_off, max_uses, used_count)
+   values ('JEDNORAZ', 10, 1, 0) on conflict (code) do update set max_uses = 1, used_count = 0`
+);
+await db.query(`update public.products set stock = 20 where id = $1`, [bulb.id]);
+
+await asUser(customer.id);
+await db.query(`select * from public.create_order($1::jsonb, $2, null, null, $3)`, [
+  JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
+  'klient@example.com',
+  'JEDNORAZ',
+]);
+await throws(
+  'kupon nie przekracza limitu użyć',
+  () =>
+    db.query(`select * from public.create_order($1::jsonb, $2, null, null, $3)`, [
+      JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
+      'klient@example.com',
+      'JEDNORAZ',
+    ]),
+  'JEDNORAZ'
+);
+
+await asService();
+const licznik = await db.query(`select used_count from public.coupons where code = 'JEDNORAZ'`);
+check('licznik kuponu stanął na limicie', licznik.rows[0].used_count === 1, `${licznik.rows[0].used_count}`);
+
+// Stara funkcja korekty zniknęła razem z ekranem, który jej używał
+const stara = await db.query(
+  `select count(*) as n from pg_proc where proname = 'adjust_stock' and pronamespace = 'public'::regnamespace`
+);
+check('adjust_stock skasowana', Number(stara.rows[0].n) === 0, `${stara.rows[0].n}`);
+
+// ---------------------------------------------------------------------------
 // Zdjęcia produktów w Storage
 // ---------------------------------------------------------------------------
 console.log('\nZdjęcia produktów');
