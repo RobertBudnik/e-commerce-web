@@ -149,6 +149,17 @@
 :root { --line-strong: #d3ccbe; }
 .dark { --line-strong: #413c36; }
 
+/* Obwódka pola formularza. Osobny token, bo `--line` ma wobec tła kontrast
+   1,29:1 — dla kreski rozdzielającej to w zupełności dość, ale pole tekstowe
+   ma tło równe tłu strony, więc obwódka jest jedynym znakiem, że to kontrolka.
+   WCAG 1.4.11 żąda tam 3:1. Wartości dobrane tak, żeby przechodzić na
+   wszystkich trzech powierzchniach, na których pola stoją:
+
+     jasny  #8a8377 → bg 3,57  surface 3,75  panel 3,22
+     ciemny #726b61 → bg 3,58  surface 3,34  panel 3,16 */
+:root { --line-pole: #8a8377; }
+.dark { --line-pole: #726b61; }
+
 /* Próg ostrzegawczy w magazynie — trzeci stan obok „w porządku" i „zero".
    Nie da się go zrobić istniejącymi tokenami: `--ok` to zieleń dostępności,
    a `--accent` niesie już „pilne", więc dioda przy progu wyglądałaby jak
@@ -477,6 +488,11 @@ p:last-child { margin-bottom: 0; }
 .search svg { width: 15px; height: 15px; flex: none; }
 .search input {
   width: 100%;
+  /* Pole samo w sobie miało 19 px wysokości, a otoczka jest zwykłym `div`-em,
+     więc kliknięcie w pozostałe 21 px pigułki nie robiło nic — kontrolka
+     wyglądała na 240×40, a łapała ułamek tego. Rozciągnięcie na pełną
+     wysokość robi z całej pigułki jeden cel. */
+  height: 100%;
   border: 0;
   background: none;
   outline: none;
@@ -486,6 +502,9 @@ p:last-child { margin-bottom: 0; }
 .search input::placeholder { color: var(--ink-faint); }
 
 .cart-btn { position: relative; }
+/* Szeroko wystarczy napis — ikona wchodzi dopiero tam, gdzie napis nie mieści
+   się w pasku. Rozmiar pod krój interfejsu, żeby nie odstawała od tekstu obok. */
+.cart-btn-ikona { display: none; width: 18px; height: 18px; }
 .cart-count {
   min-width: 20px;
   height: 20px;
@@ -655,6 +674,19 @@ select:hover { border-color: var(--line-strong); }
   gap: 40px 28px;
 }
 
+/* Na telefonie próg 248 px nie mieści dwóch kolumn — przy 390 px ekranu
+   zostaje jedna, więc osiem produktów to prawie sześć ekranów przewijania
+   i nie da się porównać dwóch rzeczy obok siebie. Dwie kolumny skracają to
+   do trzech ekranów; kafel schodzi do ~165 px, więc zdjęcie idzie na kwadrat,
+   bo pion 4:5 przy tej szerokości zjadałby połowę wysokości na sam obrazek. */
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 12px;
+  }
+  .grid .card-media { aspect-ratio: 1 / 1; }
+}
+
 .card { display: flex; flex-direction: column; }
 
 .card-media {
@@ -722,7 +754,10 @@ select:hover { border-color: var(--line-strong); }
 .card-body { padding-top: 14px; display: flex; flex-direction: column; gap: 3px; flex: 1; }
 .card-cat { font-size: .6875rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
 .card-title { font-size: .9375rem; font-weight: 500; letter-spacing: -.012em; margin: 0; }
-.card-title a { background-image: linear-gradient(currentColor, currentColor); background-size: 0 1px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size .25s ease; }
+/* `inline-block` z wyściółką podnosi wiersz tytułu z 18 px do 24 px — progu
+   celu dotykowego z WCAG 2.5.8. Podkreślenie rysowane tłem trzyma się
+   krawędzi wiersza, więc wyściółka go nie odsuwa. */
+.card-title a { display: inline-block; padding-block: 4px; background-image: linear-gradient(currentColor, currentColor); background-size: 0 1px; background-repeat: no-repeat; background-position: 0 calc(100% - 4px); transition: background-size .25s ease; }
 .card-title a:hover { background-size: 100% 1px; }
 .rating { font-size: .8125rem; color: var(--ink-faint); }
 .rating .stars { letter-spacing: .06em; color: var(--ink-soft); }
@@ -741,6 +776,7 @@ select:hover { border-color: var(--line-strong); }
   font-size: .8125rem;
   color: var(--ink-faint);
 }
+.breadcrumbs a { display: inline-block; padding-block: 4px; }
 .breadcrumbs a:hover { color: var(--ink); }
 /* Ukośnik to znak, nie kreska — token linii dawał mu 1.7:1 w ciemnym motywie
    i ścieżka rozpadała się na luźne słowa. `--ink-3` jest równie stonowany,
@@ -1013,8 +1049,16 @@ select:hover { border-color: var(--line-strong); }
   color: var(--ink-faint);
   margin-bottom: 14px;
 }
-.footer-grid ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
-.footer-grid ul a { color: var(--ink-soft); }
+.footer-grid ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+/* Sam wiersz tekstu ma 17 px wysokości. Przy odstępie 9 px przechodziło to
+   WCAG 2.5.8 wyłącznie przez wyjątek odstępu — okręgi 24 px mijały się
+   o dwa piksele. Zamiast liczyć na tolerancję, cel dostaje własną wysokość:
+   `inline-block` z wyściółką daje 25 px i palcowi, i kryterium. */
+.footer-grid ul a {
+  display: inline-block;
+  padding-block: 4px;
+  color: var(--ink-soft);
+}
 .footer-grid ul a:hover { color: var(--ink); }
 
 .footer-bottom {
@@ -1028,6 +1072,9 @@ select:hover { border-color: var(--line-strong); }
   color: var(--ink-faint);
   font-size: .8125rem;
 }
+/* Ta sama poprawka co w kolumnach stopki — regulamin i polityka to linki,
+   w które ktoś naprawdę celuje palcem. */
+.footer-bottom a { display: inline-block; padding-block: 4px; }
 
 @media (max-width: 720px) {
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
@@ -1193,6 +1240,25 @@ select:hover { border-color: var(--line-strong); }
 .field-hint { font-size: .8125rem; color: var(--ink-faint); }
 .field-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
 .field-row .field + .field { margin-top: 0; }
+
+/* ---------- Obwódki kontrolek ----------
+   Zebrane w jednym miejscu, żeby próg 3:1 z WCAG 1.4.11 dało się sprawdzić
+   jednym spojrzeniem, a nie po trzydziestu wystąpieniach `var(--line)`
+   rozsypanych po pliku. Reguła stoi za definicjami tych komponentów, więc
+   nadpisuje `--line` bez podbijania swoistości.
+
+   Obejmuje wyłącznie rzeczy, które przyjmują wpis albo wybór. Kreski wokół
+   kart, paneli i tabel zostają na `--line` — tam nic nie trzeba rozpoznawać. */
+.search,
+.qty,
+.coupon input,
+.newsletter input,
+.field input,
+.field select,
+.field textarea,
+select {
+  border-color: var(--line-pole);
+}
 
 .check {
   display: flex;
@@ -2083,8 +2149,12 @@ code {
      informację. */
   .header-inner { gap: 8px; }
   .header-actions { gap: 4px; }
-  .cart-btn { padding-inline: 12px; font-size: 0; gap: 0; }
-  .cart-btn .cart-count { font-size: .6875rem; }
+  /* Wąsko: zamiast napisu ikona. Wcześniej stało tu `font-size: 0`, które
+     chowało napis, ale nie dawało nic w zamian — przy pustym koszyku
+     plakietka też jest ukryta i zostawała goła obwódka bez treści. */
+  .cart-btn { padding-inline: 12px; gap: 6px; }
+  .cart-btn .cart-btn-tekst { display: none; }
+  .cart-btn .cart-btn-ikona { display: block; }
   .account-name { display: none; }
   .account-btn { padding-inline: 10px; }
 }
@@ -2968,7 +3038,11 @@ code {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
   font-size: 12px;
-  color: var(--accent);
+  /* `--ink-2`, nie `--accent`. Rdzawy niesie w tej palecie „przecena, pilne",
+     a licznik przy zakładce i godzina przy zamówieniu to informacje neutralne —
+     na liście wyglądały jak alerty. Kontrast trzyma z zapasem: 5,36:1 na
+     wpuszczonym torze w motywie jasnym, 6,63:1 w ciemnym. */
+  color: var(--ink-2);
 }
 
 /* Wariant wąski: przełącznik motywu skanera nie jest nawigacją, tylko
@@ -3291,6 +3365,24 @@ code {
   background: #14130f;
 }
 .mag-kadr video { width: 100%; height: 100%; object-fit: cover; }
+
+/* Kadr przed włączeniem aparatu. Czarny prostokąt bez obrazu wygląda jak
+   usterka, a nie jak miejsce, które czeka na uruchomienie — więc póki nie ma
+   strumienia, tło idzie w powierzchnię interfejsu i widać, co tu będzie. */
+.mag-kadr-uspiony { background: var(--bg-sunken); }
+.mag-kadr-pusty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  color: var(--ink-2);
+}
+.mag-kadr-pusty svg { width: 40px; height: 40px; color: var(--ink-3); }
+.mag-kadr-pusty p { margin: 0; font-size: .875rem; }
 
 /* Cztery klamry po 34 px. Dwa pseudoelementy, każdy bierze parę rogów
    przez krawędź poziomą i pionową. */

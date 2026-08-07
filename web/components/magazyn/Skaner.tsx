@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { Icon } from '@/components/Icon';
 import { korygujStanAction } from '@/app/actions/magazyn';
 import { znajdzPoKodzieAction } from '@/app/actions/skan';
 import type { Product } from '@/lib/types';
@@ -132,8 +133,17 @@ export function Skaner() {
 
   return (
     <div className="mag-skan">
-      <div className="mag-kadr">
+      <div className={`mag-kadr${stan.faza === 'gotowy' ? ' mag-kadr-uspiony' : ''}`}>
         <video ref={videoRef} playsInline muted />
+        {/* Przed włączeniem aparatu kadr jest czarnym prostokątem na pół ekranu,
+            a podpowiedź „ustaw kod w kadrze" wisi nad pustką. Zamiast tego
+            widać, że to miejsce na obraz i czym się je uruchamia. */}
+        {stan.faza === 'gotowy' && (
+          <div className="mag-kadr-pusty">
+            <Icon name="camera" />
+            <p>Tu pojawi się obraz z aparatu</p>
+          </div>
+        )}
         {skanuje && (
           <>
             <div className="mag-klamry" aria-hidden="true" />
@@ -144,14 +154,11 @@ export function Skaner() {
       </div>
 
       {stan.faza === 'gotowy' && (
-        <>
-          <p className="mag-podpowiedz">ustaw kod EAN w kadrze</p>
-          <div className="mag-akcje">
-            <button type="button" className="mag-btn" onClick={start}>
-              Włącz aparat
-            </button>
-          </div>
-        </>
+        <div className="mag-akcje">
+          <button type="button" className="mag-btn" onClick={start}>
+            Włącz aparat
+          </button>
+        </div>
       )}
 
       {skanuje && (
