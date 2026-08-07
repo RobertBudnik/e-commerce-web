@@ -11,3 +11,7 @@ blob-report/
 # Sentry — token wtyczki buildowej i cache CLI
 .env.sentry-build-plugin
 .sentryclirc
+
+# Katalog powstaje, gdy przebieg Playwrighta ma nieustawioną zmienną ze
+# ścieżką zrzutów — nazwa bierze się wtedy wprost z „undefined".
+undefined/
