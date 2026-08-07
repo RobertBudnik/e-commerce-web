@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { KONTA, wyloguj, zaloguj } from './pomoce';
+import { dodajPierwszyDoKoszyka, KONTA, wyloguj, zaloguj } from './pomoce';
 
 /**
  * Magazyn — narzędzie zaplecza.
@@ -122,12 +122,34 @@ test.describe('Magazyn', () => {
  */
 test.describe('Zwroty', () => {
   test('klient zgłasza zwrot, magazyn przyjmuje, stan rośnie', async ({ page }) => {
+    // Własne zamówienie, jak w teście anulowania obok. Wcześniej test brał
+    // pierwsze zamówienie z listy zaplecza i zgłaszał zwrot na nie — działało
+    // dopóki bazie wolno było przyjąć ten sam zwrot dwa razy. Odkąd
+    // `zglos_zwrot` sumuje wcześniejsze zgłoszenia, powtórka przebiegu
+    // (w CI `retries: 1`) trafiała na to samo zamówienie i słusznie dostawała
+    // odmowę — test padał na poprawce, nie na usterce.
+    await zaloguj(page, KONTA.klient);
+    await dodajPierwszyDoKoszyka(page);
+
+    await page.goto('/koszyk');
+    await page.getByLabel('Ulica i numer').fill('Krucza 12/4');
+    await page.getByLabel('Kod pocztowy').fill('00-001');
+    await page.getByLabel('Miasto').fill('Warszawa');
+    await page.getByRole('button', { name: /Zamawiam i płacę/ }).click();
+    await page.waitForURL(/\/zamowienie\/NOR-/, { timeout: 20_000 });
+
+    const numer = (await page.getByText(/NOR-\d{4}-\d{4}/).first().innerText()).match(
+      /NOR-\d{4}-\d{4}/
+    )![0];
+
+    await page.goto('/');
+    await wyloguj(page);
+
     // Zwrot jest możliwy dopiero po dostarczeniu — zaplecze ustawia ten stan
     await zaloguj(page, KONTA.zaplecze);
     await page.getByRole('button', { name: /Zamówienia/ }).click();
 
-    const zamowienie = page.locator('.order').first();
-    const numer = await zamowienie.locator('.order-id').innerText();
+    const zamowienie = page.locator('.order', { hasText: numer });
     await zamowienie.locator('.sortbox-btn').click();
     await page.getByRole('option', { name: 'dostarczone' }).click();
     // Pigułka przy zamówieniu, nie komunikat — komunikat znika sam po chwili
