@@ -2154,6 +2154,71 @@ code {
   .galeria-miniatury { gap: 8px; }
 }
 
+/* ---------- Opinie na karcie produktu ----------
+   Lista bez obwódek: opinie rozdziela hairline, tak jak resztę sekcji
+   w sklepie. Ramka wokół każdej wypowiedzi robi z nich kafelki, a to jest
+   tekst do czytania, nie siatka do przeglądania. */
+.opinia-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.opinia { padding: 22px 0; border-top: 1px solid var(--line); }
+.opinia:first-child { border-top: 0; padding-top: 0; }
+
+.opinia-glowa {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.opinia-glowa .stars { color: var(--accent); letter-spacing: .06em; }
+.opinia-autor { font-weight: 500; }
+.opinia-moja { font-weight: 400; color: var(--ink-3); }
+.opinia-data { margin-left: auto; font-size: .875rem; }
+.opinia-tresc { margin: 10px 0 0; color: var(--ink-2); max-width: 68ch; }
+
+/* ---------- Formularz opinii ---------- */
+.opinia-form {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  max-width: 620px;
+}
+
+.opinia-oceny {
+  border: 0;
+  margin: 0 0 18px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.opinia-oceny legend { margin-bottom: 8px; }
+
+/* Gwiazdka jest etykietą pola radiowego: przeglądarka daje strzałki i obsługę
+   czytnika za darmo, a własna lista wyboru musiałaby to odtworzyć. Samo pole
+   znika z widoku, ale zostaje dostępne — stąd obrys na `:focus-visible`
+   przeniesiony na etykietę. */
+.opinia-gwiazdka {
+  position: relative;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--accent);
+  cursor: pointer;
+  transition: transform .16s ease;
+}
+.opinia-gwiazdka:hover { transform: scale(1.12); }
+.opinia-gwiazdka input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.opinia-gwiazdka:has(input:focus-visible) {
+  outline: 1.5px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
+}
+
 /* ---------- Galeria w panelu produktów ---------- */
 .galeria-panel { display: grid; gap: 12px; }
 .galeria-panel-lista {

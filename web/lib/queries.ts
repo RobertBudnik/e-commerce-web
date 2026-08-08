@@ -153,6 +153,73 @@ export async function getGaleriaProduktu(
     .filter((z): z is ZdjecieGalerii => Boolean(z.url));
 }
 
+/** Opinia widoczna na karcie produktu. */
+export type Opinia = {
+  id: string;
+  ocena: number;
+  tresc: string | null;
+  autor: string;
+  data: string;
+  /** Czy pisze ją zalogowane konto — do oznaczenia „Twoja opinia". */
+  wlasna: boolean;
+};
+
+/**
+ * Opinie o produkcie, najnowsze na górze.
+ *
+ * Polityka odczytu przepuszcza opublikowane każdemu, a autorowi także jego
+ * własną po ukryciu — dlatego zapytanie nie filtruje statusu samo: zrobiłoby
+ * to drugi raz i odcięło autorowi jego wiersz.
+ */
+export async function getOpinieProduktu(productId: string): Promise<Opinia[]> {
+  const supabase = await createClient();
+
+  const [{ data }, { data: sesja }] = await Promise.all([
+    supabase
+      .from('reviews')
+      .select('id, rating, tresc, autor, created_at, user_id')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false })
+      .limit(50),
+    supabase.auth.getUser(),
+  ]);
+
+  const mojeId = sesja.user?.id ?? null;
+
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    ocena: Number(row.rating),
+    tresc: (row.tresc as string | null) ?? null,
+    autor: (row.autor as string | null) || 'Klient',
+    data: row.created_at as string,
+    wlasna: Boolean(mojeId) && row.user_id === mojeId,
+  }));
+}
+
+/**
+ * Czy zalogowane konto może wystawić opinię o tym produkcie.
+ *
+ * Warunek jest ten sam co w `dodaj_opinie()` — sprawdzenie po stronie bazy
+ * jest tym, które decyduje. Tutaj chodzi wyłącznie o to, żeby nie pokazywać
+ * formularza komuś, kto i tak dostanie odmowę.
+ */
+export async function czyMogeOceniac(productId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { count } = await supabase
+    .from('order_items')
+    .select('id, orders!inner(user_id, status)', { count: 'exact', head: true })
+    .eq('product_id', productId)
+    .eq('orders.user_id', user.id)
+    .eq('orders.status', 'dostarczone');
+
+  return (count ?? 0) > 0;
+}
+
 /**
  * Podobne produkty. Wcześniej strona ciągnęła cały katalog i filtrowała go
  * w pamięci — przy większym asortymencie to rosnący koszt bez powodu.

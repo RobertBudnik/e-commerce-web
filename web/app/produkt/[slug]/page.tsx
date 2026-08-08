@@ -7,8 +7,17 @@ import { BuyBox } from '@/components/product/BuyBox';
 import { BuyBar } from '@/components/product/BuyBar';
 import { TrustBlock } from '@/components/product/TrustBlock';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
+import { Opinie } from '@/components/product/Opinie';
 import { money, stars } from '@/lib/format';
-import { getCategories, getGaleriaProduktu, getProductBySlug, getProductSlugs, getRelatedProducts } from '@/lib/queries';
+import {
+  czyMogeOceniac,
+  getCategories,
+  getGaleriaProduktu,
+  getOpinieProduktu,
+  getProductBySlug,
+  getProductSlugs,
+  getRelatedProducts,
+} from '@/lib/queries';
 
 export const revalidate = 60;
 
@@ -48,10 +57,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   // Kategorie, podobne pozycje i galeria dopiero po znalezieniu produktu —
   // nie ma sensu ciągnąć ich dla adresu, który i tak skończy się na 404.
-  const [categories, related, galeria] = await Promise.all([
+  const [categories, related, galeria, opinie, mogeOceniac] = await Promise.all([
     getCategories(),
     getRelatedProducts(product.category, product.id),
     getGaleriaProduktu(product.id, product.name),
+    getOpinieProduktu(product.id),
+    czyMogeOceniac(product.id),
   ]);
 
   const categoryName = categories.find((c) => c.id === product.category)?.name ?? product.category;
@@ -118,6 +129,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </table>
         </div>
       </div>
+
+      <hr className="rule" />
+
+      <Opinie
+        produktId={product.id}
+        slug={product.slug}
+        opinie={opinie}
+        mogeOceniac={mogeOceniac}
+      />
 
       <RecentlyViewed categories={categories} skipId={product.id} track={product.id} />
 
