@@ -5,6 +5,7 @@ import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon, ICON_PATHS } from '@/components/Icon';
 import { deleteProductAction, saveProductAction } from '@/app/actions/catalog';
+import { GaleriaPanelu } from './GaleriaPanelu';
 import { toast } from '@/components/ui/ToastHost';
 import { money } from '@/lib/format';
 import { specsToText } from '@/lib/specs';
@@ -137,7 +138,7 @@ export function AdminPanel({ products, categories }: { products: Product[]; cate
             </div>
 
             <div className="field">
-              <label htmlFor="a-image">Zdjęcie produktu</label>
+              <label htmlFor="a-image">Okładka produktu</label>
               <div className="uploader">
                 <div className="uploader-preview">
                   {preview ? (
@@ -166,6 +167,10 @@ export function AdminPanel({ products, categories }: { products: Product[]; cate
                 </div>
               </div>
             </div>
+
+            {/* Dopiero przy istniejącym produkcie: nowy nie ma identyfikatora,
+                do którego dałoby się przypiąć plik. */}
+            {editing && <GaleriaPanelu productId={editing.id} />}
 
             <div className="field-row">
               <div className="field">

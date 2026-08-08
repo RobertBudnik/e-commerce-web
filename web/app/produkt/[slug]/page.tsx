@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ProductMedia } from '@/components/product/ProductMedia';
+import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { BuyBox } from '@/components/product/BuyBox';
 import { BuyBar } from '@/components/product/BuyBar';
 import { TrustBlock } from '@/components/product/TrustBlock';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { money, stars } from '@/lib/format';
-import { getCategories, getProductBySlug, getProductSlugs, getRelatedProducts } from '@/lib/queries';
+import { getCategories, getGaleriaProduktu, getProductBySlug, getProductSlugs, getRelatedProducts } from '@/lib/queries';
 
 export const revalidate = 60;
 
@@ -46,11 +46,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  // Kategorie i podobne pozycje dopiero po znalezieniu produktu — nie ma sensu
-  // ciągnąć ich dla adresu, który i tak skończy się na 404.
-  const [categories, related] = await Promise.all([
+  // Kategorie, podobne pozycje i galeria dopiero po znalezieniu produktu —
+  // nie ma sensu ciągnąć ich dla adresu, który i tak skończy się na 404.
+  const [categories, related, galeria] = await Promise.all([
     getCategories(),
     getRelatedProducts(product.category, product.id),
+    getGaleriaProduktu(product.id, product.name),
   ]);
 
   const categoryName = categories.find((c) => c.id === product.category)?.name ?? product.category;
@@ -74,9 +75,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </nav>
 
       <div className="product">
-        <div className="product-media">
-          <ProductMedia product={product} sizes="(max-width: 900px) 92vw, 560px" priority />
-        </div>
+        <ProductGallery product={product} galeria={galeria} />
         <div className="product-info">
           <span className="label">{categoryName}</span>
           <h1>{product.name}</h1>

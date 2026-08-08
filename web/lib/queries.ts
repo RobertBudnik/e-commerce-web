@@ -123,6 +123,36 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return toProduct(data as ProductRow, imageUrl);
 }
 
+/** Jedno ujęcie w galerii karty produktu. */
+export type ZdjecieGalerii = { url: string; alt: string };
+
+/**
+ * Dodatkowe zdjęcia produktu.
+ *
+ * Okładka zostaje w `products.image_path` i jedzie razem z produktem do
+ * każdej listy; tutaj chodzi o ujęcia oglądane wyłącznie na karcie. Osobne
+ * zapytanie, bo tylko ta jedna strona ich potrzebuje — dokładanie dołączenia
+ * do `getProducts()` obciążałoby siatkę katalogu bez powodu.
+ */
+export async function getGaleriaProduktu(
+  productId: string,
+  nazwa: string
+): Promise<ZdjecieGalerii[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('product_images')
+    .select('path, alt')
+    .eq('product_id', productId)
+    .order('position')
+    .order('created_at');
+
+  if (error || !data) return [];
+
+  return data
+    .map((row) => ({ url: imageUrl(row.path as string), alt: (row.alt as string) || nazwa }))
+    .filter((z): z is ZdjecieGalerii => Boolean(z.url));
+}
+
 /**
  * Podobne produkty. Wcześniej strona ciągnęła cały katalog i filtrowała go
  * w pamięci — przy większym asortymencie to rosnący koszt bez powodu.

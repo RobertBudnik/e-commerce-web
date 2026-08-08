@@ -109,6 +109,102 @@ export async function deleteProductAction(id: string, imagePath: string | null):
   return { ok: true };
 }
 
+/* ==========================================================================
+   Galeria produktu
+
+   Okładka (`products.image_path`) zostaje w formularzu produktu wyżej — jedzie
+   razem z nim do każdej listy. Tutaj są zdjęcia dodatkowe, oglądane wyłącznie
+   na karcie produktu. Osobne akcje, bo dodaje się je pojedynczo i po zapisaniu
+   produktu, a nie razem z nim.
+   ========================================================================== */
+
+export type ZdjeciePanelu = { id: number; path: string; url: string; alt: string | null };
+
+/** Zdjęcia dodatkowe produktu do panelu. Kolejność ta sama co na karcie. */
+export async function galeriaProduktuAction(productId: string): Promise<ZdjeciePanelu[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('product_images')
+    .select('id, path, alt')
+    .eq('product_id', productId)
+    .order('position')
+    .order('created_at');
+
+  const base = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
+  return (data ?? []).map((row) => ({
+    id: Number(row.id),
+    path: String(row.path),
+    url: `${base}${row.path}`,
+    alt: (row.alt as string | null) ?? null,
+  }));
+}
+
+/**
+ * Dodanie ujęcia do galerii.
+ *
+ * Kolejność liczona z liczby istniejących zdjęć, nie wpisywana ręcznie:
+ * przy czterech ujęciach nikt nie chce myśleć o numerach, a kolejność
+ * dodawania jest tą, której się spodziewa.
+ */
+export async function dodajZdjecieGaleriiAction(
+  productId: string,
+  formData: FormData
+): Promise<CatalogResult> {
+  const file = formData.get('zdjecie');
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: 'Wskaż plik ze zdjęciem.' };
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return { ok: false, error: 'Zdjęcie waży ponad 5 MB — kubełek go nie przyjmie.' };
+  }
+
+  const supabase = await createClient();
+
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const path = `${crypto.randomUUID()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
+
+  if (uploadError) return { ok: false, error: `Nie wgrano zdjęcia: ${uploadError.message}` };
+
+  const { count } = await supabase
+    .from('product_images')
+    .select('id', { count: 'exact', head: true })
+    .eq('product_id', productId);
+
+  const { error } = await supabase.from('product_images').insert({
+    product_id: productId,
+    path,
+    position: count ?? 0,
+    alt: String(formData.get('alt') ?? '').trim() || null,
+  });
+
+  // Zapis do tabeli padł, więc plik w kubełku nie ma już do czego należeć.
+  if (error) {
+    await supabase.storage.from(BUCKET).remove([path]);
+    return { ok: false, error: error.message };
+  }
+
+  revalidateCatalog();
+  return { ok: true };
+}
+
+/** Usunięcie ujęcia. Wiersz najpierw, plik potem — odwrotnie zostawiałby martwą ścieżkę. */
+export async function usunZdjecieGaleriiAction(id: number, path: string): Promise<CatalogResult> {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from('product_images').delete().eq('id', id);
+  if (error) return { ok: false, error: error.message };
+
+  const { error: removeError } = await supabase.storage.from(BUCKET).remove([path]);
+  if (removeError) console.warn('Nie skasowano pliku zdjęcia:', removeError.message);
+
+  revalidateCatalog();
+  return { ok: true };
+}
+
 /** Katalog wisi na kilku stronach naraz — odświeżamy je wszystkie. */
 function revalidateCatalog() {
   revalidatePath('/');
