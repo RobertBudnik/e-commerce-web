@@ -17,13 +17,32 @@
 -- przyspieszyć: wiodący znak wieloznaczny wyklucza użycie indeksu.
 -- =============================================================================
 
-create extension if not exists pg_trgm with schema extensions;
+-- Blok warunkowy, bo testy schematu (`npm run db:test`) biegną na Postgresie
+-- skompilowanym do WebAssembly, a tam `pg_trgm` nie istnieje. Ten sam wzorzec
+-- co przy grantach dla `supabase_auth_admin` w 20260727090300: środowisko
+-- testowe ma przejść, a wdrożone dostać indeksy.
+--
+-- Samo szukanie działa w obu przypadkach — `ilike` nie potrzebuje indeksu,
+-- żeby zwrócić poprawny wynik. Bez niego jest tylko wolniejsze, a przy ośmiu
+-- produktach w seedzie nie ma czego przyspieszać.
+do $$
+begin
+  if not exists (select 1 from pg_available_extensions where name = 'pg_trgm') then
+    raise notice 'Brak pg_trgm — pomijam indeksy trigramowe (środowisko testowe)';
+    return;
+  end if;
 
-create index if not exists products_nazwa_trgm
-  on public.products using gin (name extensions.gin_trgm_ops);
+  create extension if not exists pg_trgm with schema extensions;
 
-create index if not exists products_short_trgm
-  on public.products using gin (short extensions.gin_trgm_ops);
+  create index if not exists products_nazwa_trgm
+    on public.products using gin (name extensions.gin_trgm_ops);
+
+  create index if not exists products_short_trgm
+    on public.products using gin (short extensions.gin_trgm_ops);
+
+  comment on index public.products_nazwa_trgm is
+    'Szukanie po fragmencie nazwy (ilike %fraza%). Trigramy, bo słownika polskiego do FTS tu nie ma.';
+end $$;
 
 -- Sortowania z listy w sklepie. Bez tych indeksów każda zmiana kolejności
 -- to sortowanie całej tabeli, a stronicowanie robi to przy każdej stronie.
@@ -35,6 +54,3 @@ create index if not exists products_ocena_idx
 
 create index if not exists products_opinie_idx
   on public.products (reviews_count desc) where is_active;
-
-comment on index public.products_nazwa_trgm is
-  'Szukanie po fragmencie nazwy (ilike %fraza%). Trigramy, bo słownika polskiego do FTS tu nie ma.';
