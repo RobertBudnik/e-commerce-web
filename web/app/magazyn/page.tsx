@@ -48,7 +48,7 @@ export default async function Przeglad() {
         </Link>
 
         <Link className="mag-wiersz" href="/magazyn/zwroty">
-          <span className="mag-dioda mag-dioda-zero" aria-hidden="true" />
+          <span className="mag-dioda mag-dioda-neutralna" aria-hidden="true" />
           <span className="mag-tresc">
             <span className="mag-nazwa">Zwroty do przyjęcia</span>
           </span>

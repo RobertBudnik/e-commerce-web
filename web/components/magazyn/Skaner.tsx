@@ -187,7 +187,7 @@ export function Skaner() {
             <span
               className={`mag-dioda${
                 stan.stan === 0
-                  ? ' mag-dioda-zero'
+                  ? ' mag-dioda-brak'
                   : stan.produkt.progNiski > 0 && stan.stan <= stan.produkt.progNiski
                     ? ' mag-dioda-uwaga'
                     : ''

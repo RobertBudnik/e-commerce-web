@@ -17,9 +17,9 @@ const KLIKALNE = 'a, button, [role="button"], input, select, textarea, summary, 
  * żadnego wskaźnika myszy, a to jest usterka, z której użytkownik nie ma
  * wyjścia.
  *
- * Etykieta bierze się z `data-kursor` na elemencie pod spodem, a w drugiej
- * kolejności z jego dostępnej nazwy. Nic nie trzeba oznaczać ręcznie, żeby
- * pierścień zareagował.
+ * Nad elementem klikalnym kropka rośnie w cienki pierścień. Bez etykiety —
+ * podpis ciągnięty za kursorem odciągał wzrok od samego łącza, a wskaźnik ma
+ * prowadzić do treści, nie konkurować z nią.
  *
  * Efekt chowa się przed dotykiem i przy `prefers-reduced-motion` — na telefonie
  * nie ma kursora do zastąpienia, a opóźniony pierścień to dokładnie ten rodzaj
@@ -59,12 +59,6 @@ export function WlasnyKursor() {
 
       const pod = (e.target as Element | null)?.closest?.(KLIKALNE) ?? null;
       node.classList.toggle('nad-celem', Boolean(pod));
-
-      const etykieta =
-        pod?.getAttribute('data-kursor') ??
-        (pod?.getAttribute('aria-label') || pod?.textContent?.trim()?.slice(0, 24)) ??
-        '';
-      node.dataset.etykieta = pod ? etykieta : '';
     };
 
     const naWyjscie = () => {

@@ -94,7 +94,7 @@ export default async function Stany({
             return (
               <Link key={p.id} className="mag-wiersz" href={`/magazyn/stany/${p.id}`}>
                 <span
-                  className={`mag-dioda${zero ? ' mag-dioda-zero' : przyProgu ? ' mag-dioda-uwaga' : ''}`}
+                  className={`mag-dioda${zero ? ' mag-dioda-brak' : przyProgu ? ' mag-dioda-uwaga' : ''}`}
                   aria-hidden="true"
                 />
                 <span className="mag-tresc">
@@ -105,7 +105,7 @@ export default async function Stany({
                   </span>
                 </span>
                 <span
-                  className={`mag-odczyt${zero ? ' mag-odczyt-zero' : przyProgu ? ' mag-odczyt-uwaga' : ''}`}
+                  className={`mag-odczyt${zero ? ' mag-odczyt-brak' : przyProgu ? ' mag-odczyt-uwaga' : ''}`}
                   aria-label={`Stan: ${p.stock} szt.`}
                 >
                   {p.stock}

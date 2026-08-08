@@ -2424,41 +2424,28 @@ code {
   top: 0;
   left: 0;
   z-index: var(--z-toast);
-  width: 26px;
-  height: 26px;
-  border: 1px solid var(--ink);
+  width: 7px;
+  height: 7px;
   border-radius: var(--r-pill);
+  background: var(--ink);
   pointer-events: none;
   opacity: 0;
-  /* Skala i przezroczystość osobno od pozycji: pozycję ustawia pętla
-     w `transform`, więc rozmiar musi iść inną właściwością. */
+  /* Skala osobno od pozycji: pozycję ustawia pętla w `transform`, więc rozmiar
+     musi iść inną właściwością, inaczej jedno kasuje drugie. */
   scale: 1;
-  transition: opacity .2s ease, scale .18s ease, background-color .18s ease;
+  transition: opacity .2s ease, scale .18s ease;
 }
 .kursor.jest { opacity: 1; }
-.kursor.nad-celem {
-  scale: 1.9;
-  background: color-mix(in srgb, var(--ink) 10%, transparent);
-}
 
-/* Etykieta pod pierścieniem — skalowana odwrotnie, żeby nie rosła razem z nim. */
-.kursor::after {
-  content: attr(data-etykieta);
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  translate: -50% 0;
-  scale: .55;
-  white-space: nowrap;
-  font-family: var(--mono);
-  font-size: .625rem;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-  opacity: 0;
-  transition: opacity .16s ease;
+/* Nad elementem klikalnym kropka rośnie w pierścień i przestaje zasłaniać to,
+   na co się patrzy. Bez etykiety i bez wypełnienia: wcześniej ciągnęła za sobą
+   podpis, który przy każdym łączu odciągał wzrok od samego łącza — a kursor
+   ma prowadzić do treści, nie konkurować z nią. */
+.kursor.nad-celem {
+  scale: 3.4;
+  background: transparent;
+  border: .5px solid var(--ink);
 }
-.kursor.nad-celem::after { opacity: 1; }
 
 /* Wyłącznik zbiorczy. Globalna reguła ścina czasy, ale te efekty mają
    zniknąć, nie przyspieszyć. */
@@ -3541,8 +3528,21 @@ body:has(.mag) { background: var(--panel); }
   letter-spacing: .01em;
 }
 .mag-odczyt-maly { font-size: 13px; font-weight: 500; }
+/* Jednostka przy liczbie: mniejsza i przygaszona, żeby liczba została
+   najmocniejszym elementem wiersza, a „szt." tylko ją tłumaczyło. */
+.mag-odczyt-jednostka { font-size: 12px; font-weight: 400; color: var(--ink-3); }
 .mag-odczyt-uwaga { color: var(--accent); }
-.mag-odczyt-zero { color: var(--ink-3); }
+/* Neutralna, nie alarmowa: tym samym stylem jedzie liczba przy pozycji, która
+   nikogo nie woła do działania. Nazwa mówi o wyglądzie, bo znaczenie zależy
+   od ekranu — patrz komentarz przy diodach niżej. */
+.mag-odczyt-neutralny { color: var(--ink-3); }
+
+/* Brak na stanie. Najmocniejszy stan w magazynie, więc najmocniejszy kontrast —
+   nie kolor. Paleta jest monochromatyczna, czerwieni w niej nie ma i nie
+   będzie, a rdza jest już zajęta przez „mało". Wcześniej zero jechało
+   najbledszym odcieniem `--ink-3` i wyglądało jak pozycja wyłączona: rzecz,
+   której nie da się sprzedać, była najsłabiej widoczna na ekranie. */
+.mag-odczyt-brak { color: var(--ink); font-weight: 700; }
 
 /* Szewron. Rysowany dwiema kreskami zamiast ikoną — jedna reguła zamiast
    pliku, a przy tym zawsze w kolorze tekstu obok. */
@@ -3567,7 +3567,20 @@ body:has(.mag) { background: var(--panel); }
   background: var(--ok);
 }
 .mag-dioda-uwaga { background: var(--uwaga); }
-.mag-dioda-zero { background: var(--ink-3); }
+
+/* Uwaga na nazwy: `-neutralna` to wygląd, nie znaczenie. Ta sama szara kropka
+   opisuje wysłaną paczkę, zwrot w kolejce i wiersz przeglądu — wszędzie znaczy
+   „nic tu po Tobie", nie „źle". Wcześniej nosiła nazwę `-zero` i ta sama klasa
+   trafiła na brak towaru, czyli na stan dokładnie odwrotny. */
+.mag-dioda-neutralna { background: var(--ink-3); }
+
+/* Brak na stanie: pierścień, nie kropka. Sama zmiana koloru na ciemny zlałaby
+   się z tekstem obok, a przy diodzie o średnicy dziewięciu pikseli różnica
+   odcienia ginie w ruchu — magazynier patrzy na ten ekran, idąc z kartonem. */
+.mag-dioda-brak {
+  background: transparent;
+  border: 2.5px solid var(--ink);
+}
 /* W kolejce zamówień dioda mówi „to czeka na ruch", a nie „stan jest dobry".
    Zieleń niosła tam odwrotny komunikat: paczka nietknięta wyglądała jak
    załatwiona. Makieta 02 ma przy nowych zamówieniach rdzę. */

@@ -3,14 +3,6 @@ import Link from 'next/link';
 import { wymagajZaplecza } from '@/lib/magazyn-dostep';
 import { getKolejkaZamowien, getLicznikiZamowien } from '@/lib/queries';
 import { ile, POZYCJE } from '@/lib/odmiana';
-/* W kolejce waluta jest ta sama w każdym wierszu, więc powtarzanie „zł"
-   trzydzieści razy tylko zabiera miejsce liczbie. Symbol wraca na karcie
-   zamówienia, gdzie kwota jest pojedyncza i ma wagę. */
-const KWOTA = new Intl.NumberFormat('pl-PL', {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
 export const metadata: Metadata = {
   title: 'Zamówienia',
   description: 'Kolejka wysyłek.',
@@ -79,6 +71,7 @@ export default async function Zamowienia({
         <div className="mag-karta" style={{ marginTop: 10 }}>
           {zamowienia.map((z) => {
             const brak = z.brakujeSztuk > 0;
+            const sztuk = z.items.reduce((suma, p) => suma + p.qty, 0);
             return (
               <Link
                 key={z.id}
@@ -87,7 +80,7 @@ export default async function Zamowienia({
               >
                 <span
                   className={`mag-dioda${
-                    brak ? ' mag-dioda-uwaga' : stan === 'wysłane' ? ' mag-dioda-zero' : ' mag-dioda-pilne'
+                    brak ? ' mag-dioda-uwaga' : stan === 'wysłane' ? ' mag-dioda-neutralna' : ' mag-dioda-pilne'
                   }`}
                   aria-hidden="true"
                 />
@@ -102,9 +95,15 @@ export default async function Zamowienia({
                       : `${ile(z.items.length, POZYCJE)} · ${sposobDostawy(z.address)}`}
                   </span>
                 </span>
+                {/* Liczba sztuk do skompletowania, nie kwota. Cena była tu
+                    najmocniejszą liczbą w wierszu i lądowała dokładnie tam,
+                    gdzie pada wzrok — a przy pakowaniu jest bezużyteczna:
+                    magazynier potrzebuje wiedzieć, ile rzeczy wyjąć z regału.
+                    Kwota została na karcie zamówienia, gdzie ma sens. */}
                 <span style={{ textAlign: 'right', flex: 'none' }}>
-                  <span className="mag-odczyt" style={{ fontSize: 15, display: 'block' }}>
-                    {KWOTA.format(z.total)}
+                  <span className="mag-odczyt" style={{ display: 'block' }}>
+                    {sztuk}
+                    <span className="mag-odczyt-jednostka"> szt.</span>
                   </span>
                   <span className="mag-godzina">{GODZINA.format(new Date(z.date))}</span>
                 </span>

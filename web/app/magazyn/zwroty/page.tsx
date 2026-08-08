@@ -38,7 +38,7 @@ export default async function Zwroty() {
         zwroty.map((z) => (
           <section key={z.id} className="mag-karta" style={{ marginTop: 10 }}>
             <div className="mag-wiersz">
-              <span className="mag-dioda mag-dioda-zero" aria-hidden="true" />
+              <span className="mag-dioda mag-dioda-neutralna" aria-hidden="true" />
               <span className="mag-tresc">
                 <span className="mag-odczyt-maly" style={{ display: 'block' }}>
                   {z.numerZamowienia}
