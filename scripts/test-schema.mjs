@@ -781,9 +781,17 @@ const uploaded = await db.query(
 );
 check('zaplecze wgrywa zdjęcie', uploaded.rows[0]?.name === 'aura.png');
 
+// Gość nie ma prawa wylistować kubełka. Samo zdjęcie widzi i tak: kubełek jest
+// publiczny, więc pobranie pliku po adresie omija RLS z definicji i nie da się
+// tego sprawdzić zapytaniem SQL. Polityka SELECT dawała co innego — prawo
+// poznania wszystkich nazw plików, w tym zdjęć produktów wycofanych z katalogu.
 await asUser(null, 'anon');
-const publicRead = await db.query(`select count(*) as n from storage.objects where bucket_id = 'product-images'`);
-check('gość widzi zdjęcia', Number(publicRead.rows[0].n) === 1, `${publicRead.rows[0].n}`);
+const listaGoscia = await db.query(`select count(*) as n from storage.objects where bucket_id = 'product-images'`);
+check('gość nie wylistuje kubełka', Number(listaGoscia.rows[0].n) === 0, `${listaGoscia.rows[0].n}`);
+
+await asUser(owner.id);
+const listaZaplecza = await db.query(`select count(*) as n from storage.objects where bucket_id = 'product-images'`);
+check('zaplecze widzi zawartość kubełka', Number(listaZaplecza.rows[0].n) === 1, `${listaZaplecza.rows[0].n}`);
 
 // Ścieżka zdjęcia wisi przy produkcie; brak zdjęcia to zwykły NULL
 await asService();
