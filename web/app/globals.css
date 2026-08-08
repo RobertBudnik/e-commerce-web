@@ -2413,40 +2413,6 @@ code {
   height: calc(1em + 14px);
 }
 
-/* ---------- Własny kursor ---------- */
-/* `cursor: none` dokłada JavaScript przy montowaniu pierścienia. W arkuszu na
-   stałe zostawiłoby stronę bez wskaźnika, gdyby skrypt nie doszedł. */
-.bez-kursora,
-.bez-kursora * { cursor: none !important; }
-
-.kursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: var(--z-toast);
-  width: 7px;
-  height: 7px;
-  border-radius: var(--r-pill);
-  background: var(--ink);
-  pointer-events: none;
-  opacity: 0;
-  /* Skala osobno od pozycji: pozycję ustawia pętla w `transform`, więc rozmiar
-     musi iść inną właściwością, inaczej jedno kasuje drugie. */
-  scale: 1;
-  transition: opacity .2s ease, scale .18s ease;
-}
-.kursor.jest { opacity: 1; }
-
-/* Nad elementem klikalnym kropka rośnie w pierścień i przestaje zasłaniać to,
-   na co się patrzy. Bez etykiety i bez wypełnienia: wcześniej ciągnęła za sobą
-   podpis, który przy każdym łączu odciągał wzrok od samego łącza — a kursor
-   ma prowadzić do treści, nie konkurować z nią. */
-.kursor.nad-celem {
-  scale: 3.4;
-  background: transparent;
-  border: .5px solid var(--ink);
-}
-
 /* Wyłącznik zbiorczy. Globalna reguła ścina czasy, ale te efekty mają
    zniknąć, nie przyspieszyć. */
 @media (prefers-reduced-motion: reduce) {
@@ -2458,7 +2424,6 @@ code {
   .przypieta-opis h3,
   .przypieta-opis .lede { animation: none; }
   .spotlight-snop { display: none; }
-  .kursor { display: none; }
 }
 
 /* ---------- Stronicowanie katalogu ---------- */

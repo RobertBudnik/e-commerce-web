@@ -141,7 +141,6 @@ tabela wyżej.** Jeśli efekt dzieje się obok jego decyzji, wolno mu trwać dł
 | przeciągana strzępka | bezwładność `velocity *= 0.94` | — | pozioma lista |
 | tilt kart | ±8 deg | `ease` 160 ms | siatka katalogu |
 | odometr ceny | 500 ms | `easeOutCubic` | karta produktu |
-| własny kursor | dociąganie `*0.18`/klatkę | — | cała strona |
 
 Cztery reguły obowiązujące każdy z nich, bez wyjątku:
 
@@ -156,10 +155,15 @@ Cztery reguły obowiązujące każdy z nich, bez wyjątku:
    kursor wraca do systemowego. Sprawdzenie w JS, nie w CSS — te efekty żyją
    w JavaScripcie i globalna reguła ich nie dosięga.
 4. **Dotyk dostaje mniej.** Za `matchMedia('(hover: hover) and (pointer: fine)')`
-   chowają się: własny kursor, magnetyczny CTA, tilt, spotlight i cząsteczki —
-   wszystkie wymagają myszy, a na telefonie albo nie działają, albo psują
-   przewijanie. Zostają: marquee, dekodowanie, liczniki, sekcja przypięta,
+   chowają się: magnetyczny CTA, tilt, spotlight i cząsteczki — wszystkie
+   wymagają myszy, a na telefonie albo nie działają, albo psują przewijanie. Zostają: marquee, dekodowanie, liczniki, sekcja przypięta,
    przeciągana strzępka (tam dotyk jest naturalny) i odometr.
+
+**Własnego kursora nie ma i nie wraca.** Był zbudowany i wycofany: wskaźnik
+podążający za myszą z opóźnieniem zawsze o ułamek sekundy rozmija się z tym,
+co robi ręka, a `cursor: none` odbiera użytkownikowi wskaźnik, do którego jest
+przyzwyczajony, w zamian nie dając nic poza ozdobą. Sklep, w którym ludzie
+wydają pieniądze, nie jest miejscem na eksperymenty ze wskaźnikiem myszy.
 
 Ograniczenie ilościowe: **jeden mocny efekt na ekran**. Sekcja przypięta
 i spotlight nie mogą stać obok siebie bez oddechu między nimi, a pole cząsteczek

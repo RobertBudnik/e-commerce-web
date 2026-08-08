@@ -99,8 +99,7 @@ test.describe('Zaawansowany ruch', () => {
     const page = await kontekst.newPage();
     await page.goto('/');
 
-    // Kursor, cząsteczki i snop spotlightu nie powstają w ogóle
-    await expect(page.locator('.kursor')).toHaveCount(0);
+    // Cząsteczki i snop spotlightu nie powstają w ogóle
     await expect(page.locator('.pole-czastek')).toHaveCount(0);
     await expect(page.locator('.spotlight-snop')).toHaveCount(0);
 
