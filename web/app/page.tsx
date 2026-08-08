@@ -1,5 +1,9 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
+import { Marquee } from '@/components/ruch/Marquee';
+import { TekstDekodujacy } from '@/components/ruch/TekstDekodujacy';
+import { Licznik } from '@/components/ruch/Licznik';
+import { PrzyciskMagnetyczny } from '@/components/ruch/PrzyciskMagnetyczny';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { getCategories, getProducts } from '@/lib/queries';
@@ -14,33 +18,49 @@ export default async function HomePage() {
 
   return (
     <main>
+      <Marquee
+        hasla={[
+          'Darmowa dostawa od 300 zł',
+          '30 dni na zwrot',
+          'Wysyłka w 24 h',
+          '2 lata gwarancji door-to-door',
+          'BLIK · Przelewy24 · raty 0%',
+        ]}
+      />
+
       <section className="hero">
         <div className="container hero-inner">
           <div>
             <span className="label">Kolekcja 2026</span>
-            <h1>Elektronika bez zbędnego hałasu</h1>
+            <h1>
+              <TekstDekodujacy tekst="Elektronika bez zbędnego hałasu" />
+            </h1>
             <p className="lede">
               Wąski, przemyślany wybór sprzętu. Darmowa dostawa od 300 zł, trzydzieści dni na zwrot.
             </p>
             <div className="hero-actions">
-              <Link className="btn" href="/sklep">
-                Przeglądaj sklep
-              </Link>
+              <PrzyciskMagnetyczny href="/sklep">Przeglądaj sklep</PrzyciskMagnetyczny>
               <Link className="btn btn-ghost" href="/sklep?sort=rating">
                 Zobacz bestsellery
               </Link>
             </div>
             <div className="hero-stats">
               <div>
-                <strong className="num">120k</strong>
+                <strong className="num">
+                  <Licznik do={120} sufiks="k" etykieta="120 tysięcy zamówień" />
+                </strong>
                 <span>zamówień</span>
               </div>
               <div>
-                <strong className="num">4.8</strong>
+                <strong className="num">
+                  <Licznik do={4.8} ulamek={1} etykieta="Średnia ocen 4,8" />
+                </strong>
                 <span>średnia ocen</span>
               </div>
               <div>
-                <strong className="num">24 h</strong>
+                <strong className="num">
+                  <Licznik do={24} sufiks=" h" etykieta="Wysyłka w 24 godziny" />
+                </strong>
                 <span>wysyłka</span>
               </div>
             </div>

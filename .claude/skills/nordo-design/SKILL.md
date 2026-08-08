@@ -114,8 +114,56 @@ Animujemy **wyłącznie `transform` i `opacity`** (oraz kolor). Nigdy `width`,
 - Ujawnianie jedzie na osobnych właściwościach `translate` i `scale`, nie na
   zbiorczym `transform` — inaczej kłóci się z uniesieniem kafelka na hover.
   Selektor `[data-reveal][data-reveal]` podbija swoistość ponad `.card`.
-- Bez odbić i sprężyn poza jednym akcentem (serce listy życzeń) — reszta jedzie
-  spokojnie, zgodnie z charakterem sklepu.
+- Bez odbić i sprężyn **w ruchu podstawowym** — hover, wejścia, szuflady jadą
+  spokojnie. Sprężystość jest zarezerwowana dla efektów z sekcji „Zaawansowany
+  ruch" i dla serca listy życzeń; poza nimi nie ma czego odbijać.
+
+## Zaawansowany ruch
+
+Osobna warstwa, świadomie wyłamana z tabeli wyżej. Tamte czasy opisują ruch
+**użytkowy** — reakcję na kliknięcie, wejście panelu, ujawnienie kafelka —
+i tam sufit 400 ms dalej obowiązuje bez wyjątku. Efekty niżej nie reagują na
+akcję, tylko budują charakter strony, i mają własne budżety czasu.
+
+Zasada rozstrzygająca spór: **jeśli użytkownik czeka na wynik, obowiązuje
+tabela wyżej.** Jeśli efekt dzieje się obok jego decyzji, wolno mu trwać dłużej.
+
+| efekt | czas / parametr | krzywa | gdzie |
+|---|---|---|---|
+| marquee pod headerem | 30–45 s na pełną pętlę | `linear` | pasek promocji |
+| pole cząsteczek | promień 120 px, powrót `*0.08`/klatkę | — | tło hero |
+| dekodowanie nagłówka | 8 klatek na literę, kaskada 30 ms | `steps()` | `h1` hero |
+| magnetyczny CTA | promień 14 px, dociąganie `*0.25` | — | główny przycisk |
+| ripple | 600 ms, `scale(0)→scale(3)`, `opacity 1→0` | `cubic-bezier(.2,.7,.3,1)` | główny przycisk |
+| liczniki | 900 ms | `easeOutCubic` | statystyki hero |
+| sekcja przypięta | 2–3 kroki na wysokość sekcji | — | sekcja opowieści |
+| spotlight | `clip-path: circle()` za kursorem | `ease-out` 120 ms | ciemny panel |
+| przeciągana strzępka | bezwładność `velocity *= 0.94` | — | pozioma lista |
+| tilt kart | ±8 deg | `ease` 160 ms | siatka katalogu |
+| odometr ceny | 500 ms | `easeOutCubic` | karta produktu |
+| własny kursor | dociąganie `*0.18`/klatkę | — | cała strona |
+
+Cztery reguły obowiązujące każdy z nich, bez wyjątku:
+
+1. **`clip-path` dołącza do dozwolonych właściwości** — obok `transform`
+   i `opacity`. Nie kompozytuje się tak tanio, więc wolno go animować wyłącznie
+   w spotlighcie i wyłącznie za kursorem, nigdy w pętli.
+2. **Wszystko jedzie w `requestAnimationFrame`**, nigdy w `setInterval`, i musi
+   mieć sprzątanie w `useEffect`. Efekt, który zostaje po odmontowaniu, to wyciek.
+3. **`prefers-reduced-motion` wyłącza je całkowicie**, nie skraca. Marquee staje
+   i pokazuje pierwszy komplet treści, cząsteczek nie ma, nagłówek jest od razu
+   docelowy, licznik pokazuje wartość końcową, spotlight odsłania całość,
+   kursor wraca do systemowego. Sprawdzenie w JS, nie w CSS — te efekty żyją
+   w JavaScripcie i globalna reguła ich nie dosięga.
+4. **Dotyk dostaje mniej.** Za `matchMedia('(hover: hover) and (pointer: fine)')`
+   chowają się: własny kursor, magnetyczny CTA, tilt, spotlight i cząsteczki —
+   wszystkie wymagają myszy, a na telefonie albo nie działają, albo psują
+   przewijanie. Zostają: marquee, dekodowanie, liczniki, sekcja przypięta,
+   przeciągana strzępka (tam dotyk jest naturalny) i odometr.
+
+Ograniczenie ilościowe: **jeden mocny efekt na ekran**. Sekcja przypięta
+i spotlight nie mogą stać obok siebie bez oddechu między nimi, a pole cząsteczek
+wyklucza jakikolwiek inny ruch w tle tego samego bloku.
 
 ## prefers-reduced-motion — obowiązkowo
 
@@ -165,11 +213,19 @@ poza obszarem.
 
 ## Czego nie robić
 
-- karuzeli z autoprzewijaniem, licznika odliczającego promocję, wyskakującego
-  popupu z rabatem — to nie ten sklep
+- **karuzeli produktów z autoprzewijaniem**, licznika odliczającego promocję,
+  wyskakującego popupu z rabatem — to nie ten sklep. Marquee z sekcji
+  „Zaawansowany ruch" nie jest wyjątkiem od tej reguły, tylko czym innym:
+  przewija **tekst**, niczego nie ukrywa i nie zabiera pozycji z pola widzenia,
+  a pod kursorem staje. Karuzela, w której produkt sam ucieka, zostaje zakazana.
 - gradientów, neonów, kolorowych cieni
 - koloru wpisanego wprost w regule komponentu ani `rgba()` z liczbami —
   jedno i drugie przeżyje przełączenie motywu i będzie świecić
 - `z-index` liczbą zamiast tokenu warstwy
-- animacji dłuższych niż 400 ms i opóźnień większych niż 300 ms
+- **w ruchu użytkowym**: animacji dłuższych niż 400 ms i opóźnień większych
+  niż 300 ms. Efekty z sekcji „Zaawansowany ruch" mają własne budżety i własną
+  tabelę — sufit dotyczy tego, na co użytkownik czeka.
 - `!important` (poza istniejącą regułą reduced-motion)
+- efektu z sekcji „Zaawansowany ruch" **bez** wyłącznika `prefers-reduced-motion`
+  i bez sprzątania w `useEffect` — jedno i drugie jest częścią efektu, nie
+  dodatkiem do niego
