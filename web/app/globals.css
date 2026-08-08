@@ -2281,6 +2281,185 @@ code {
    klatce i kafelek drga aż do końca animacji. */
 .odometr { font-variant-numeric: tabular-nums; }
 
+/* ---------- Przeciągana strzępka ---------- */
+.strzepka {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  /* Natywne przewijanie zostaje jako podkład: bez JavaScriptu i przy
+     wyłączonym ruchu lista dalej działa, tylko bez wybiegu. */
+  scrollbar-width: none;
+  cursor: grab;
+  padding-bottom: 4px;
+}
+.strzepka::-webkit-scrollbar { display: none; }
+.strzepka.ciagnie { cursor: grabbing; scroll-behavior: auto; }
+/* Zaznaczanie tekstu w trakcie ciągnięcia zamienia gest w podświetlanie. */
+.strzepka.ciagnie * { user-select: none; }
+.strzepka > * { flex: 0 0 clamp(220px, 26vw, 280px); }
+
+/* ---------- Sekcja przypięta ---------- */
+.przypieta { position: relative; }
+.przypieta-ekran {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.przypieta-tresc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(28px, 6vw, 72px);
+  align-items: center;
+}
+.przypieta-media {
+  aspect-ratio: 1;
+  border-radius: var(--r-lg);
+  background: var(--bg-soft);
+  display: grid;
+  place-items: center;
+}
+.przypieta-ikona { display: grid; place-items: center; width: 42%; }
+.przypieta-ikona svg { width: 100%; height: auto; color: var(--img-line); }
+
+/* Wejście kroku: te same wartości co przy ujawnianiu kafelków — 16–26 px
+   i lekkie skalowanie, krzywa z tabeli ruchu użytkowego. Zmiana kroku jest
+   reakcją na przewijanie, więc mieści się w suficie 400 ms. */
+.przypieta-ikona,
+.przypieta-opis h3,
+.przypieta-opis .lede {
+  animation: krok-wchodzi .34s cubic-bezier(.2, .7, .3, 1) both;
+}
+@keyframes krok-wchodzi {
+  from { opacity: 0; translate: 0 18px; scale: .985; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
+}
+
+.przypieta-kropki {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  margin: 26px 0 0;
+  padding: 0;
+}
+.przypieta-kropki li {
+  width: 28px;
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+  transition: background .2s ease;
+}
+.przypieta-kropki li[aria-current="step"] { background: var(--accent); }
+
+.przypieta-lista .przypieta-krok + .przypieta-krok {
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 760px) {
+  .przypieta-tresc { grid-template-columns: minmax(0, 1fr); }
+  .przypieta-media { display: none; }
+}
+
+/* ---------- Spotlight ---------- */
+.spotlight {
+  position: relative;
+  padding: clamp(64px, 10vw, 120px) 0;
+  background: var(--ink);
+  overflow: hidden;
+}
+/* Odwrócony kontrast składany z tokenów, nigdy z bieli wprost — w ciemnym
+   motywie `--ink` jest jasny i biel by zniknęła. */
+.spotlight .label { color: color-mix(in srgb, var(--bg) 55%, transparent); }
+
+.spotlight-tekst {
+  margin: 14px 0 0;
+  font-family: var(--display);
+  font-size: clamp(1.5rem, 1rem + 2.4vw, 2.75rem);
+  line-height: 1.14;
+  letter-spacing: -.012em;
+  max-width: 22ch;
+}
+/* 70%, nie 38%: bez myszy i przy ograniczonym ruchu ta warstwa jest jedyną,
+   jaką ktoś zobaczy, więc musi być czytelna sama z siebie. Kontrast wobec
+   snopu i tak zostaje — akcent jest cieplejszy i pełny, a spód przygaszony. */
+.spotlight-spod { color: color-mix(in srgb, var(--bg) 70%, transparent); }
+
+.spotlight-snop {
+  position: absolute;
+  top: clamp(64px, 10vw, 120px);
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  max-width: var(--maxw);
+  color: var(--accent);
+  pointer-events: none;
+  /* Snop podąża za kursorem. `clip-path` jest tu dopuszczony wyjątkowo
+     i wyłącznie w tej roli — patrz sekcja „Zaawansowany ruch" w skillu.
+     Wartość składa JavaScript: podstawienie `var()` wewnątrz `circle()` nie
+     dochodzi do skutku w każdym silniku i zostawiało snop na zerowym promieniu. */
+  clip-path: circle(0px at 50% 50%);
+  transition: clip-path .12s ease-out;
+}
+/* Nadtytuł zajmuje miejsce nad tekstem także w warstwie snopu — bez tego
+   górna kopia stoi wyżej niż dolna i snop odsłania przesunięty tekst. */
+.spotlight-snop::before {
+  content: '';
+  display: block;
+  height: calc(1em + 14px);
+}
+
+/* ---------- Własny kursor ---------- */
+/* `cursor: none` dokłada JavaScript przy montowaniu pierścienia. W arkuszu na
+   stałe zostawiłoby stronę bez wskaźnika, gdyby skrypt nie doszedł. */
+.bez-kursora,
+.bez-kursora * { cursor: none !important; }
+
+.kursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-toast);
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--ink);
+  border-radius: var(--r-pill);
+  pointer-events: none;
+  opacity: 0;
+  /* Skala i przezroczystość osobno od pozycji: pozycję ustawia pętla
+     w `transform`, więc rozmiar musi iść inną właściwością. */
+  scale: 1;
+  transition: opacity .2s ease, scale .18s ease, background-color .18s ease;
+}
+.kursor.jest { opacity: 1; }
+.kursor.nad-celem {
+  scale: 1.9;
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+/* Etykieta pod pierścieniem — skalowana odwrotnie, żeby nie rosła razem z nim. */
+.kursor::after {
+  content: attr(data-etykieta);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  translate: -50% 0;
+  scale: .55;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: .625rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  opacity: 0;
+  transition: opacity .16s ease;
+}
+.kursor.nad-celem::after { opacity: 1; }
+
 /* Wyłącznik zbiorczy. Globalna reguła ścina czasy, ale te efekty mają
    zniknąć, nie przyspieszyć. */
 @media (prefers-reduced-motion: reduce) {
@@ -2288,6 +2467,11 @@ code {
   .magnetyczny { translate: none; transition: none; }
   .fala { display: none; }
   .tilt { rotate: none; transition: none; }
+  .przypieta-ikona,
+  .przypieta-opis h3,
+  .przypieta-opis .lede { animation: none; }
+  .spotlight-snop { display: none; }
+  .kursor { display: none; }
 }
 
 /* ---------- Stronicowanie katalogu ---------- */

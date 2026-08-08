@@ -18,7 +18,10 @@ test.describe('Katalog', () => {
     expect(html).toMatch(/card-title/);
 
     await expect(page.locator('.category')).toHaveCount(4);
-    await expect(page.locator('.card')).toHaveCount(4);
+    // Strzępka na stronie głównej pokazuje cały asortyment, nie cztery
+    // wybrane pozycje: przy czterech kartach lista mieści się w kontenerze
+    // na szerokim ekranie i nie ma czego przeciągać.
+    await expect(page.locator('.strzepka .card')).toHaveCount(8);
   });
 
   test('sklep filtruje po kategorii i sortuje po cenie', async ({ page }) => {

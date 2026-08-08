@@ -8,6 +8,7 @@ import { QuickViewHost } from '@/components/product/QuickViewHost';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ToastHost } from '@/components/ui/ToastHost';
+import { WlasnyKursor } from '@/components/ruch/WlasnyKursor';
 import { WishlistProvider } from '@/components/product/WishlistProvider';
 import { headers } from 'next/headers';
 import { getSessionUser } from '@/lib/queries';
@@ -160,6 +161,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <MiniCart />
             <QuickViewHost />
             <ToastHost />
+            {/* Kursor tylko w sklepie: magazyn jest narzędziem do pracy jedną
+                ręką na telefonie, a tam nie ma kursora do zastąpienia. */}
+            {!magazyn && !wAplikacji && <WlasnyKursor />}
           </WishlistProvider>
         </CartProvider>
       </body>

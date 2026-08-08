@@ -5,7 +5,10 @@ import { TekstDekodujacy } from '@/components/ruch/TekstDekodujacy';
 import { Licznik } from '@/components/ruch/Licznik';
 import { PrzyciskMagnetyczny } from '@/components/ruch/PrzyciskMagnetyczny';
 import { PoleCzastek } from '@/components/ruch/PoleCzastek';
-import { ProductGrid } from '@/components/product/ProductGrid';
+import { StrzepkaPrzeciagana } from '@/components/ruch/StrzepkaPrzeciagana';
+import { SekcjaPrzypieta } from '@/components/ruch/SekcjaPrzypieta';
+import { Spotlight } from '@/components/ruch/Spotlight';
+import { ProductCard } from '@/components/product/ProductCard';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { getCategories, getProducts } from '@/lib/queries';
 import { ile, PRODUKTY } from '@/lib/odmiana';
@@ -15,7 +18,10 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
-  const featured = [...products].sort((a, b) => b.rating - a.rating).slice(0, 4);
+  // Strzępka pokazuje cały asortyment, nie cztery pozycje: przy czterech
+  // kartach lista mieści się w kontenerze na szerokim ekranie i nie ma czego
+  // przeciągać — zostaje kilkadziesiąt pikseli zapasu.
+  const featured = [...products].sort((a, b) => b.rating - a.rating);
 
   return (
     <main>
@@ -132,10 +138,50 @@ export default async function HomePage() {
             Wszystkie produkty
           </Link>
         </div>
-        <ProductGrid products={featured} categories={categories} />
+        <StrzepkaPrzeciagana>
+          {featured.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              categoryName={categories.find((c) => c.id === product.category)?.name ?? product.category}
+              delay={0}
+            />
+          ))}
+        </StrzepkaPrzeciagana>
       </section>
 
+      {/* Sekcja przypięta i spotlight stoją osobno, z sekcją „ostatnio
+          oglądane" między nimi — skill dopuszcza jeden mocny efekt na ekran,
+          a dwa takie momenty pod rząd nie dają oddechu. */}
+      <SekcjaPrzypieta
+        kroki={[
+          {
+            nadtytul: 'Krok pierwszy',
+            tytul: 'Zamawiasz do 15:00',
+            opis: 'Zamówienie złożone przed piętnastą pakujemy tego samego dnia. Bez dopłat za pośpiech.',
+            ikona: 'box',
+          },
+          {
+            nadtytul: 'Krok drugi',
+            tytul: 'Pakujemy i nadajemy',
+            opis: 'Każda paczka dostaje numer listu przewozowego, zanim wyjedzie z magazynu.',
+            ikona: 'shield',
+          },
+          {
+            nadtytul: 'Krok trzeci',
+            tytul: 'Masz trzydzieści dni',
+            opis: 'Nie pasuje — odsyłasz bez podawania przyczyny. Zwrot pieniędzy w czternaście dni.',
+            ikona: 'check',
+          },
+        ]}
+      />
+
       <RecentlyViewed categories={categories} className="section container" />
+
+      <Spotlight
+        nadtytul="Dlaczego wąski wybór"
+        tekst="Osiem rzeczy, które sami mamy w domu, zamiast czterech tysięcy, których nikt nie sprawdził."
+      />
 
       <section className="newsletter">
         <div className="container newsletter-inner">
