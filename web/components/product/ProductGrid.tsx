@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { ProductCard } from './ProductCard';
+import { Tilt } from '@/components/ruch/Tilt';
 import type { Category, Product } from '@/lib/types';
 
 /** Kaskada wejścia: 70 × √index — początek wyraźny, ósmy kafelek nie każe czekać. */
@@ -57,12 +58,13 @@ export function ProductGrid({
   return (
     <div className="grid" ref={grid}>
       {products.map((product, i) => (
-        <ProductCard
-          key={product.id}
-          product={product}
-          categoryName={nameOf(product.category)}
-          delay={delayFor(i)}
-        />
+        <Tilt key={product.id}>
+          <ProductCard
+            product={product}
+            categoryName={nameOf(product.category)}
+            delay={delayFor(i)}
+          />
+        </Tilt>
       ))}
     </div>
   );

@@ -4,6 +4,7 @@ import { Marquee } from '@/components/ruch/Marquee';
 import { TekstDekodujacy } from '@/components/ruch/TekstDekodujacy';
 import { Licznik } from '@/components/ruch/Licznik';
 import { PrzyciskMagnetyczny } from '@/components/ruch/PrzyciskMagnetyczny';
+import { PoleCzastek } from '@/components/ruch/PoleCzastek';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { getCategories, getProducts } from '@/lib/queries';
@@ -29,6 +30,7 @@ export default async function HomePage() {
       />
 
       <section className="hero">
+        <PoleCzastek />
         <div className="container hero-inner">
           <div>
             <span className="label">Kolekcja 2026</span>

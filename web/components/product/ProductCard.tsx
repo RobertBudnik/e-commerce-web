@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { ProductMedia } from './ProductMedia';
 import { money, stars } from '@/lib/format';
+import { OdometrCeny } from '@/components/ruch/OdometrCeny';
 import { useCart } from '@/components/cart/CartProvider';
 import { useWishlist } from './WishlistProvider';
 import { openQuickView } from './QuickViewHost';
@@ -60,7 +61,9 @@ export function ProductCard({
           <span className="sr-only">Ocena {product.rating} na 5.</span> {product.reviews} opinii
         </span>
         <div className="price-row">
-          <span className="price">{money(product.price)}</span>
+          <span className="price">
+            <OdometrCeny cena={product.price} />
+          </span>
           {product.oldPrice && <span className="price-old">{money(product.oldPrice)}</span>}
         </div>
         <div className="card-cta">

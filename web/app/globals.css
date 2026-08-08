@@ -2249,12 +2249,45 @@ code {
   to { transform: scale(3); opacity: 0; }
 }
 
+/* ---------- Pole cząsteczek w tle hero ---------- */
+.hero { position: relative; }
+.pole-czastek {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Pod treścią i poza zasięgiem kliknięć — to tło, nie element sterujący. */
+  z-index: 0;
+  pointer-events: none;
+}
+.hero-inner { position: relative; z-index: 1; }
+
+/* ---------- Przechył karty ---------- */
+/* Perspektywa na rodzicu, nie na karcie: przy `perspective` na samym kafelku
+   każdy ma własny punkt zbiegu i siatka rozsypuje się na osobne pudełka. */
+.grid { perspective: 1000px; }
+.tilt {
+  transform-style: preserve-3d;
+  /* Osobna właściwość `rotate`, nie zbiorczy `transform` — kafelek ma już
+     uniesienie na hover i ujawnianie na `translate`, a zbiorczy transform
+     skasowałby jedno drugim. */
+  rotate: var(--tilt-y, 0deg) var(--tilt-x, 0deg) 0deg;
+  transition: rotate .16s ease;
+}
+.tilt:hover { transition: rotate .06s ease; }
+
+/* ---------- Odometr ceny ---------- */
+/* Cyfry o stałej szerokości: bez tego cena skacze w poziomie przy każdej
+   klatce i kafelek drga aż do końca animacji. */
+.odometr { font-variant-numeric: tabular-nums; }
+
 /* Wyłącznik zbiorczy. Globalna reguła ścina czasy, ale te efekty mają
    zniknąć, nie przyspieszyć. */
 @media (prefers-reduced-motion: reduce) {
   .marquee-tor { animation: none; }
   .magnetyczny { translate: none; transition: none; }
   .fala { display: none; }
+  .tilt { rotate: none; transition: none; }
 }
 
 /* ---------- Stronicowanie katalogu ---------- */

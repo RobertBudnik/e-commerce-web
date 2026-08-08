@@ -48,7 +48,11 @@ test.describe('Katalog', () => {
     await page.getByRole('option', { name: 'Cena malejąco' }).click();
     await expect(page).toHaveURL(/sort=price-desc/);
 
-    const ceny = await page.locator('.card .price').allInnerTexts();
+    // Cena dolicza się od zera przy wejściu kafelka w pole widzenia, więc
+    // widoczny tekst przez pół sekundy nie jest ceną produktu. Czytamy warstwę
+    // dla czytnika ekranu — tam stoi wartość docelowa od pierwszego renderu
+    // i to ona jest prawdą o cenie.
+    const ceny = await page.locator('.card .price .sr-only').allInnerTexts();
     const liczby = ceny.map((t) => Number.parseFloat(t.replace(/[^\d,]/g, '').replace(',', '.')));
     expect(liczby).toEqual([...liczby].sort((a, b) => b - a));
   });
