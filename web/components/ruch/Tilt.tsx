@@ -22,6 +22,14 @@ const KAT = 8; // stopni w każdą stronę
  *
  * Wyłączony bez myszy i przy `prefers-reduced-motion` — na dotyku nie ma
  * czego śledzić, a przechył pod palcem tylko przeszkadza w trafieniu w kartę.
+ *
+ * Opakowanie stoi **zawsze**, także gdy efekt jest wyłączony. Wcześniej przy
+ * braku myszy komponent oddawał same dzieci i dokładał `<div>` dopiero po
+ * zamontowaniu, gdy zapytanie medialne odpowiedziało — React niszczył wtedy
+ * kafelki i tworzył je od nowa. Obserwator ujawniania zdążył obserwować te
+ * pierwsze, nowych nie widział nikt i cała siatka zostawała na `opacity: 0`.
+ * Kafelków nie było widać w ogóle. Bez efektu `--tilt-*` są zerowe, więc pusty
+ * kontener nic nie kosztuje.
  */
 export function Tilt({ children }: { children: React.ReactNode }) {
   const aktywny = useEfektKursora();
@@ -52,10 +60,13 @@ export function Tilt({ children }: { children: React.ReactNode }) {
     node.style.setProperty('--tilt-y', '0deg');
   }, []);
 
-  if (!aktywny) return <>{children}</>;
-
   return (
-    <div className="tilt" ref={element} onPointerMove={ruch} onPointerLeave={powrot}>
+    <div
+      className="tilt"
+      ref={element}
+      onPointerMove={aktywny ? ruch : undefined}
+      onPointerLeave={aktywny ? powrot : undefined}
+    >
       {children}
     </div>
   );

@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { ProductCard } from './ProductCard';
+import { useUjawnianie } from '@/lib/ujawnianie';
 import { Tilt } from '@/components/ruch/Tilt';
 import type { Category, Product } from '@/lib/types';
 
@@ -23,33 +24,7 @@ export function ProductGrid({
 }) {
   const grid = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const root = grid.current;
-    if (!root) return;
-
-    const targets = root.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-in)');
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      targets.forEach((el) => el.classList.add('is-in'));
-      return;
-    }
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          // Element wjeżdżający od góry pojawia się bez animacji — animowanie
-          // go przy powrocie w górę wygląda jak usterka.
-          if (entry.boundingClientRect.top < 0) entry.target.classList.add('is-instant');
-          entry.target.classList.add('is-in');
-          io.unobserve(entry.target);
-        });
-      },
-      { rootMargin: '0px 0px -12% 0px', threshold: 0.08 }
-    );
-
-    targets.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, [products]);
+  useUjawnianie(grid, products);
 
   if (!products.length) return <p className="muted">{empty}</p>;
 

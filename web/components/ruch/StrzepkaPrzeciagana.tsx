@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useRuchWylaczony } from '@/lib/ruch';
+import { useUjawnianie } from '@/lib/ujawnianie';
 
 const TARCIE = 0.94; // ubytek prędkości na klatkę po puszczeniu
 const PROG = 0.4; // px/klatkę — poniżej tego zatrzymujemy pętlę
@@ -29,6 +30,12 @@ export function StrzepkaPrzeciagana({ children }: { children: React.ReactNode })
   const tor = useRef<HTMLDivElement>(null);
   const stan = useRef({ ciagnie: false, startX: 0, startScroll: 0, predkosc: 0, ostatniX: 0, przesuniete: 0 });
   const ramka = useRef(0);
+
+  // Kafelki startują z `opacity: 0` i odsłania je dopiero obserwator. Bez tego
+  // wywołania strzępka pokazywała pustą przestrzeń zamiast produktów — reguła
+  // CSS ustawia stan początkowy dla wszystkich `[data-reveal]`, więc każdy
+  // kontener z kafelkami musi umieć je odsłonić, nie tylko siatka katalogu.
+  useUjawnianie(tor);
 
   const wybieg = useCallback(() => {
     const node = tor.current;
