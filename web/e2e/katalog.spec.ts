@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { wyczyscStanPrzegladarki } from './pomoce';
+import { MARKA } from '../lib/dane-sklepu';
 
 test.describe('Katalog', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,7 +13,10 @@ test.describe('Katalog', () => {
     const odpowiedz = await page.goto('/');
     const html = (await odpowiedz!.text()) ?? '';
 
-    expect(html).toContain('Elektronika bez zbędnego hałasu');
+    // Hasło z `dane-sklepu.ts`, nie literał: sklep jest szablonem i każdy
+    // wdrażający je podmienia, a dowodem na SSR jest obecność treści w HTML-u,
+    // nie jej brzmienie.
+    expect(html).toContain(MARKA.hasloHero);
     expect(html).toMatch(/Kategorie/);
     // Nazwa produktu w surowym HTML dowodzi, że siatka nie czeka na klienta
     expect(html).toMatch(/card-title/);

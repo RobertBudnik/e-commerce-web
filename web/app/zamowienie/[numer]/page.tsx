@@ -25,8 +25,13 @@ export default async function OrderPage({ params }: { params: Promise<{ numer: s
         <Icon name="check" />
       </span>
       <h1>Zamówienie przyjęte</h1>
+      {/* Szablon nie ma jeszcze nadawcy poczty, więc strona nie obiecuje
+          wiadomości, której nikt nie wyśle. Po podpięciu wysyłki zmień to zdanie:
+          potwierdzenie umowy na trwałym nośniku jest przy sprzedaży konsumenckiej
+          obowiązkowe, a nie miłym dodatkiem. */}
       <p className="lede">
-        Numer <strong>{decodeURIComponent(numer)}</strong> — potwierdzenie idzie na e-mail.
+        Numer <strong>{decodeURIComponent(numer)}</strong> — zapisz go sobie. Status zamówienia
+        śledzisz w panelu konta.
       </p>
     </div>
   );

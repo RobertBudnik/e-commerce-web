@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { JAK_TO_DZIALA, MARKA, OBIETNICE } from '../lib/dane-sklepu';
 
 /**
  * Zaawansowany ruch — sekcja z `.claude/skills/nordo-design`.
@@ -7,6 +8,11 @@ import { expect, test } from '@playwright/test';
  * puszczeniu, czy sekcja przypięta zmienia krok wraz z przewijaniem i czy
  * wszystko znika przy `prefers-reduced-motion`. Tego ostatniego nie da się
  * sprawdzić okiem, a jest to warunek, na którym cała ta warstwa stoi.
+ *
+ * Teksty biorą się z `web/lib/dane-sklepu.ts`, a nie z literałów w teście:
+ * sklep jest szablonem, więc każdy wdrażający podmienia hasła na własne.
+ * Test przypięty do konkretnego hasła padałby po każdym rebrandingu, choć
+ * sprawdzana zachowanie ani drgnie.
  */
 test.describe('Zaawansowany ruch', () => {
   test('strzępka jedzie dalej po puszczeniu i nie otwiera karty po przeciągnięciu', async ({
@@ -105,16 +111,14 @@ test.describe('Zaawansowany ruch', () => {
 
     // Marquee stoi, ale hasła są na stronie
     await expect(page.locator('.marquee-stoi')).toBeVisible();
-    await expect(page.getByText('Darmowa dostawa od 300 zł').first()).toBeVisible();
+    await expect(page.getByText(OBIETNICE[0].tytul).first()).toBeVisible();
 
     // Sekcja przypięta rozwija się w zwykłą listę — nie przejmuje przewijania
     await expect(page.locator('.przypieta-ekran')).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: 'Zamawiasz do 15:00' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: JAK_TO_DZIALA[0].tytul })).toBeVisible();
 
     // Nagłówek jest od razu docelowy, bez szumu
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(
-      'Elektronika bez zbędnego hałasu'
-    );
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(MARKA.hasloHero);
 
     await kontekst.close();
   });

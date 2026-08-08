@@ -10,6 +10,7 @@ import { useCart } from './CartProvider';
 import { useCartQuote } from './useCartQuote';
 import { checkoutAction } from '@/app/actions/checkout';
 import { money } from '@/lib/format';
+import { WARUNKI } from '@/lib/dane-sklepu';
 import { toast } from '@/components/ui/ToastHost';
 
 type Defaults = {
@@ -320,7 +321,7 @@ export function CartPage({ defaults }: { defaults: Defaults }) {
         )}
 
         <p className="summary-note" style={{ textAlign: 'center' }}>
-          Kwoty policzone w bazie · darmowy zwrot w 30 dni
+          Kwoty policzone w bazie · zwrot w {WARUNKI.dniNaOdstapienie} dni
         </p>
       </aside>
     </div>

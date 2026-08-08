@@ -12,6 +12,7 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { getCategories, getProducts } from '@/lib/queries';
 import { ile, PRODUKTY } from '@/lib/odmiana';
+import { JAK_TO_DZIALA, MARKA, OBIETNICE, STATYSTYKI, WARUNKI } from '@/lib/dane-sklepu';
 
 /** Katalog zmienia się rzadko — strona główna może stać w cache przez minutę. */
 export const revalidate = 60;
@@ -25,53 +26,38 @@ export default async function HomePage() {
 
   return (
     <main>
-      <Marquee
-        hasla={[
-          'Darmowa dostawa od 300 zł',
-          '30 dni na zwrot',
-          'Wysyłka w 24 h',
-          '2 lata gwarancji door-to-door',
-          'BLIK · Przelewy24 · raty 0%',
-        ]}
-      />
+      {/* Pasek niesie wyłącznie obietnice z `web/lib/dane-sklepu.ts`. Pusto =
+          nie ma czego przewijać, więc paska nie ma — zamiast haseł z szablonu,
+          którymi sklep byłby związany wobec kupującego. */}
+      {OBIETNICE.length > 0 && <Marquee hasla={OBIETNICE.map((o) => o.tytul)} />}
 
       <section className="hero">
         <PoleCzastek />
         <div className="container hero-inner">
           <div>
-            <span className="label">Kolekcja 2026</span>
+            <span className="label">{MARKA.nadtytulHero}</span>
             <h1>
-              <TekstDekodujacy tekst="Elektronika bez zbędnego hałasu" />
+              <TekstDekodujacy tekst={MARKA.hasloHero} />
             </h1>
-            <p className="lede">
-              Wąski, przemyślany wybór sprzętu. Darmowa dostawa od 300 zł, trzydzieści dni na zwrot.
-            </p>
+            <p className="lede">{MARKA.podtytulHero}</p>
             <div className="hero-actions">
               <PrzyciskMagnetyczny href="/sklep">Przeglądaj sklep</PrzyciskMagnetyczny>
               <Link className="btn btn-ghost" href="/sklep?sort=rating">
                 Zobacz bestsellery
               </Link>
             </div>
-            <div className="hero-stats">
-              <div>
-                <strong className="num">
-                  <Licznik do={120} sufiks="k" etykieta="120 tysięcy zamówień" />
-                </strong>
-                <span>zamówień</span>
+            {STATYSTYKI.length > 0 && (
+              <div className="hero-stats">
+                {STATYSTYKI.map((s) => (
+                  <div key={s.etykieta}>
+                    <strong className="num">
+                      <Licznik do={s.do} ulamek={s.ulamek} sufiks={s.sufiks} etykieta={s.etykieta} />
+                    </strong>
+                    <span>{s.opis}</span>
+                  </div>
+                ))}
               </div>
-              <div>
-                <strong className="num">
-                  <Licznik do={4.8} ulamek={1} etykieta="Średnia ocen 4,8" />
-                </strong>
-                <span>średnia ocen</span>
-              </div>
-              <div>
-                <strong className="num">
-                  <Licznik do={24} sufiks=" h" etykieta="Wysyłka w 24 godziny" />
-                </strong>
-                <span>wysyłka</span>
-              </div>
-            </div>
+            )}
           </div>
           <div className="hero-media" role="img" aria-label="Ilustracja produktu">
             <Icon name="headphones" />
@@ -79,28 +65,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <div className="band">
-        <div className="features-wrap">
-          <div className="features">
-            <div className="feature">
-              <strong>Wysyłka 24 h</strong>
-              <span>Zamówienia do 15:00 tego samego dnia</span>
-            </div>
-            <div className="feature">
-              <strong>30 dni na zwrot</strong>
-              <span>Bez podawania przyczyny</span>
-            </div>
-            <div className="feature">
-              <strong>2 lata gwarancji</strong>
-              <span>Serwis door-to-door</span>
-            </div>
-            <div className="feature">
-              <strong>Płatności</strong>
-              <span>BLIK, karta, raty 0%</span>
+      {OBIETNICE.length > 0 && (
+        <div className="band">
+          <div className="features-wrap">
+            <div className="features">
+              {OBIETNICE.map((o) => (
+                <div className="feature" key={o.tytul}>
+                  <strong>{o.tytul}</strong>
+                  <span>{o.opis}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       <section className="section container">
         <div className="section-head">
@@ -153,53 +131,42 @@ export default async function HomePage() {
       {/* Sekcja przypięta i spotlight stoją osobno, z sekcją „ostatnio
           oglądane" między nimi — skill dopuszcza jeden mocny efekt na ekran,
           a dwa takie momenty pod rząd nie dają oddechu. */}
-      <SekcjaPrzypieta
-        kroki={[
-          {
-            nadtytul: 'Krok pierwszy',
-            tytul: 'Zamawiasz do 15:00',
-            opis: 'Zamówienie złożone przed piętnastą pakujemy tego samego dnia. Bez dopłat za pośpiech.',
-            ikona: 'box',
-          },
-          {
-            nadtytul: 'Krok drugi',
-            tytul: 'Pakujemy i nadajemy',
-            opis: 'Każda paczka dostaje numer listu przewozowego, zanim wyjedzie z magazynu.',
-            ikona: 'shield',
-          },
-          {
-            nadtytul: 'Krok trzeci',
-            tytul: 'Masz trzydzieści dni',
-            opis: 'Nie pasuje — odsyłasz bez podawania przyczyny. Zwrot pieniędzy w czternaście dni.',
-            ikona: 'check',
-          },
-        ]}
-      />
+      {JAK_TO_DZIALA.length > 0 && <SekcjaPrzypieta kroki={[...JAK_TO_DZIALA]} />}
 
       <RecentlyViewed categories={categories} className="section container" />
 
-      <Spotlight
-        nadtytul="Dlaczego wąski wybór"
-        tekst="Osiem rzeczy, które sami mamy w domu, zamiast czterech tysięcy, których nikt nie sprawdził."
-      />
+      <Spotlight nadtytul={MARKA.spotlightNadtytul} tekst={MARKA.spotlightTekst} />
 
-      <section className="newsletter">
-        <div className="container newsletter-inner">
-          <div>
-            <h2>Newsletter</h2>
-            <p>Rabat 10% na pierwsze zamówienie i wcześniejszy dostęp do promocji.</p>
+      {/* Newsletter pokazuje się dopiero po wpisaniu rabatu w `dane-sklepu.ts`
+          i po podpięciu formularza do prawdziwej listy. Zgoda marketingowa musi
+          być uprzednia i odrębna, stąd osobny checkbox — nie wolno jej wyprowadzać
+          z samego wpisania adresu. Dopóki `action` jest puste, sekcja przyjmuje
+          adres i go gubi, co jest gorsze niż jej brak. */}
+      {WARUNKI.rabatNewsletter && (
+        <section className="newsletter">
+          <div className="container newsletter-inner">
+            <div>
+              <h2>Newsletter</h2>
+              <p>{WARUNKI.rabatNewsletter}</p>
+            </div>
+            <form>
+              <label className="sr-only" htmlFor="nl-email">
+                Adres e-mail
+              </label>
+              <input id="nl-email" type="email" required placeholder="twoj@email.pl" />
+              <button className="btn" type="submit">
+                Zapisz się
+              </button>
+              <label className="nl-zgoda">
+                <input type="checkbox" name="zgoda" required />
+                Chcę dostawać informacje handlowe na podany adres. Zgodę mogę wycofać
+                w każdej chwili — zasady w{' '}
+                <Link href="/informacje/polityka-prywatnosci">polityce prywatności</Link>.
+              </label>
+            </form>
           </div>
-          <form>
-            <label className="sr-only" htmlFor="nl-email">
-              Adres e-mail
-            </label>
-            <input id="nl-email" type="email" required placeholder="twoj@email.pl" />
-            <button className="btn" type="submit">
-              Zapisz się
-            </button>
-          </form>
-        </div>
-      </section>
+        </section>
+      )}
     </main>
   );
 }

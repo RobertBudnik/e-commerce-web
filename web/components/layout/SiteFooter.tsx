@@ -1,15 +1,24 @@
 import Link from 'next/link';
+import { MARKA, PLATNOSCI, SPRZEDAWCA, doUzupelnienia } from '@/lib/dane-sklepu';
 
+/**
+ * Stopka niesie dane identyfikujące sprzedawcę — przy sprzedaży konsumenckiej
+ * muszą być dostępne w sposób stały i łatwy, więc stoją tu, a nie wyłącznie
+ * w regulaminie. Treść pochodzi z `web/lib/dane-sklepu.ts`; dopóki pola noszą
+ * znacznik `⟨…⟩`, stopka mówi wprost, czego brakuje, zamiast udawać komplet.
+ */
 export function SiteFooter() {
+  const brakDanych = [SPRZEDAWCA.nazwa, SPRZEDAWCA.adres, SPRZEDAWCA.nip].some(doUzupelnienia);
+
   return (
     <footer className="site-footer">
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
             <Link className="logo" href="/">
-              Nordo
+              {MARKA.nazwa}
             </Link>
-            <p>Sklep z elektroniką od 2019 roku. Ponad 120 000 zrealizowanych zamówień.</p>
+            <p>{MARKA.opisStopki}</p>
           </div>
           <div>
             <h3>Sklep</h3>
@@ -60,9 +69,21 @@ export function SiteFooter() {
             </ul>
           </div>
         </div>
+
+        <p className="footer-sprzedawca muted">
+          {brakDanych ? (
+            <>Dane sprzedawcy do wpisania w <code>web/lib/dane-sklepu.ts</code> → <code>SPRZEDAWCA</code>:{' '}</>
+          ) : null}
+          {[SPRZEDAWCA.nazwa, SPRZEDAWCA.adres, `NIP ${SPRZEDAWCA.nip}`, SPRZEDAWCA.regon && `REGON ${SPRZEDAWCA.regon}`, SPRZEDAWCA.krs]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+
         <div className="footer-bottom">
-          <span>© 2026 Nordo</span>
-          <span>BLIK · Visa · Mastercard · Przelewy24</span>
+          <span>
+            © {new Date().getFullYear()} {MARKA.nazwa}
+          </span>
+          {PLATNOSCI.length > 0 && <span>{PLATNOSCI.join(' · ')}</span>}
         </div>
       </div>
     </footer>

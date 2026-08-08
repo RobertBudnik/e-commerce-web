@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SLUGI_INFO, STRONY_INFO } from '@/lib/strony-informacyjne';
+import { SPRZEDAWCA, doUzupelnienia } from '@/lib/dane-sklepu';
 
 export const metadata: Metadata = {
   title: 'Pomoc',
@@ -8,6 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default function Pomoc() {
+  const brakKontaktu = [SPRZEDAWCA.email, SPRZEDAWCA.telefon, SPRZEDAWCA.godziny].some(doUzupelnienia);
+
   return (
     <main className="container doc">
       <nav className="crumbs" aria-label="Ścieżka">
@@ -33,17 +36,19 @@ export default function Pomoc() {
 
       <section className="doc-section">
         <h2>Kontakt</h2>
-        <p>
-          Nie znalazłeś odpowiedzi? Napisz — odpowiadamy w dni robocze, zwykle
-          tego samego dnia.
-        </p>
-        <aside className="doc-todo">
-          <p className="label">Do uzupełnienia przed startem sprzedaży</p>
-          <ul>
-            <li>Adres e-mail i telefon obsługi klienta</li>
-            <li>Godziny pracy działu obsługi</li>
-          </ul>
-        </aside>
+        {brakKontaktu ? (
+          <p>
+            Dane kontaktowe wpisz w <code>web/lib/dane-sklepu.ts</code> →{' '}
+            <code>SPRZEDAWCA</code> (<code>email</code>, <code>telefon</code>,{' '}
+            <code>godziny</code>). Przy sprzedaży konsumenckiej muszą być dostępne
+            w sposób stały i łatwy.
+          </p>
+        ) : (
+          <p>
+            Napisz na <a href={`mailto:${SPRZEDAWCA.email}`}>{SPRZEDAWCA.email}</a> albo zadzwoń
+            pod {SPRZEDAWCA.telefon}. Pracujemy {SPRZEDAWCA.godziny}.
+          </p>
+        )}
       </section>
     </main>
   );

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { MARKA } from '@/lib/dane-sklepu';
 
 /**
  * Manifest aplikacji. Po dodaniu do ekranu początkowego telefon uruchamia
@@ -10,8 +11,8 @@ import type { MetadataRoute } from 'next';
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Nordo — magazyn',
-    short_name: 'Nordo',
+    name: `${MARKA.nazwa} — magazyn`,
+    short_name: MARKA.nazwa,
     description: 'Kolejka pakowania i obsługa zamówień.',
     start_url: '/magazyn',
     scope: '/',

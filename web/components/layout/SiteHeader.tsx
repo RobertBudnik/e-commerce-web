@@ -5,6 +5,7 @@ import { MobileNav } from './MobileNav';
 import { ThemeToggle } from './ThemeToggle';
 import { CartButton } from '@/components/cart/CartButton';
 import { storeModeZeSrodowiska } from '@/lib/store-mode';
+import { MARKA } from '@/lib/dane-sklepu';
 
 /**
  * Nagłówek renderuje się na serwerze — stan zalogowania jest w pierwszym
@@ -31,7 +32,7 @@ export function SiteHeader({ user }: { user: SessionUser | null }) {
         <MobileNav pozycje={pozycje} />
 
         <Link className="logo" href="/">
-          Nordo
+          {MARKA.nazwa}
         </Link>
 
         <nav className="nav" aria-label="Główna">

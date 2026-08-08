@@ -11,6 +11,7 @@ import { ToastHost } from '@/components/ui/ToastHost';
 import { WishlistProvider } from '@/components/product/WishlistProvider';
 import { headers } from 'next/headers';
 import { getSessionUser } from '@/lib/queries';
+import { MARKA } from '@/lib/dane-sklepu';
 import { siteUrl } from '@/lib/site';
 
 /**
@@ -80,14 +81,14 @@ const SKRYPT_MOTYWU = `
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: 'Nordo — sklep z elektroniką',
-    template: '%s — Nordo',
+    default: MARKA.tytulKarty,
+    template: `%s — ${MARKA.nazwa}`,
   },
-  description: 'Wąski, przemyślany wybór sprzętu. Darmowa dostawa od 300 zł, trzydzieści dni na zwrot.',
+  description: MARKA.opisMeta,
   openGraph: {
     type: 'website',
     locale: 'pl_PL',
-    siteName: 'Nordo',
+    siteName: MARKA.nazwa,
   },
 
   /**
@@ -96,7 +97,7 @@ export const metadata: Metadata = {
    */
   appleWebApp: {
     capable: true,
-    title: 'Nordo',
+    title: MARKA.nazwa,
     statusBarStyle: 'default',
   },
   icons: {
