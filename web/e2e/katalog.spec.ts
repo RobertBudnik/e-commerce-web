@@ -83,6 +83,13 @@ test.describe('Katalog', () => {
     // Status bywa różny w dev i w produkcji; liczy się to, że nie ma karty
     await expect(page.locator('.product')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Dodaj do koszyka' })).toHaveCount(0);
-    await expect(page.locator('body')).toContainText(/nie zna|not be found|404/i);
+
+    // Własna strona sklepu, nie domyślna Next. Wcześniej wystarczał tu sam
+    // ciąg „404" gdziekolwiek w treści, więc test przechodził na czarnym
+    // grotesku po angielsku, bez nagłówka i bez drogi powrotnej.
+    await expect(page.getByRole('heading', { name: 'Nie ma takiej strony' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Przejdź do sklepu' })).toBeVisible();
+    // Chrom sklepu zostaje na miejscu — klient nie wypada ze sklepu
+    await expect(page.locator('.site-footer, footer')).toBeVisible();
   });
 });

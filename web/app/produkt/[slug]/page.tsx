@@ -25,7 +25,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) return { title: 'Produkt' };
+  // `generateMetadata` biegnie przed `notFound()`, więc tytuł karty ustala się
+  // tutaj także dla adresu, który zaraz skończy się stroną 404. Bez tego
+  // w pasku karty zostawało „Produkt" nad stroną mówiącą „Nie ma takiej strony".
+  if (!product) return { title: 'Nie ma takiej strony', robots: { index: false, follow: false } };
 
   return {
     title: product.name,
