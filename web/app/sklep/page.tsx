@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { ShopBrowser } from '@/components/product/ShopBrowser';
-import { getCategories, getProducts } from '@/lib/queries';
+import { getCategories, getStronaKatalogu } from '@/lib/queries';
 import { storeMode } from '@/lib/store-mode';
-
-export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: 'Sklep',
@@ -14,12 +12,22 @@ export const metadata: Metadata = {
 /**
  * Lista renderuje się na serwerze: robot i czytelnik dostają gotowy HTML
  * z produktami, a nie pustą siatkę do wypełnienia przez JavaScript.
- * Filtrowanie i sortowanie przejmuje potem wyspa kliencka.
+ *
+ * Filtr, sortowanie, szukanie i strona jadą w adresie i trafiają do zapytania,
+ * a nie do pamięci przeglądarki. Dlatego strona nie może być rewalidowana co
+ * minutę jak dawniej — każdy zestaw parametrów to inny wynik, a stronicowany
+ * katalog ma pokazywać stan magazynu, nie sprzed minuty.
  */
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ kategoria?: string; sort?: string; szukaj?: string; mode?: string }>;
+  searchParams: Promise<{
+    kategoria?: string;
+    sort?: string;
+    szukaj?: string;
+    strona?: string;
+    mode?: string;
+  }>;
 }) {
   const params = await searchParams;
 
@@ -27,7 +35,15 @@ export default async function ShopPage({
   // dzieje się na stronie głównej.
   if (storeMode(params) === 'single') redirect('/');
 
-  const [products, categories] = await Promise.all([getProducts(), getCategories()]);
+  const kategoria = params.kategoria ?? 'all';
+  const sort = params.sort ?? 'popular';
+  const szukaj = params.szukaj ?? '';
+  const strona = Number.parseInt(params.strona ?? '1', 10) || 1;
+
+  const [katalog, categories] = await Promise.all([
+    getStronaKatalogu({ kategoria, sort, szukaj, strona }),
+    getCategories(),
+  ]);
 
   return (
     <main className="container section">
@@ -39,11 +55,14 @@ export default async function ShopPage({
       </div>
 
       <ShopBrowser
-        products={products}
+        products={katalog.produkty}
         categories={categories}
-        initialCategory={params.kategoria ?? 'all'}
-        initialSort={params.sort ?? 'popular'}
-        initialQuery={params.szukaj ?? ''}
+        kategoria={kategoria}
+        sort={sort}
+        szukaj={szukaj}
+        ileWszystkich={katalog.ile}
+        strona={katalog.strona}
+        stron={katalog.stron}
       />
     </main>
   );

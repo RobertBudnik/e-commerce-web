@@ -2154,6 +2154,24 @@ code {
   .galeria-miniatury { gap: 8px; }
 }
 
+/* ---------- Stronicowanie katalogu ---------- */
+.stronicowanie {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+.stronicowanie button:disabled { opacity: .45; cursor: default; }
+
+/* Siatka podczas pobierania kolejnej strony: przygasza się, ale nie znika —
+   skok wysokości przy każdej zmianie filtra byłby gorszy niż chwila
+   przygaszenia. Animujemy samą przezroczystość, więc układ stoi. */
+.katalog-siatka { transition: opacity .16s ease; }
+.katalog-siatka[data-oczekuje] { opacity: .55; }
+
 /* ---------- Opinie na karcie produktu ----------
    Lista bez obwódek: opinie rozdziela hairline, tak jak resztę sekcji
    w sklepie. Ramka wokół każdej wypowiedzi robi z nich kafelki, a to jest

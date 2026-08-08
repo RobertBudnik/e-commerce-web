@@ -115,6 +115,89 @@ export const getProducts = cache(async (): Promise<Product[]> => {
   return data.map((row) => toProduct(row as ProductRow, imageUrl));
 });
 
+/** Ile pozycji mieści jedna strona katalogu. */
+export const NA_STRONE = 12;
+
+export type StronaKatalogu = {
+  produkty: Product[];
+  /** Ile pozycji pasuje do filtrów w całości, nie na tej stronie. */
+  ile: number;
+  strona: number;
+  stron: number;
+};
+
+/** Kolejności do wyboru w sklepie. Klucz jedzie w adresie, więc jest stabilny. */
+const SORTOWANIA: Record<string, { kolumna: string; rosnaco: boolean }> = {
+  popular: { kolumna: 'reviews_count', rosnaco: false },
+  'price-asc': { kolumna: 'price_cents', rosnaco: true },
+  'price-desc': { kolumna: 'price_cents', rosnaco: false },
+  rating: { kolumna: 'rating', rosnaco: false },
+  name: { kolumna: 'name', rosnaco: true },
+};
+
+/**
+ * Strona katalogu z filtrem, szukaniem i sortowaniem — wszystko po stronie bazy.
+ *
+ * Wcześniej `/sklep` brało cały katalog i przesiewało go w przeglądarce. Przy
+ * ośmiu produktach było to tańsze niż zapytanie na każdą zmianę filtra i tak
+ * stało w komentarzu przy `ShopBrowser`. Przy stu pozycjach kończy się to
+ * wysyłaniem stu rekordów, żeby pokazać dwanaście.
+ *
+ * Liczbę pasujących pozycji bierzemy z tego samego zapytania (`count: exact`),
+ * a nie osobnym — inaczej licznik i lista potrafią pokazać dwie różne prawdy,
+ * gdy ktoś w międzyczasie wycofa produkt.
+ */
+export async function getStronaKatalogu({
+  kategoria = 'all',
+  sort = 'popular',
+  szukaj = '',
+  strona = 1,
+}: {
+  kategoria?: string;
+  sort?: string;
+  szukaj?: string;
+  strona?: number;
+}): Promise<StronaKatalogu> {
+  const supabase = await createClient();
+  const kolejnosc = SORTOWANIA[sort] ?? SORTOWANIA.popular;
+  const numer = Math.max(1, Math.floor(strona) || 1);
+  const od = (numer - 1) * NA_STRONE;
+
+  let zapytanie = supabase
+    .from('products')
+    .select('*', { count: 'exact' })
+    .eq('is_active', true);
+
+  if (kategoria && kategoria !== 'all') {
+    zapytanie = zapytanie.eq('category_id', kategoria);
+  }
+
+  const fraza = szukaj.trim();
+  if (fraza) {
+    // `%` i `,` rozbijają składnię filtra PostgREST — usuwamy je z frazy,
+    // tak samo jak w szukaniu magazynowym.
+    const czysta = fraza.replace(/[%,]/g, ' ').trim();
+    if (czysta) zapytanie = zapytanie.or(`name.ilike.%${czysta}%,short.ilike.%${czysta}%`);
+  }
+
+  const { data, error, count } = await zapytanie
+    .order(kolejnosc.kolumna, { ascending: kolejnosc.rosnaco })
+    // Druga kolejność rozstrzyga remisy — bez niej dwie pozycje o tej samej
+    // cenie potrafią zamienić się miejscami między stronami i jedna zniknie.
+    .order('id', { ascending: true })
+    .range(od, od + NA_STRONE - 1);
+
+  if (error || !data) return { produkty: [], ile: 0, strona: numer, stron: 0 };
+
+  const ile = count ?? 0;
+  return {
+    produkty: data.map((row) => toProduct(row as ProductRow, imageUrl)),
+    ile,
+    strona: numer,
+    stron: Math.max(1, Math.ceil(ile / NA_STRONE)),
+  };
+}
+
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.from('products').select('*').eq('slug', slug).maybeSingle();

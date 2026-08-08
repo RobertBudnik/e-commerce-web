@@ -26,7 +26,14 @@ test.describe('Katalog', () => {
     const wszystkie = await page.locator('.card').count();
     expect(wszystkie).toBeGreaterThan(1);
 
+    // Filtr, sortowanie i strona jadą w adresie i trafiają do zapytania, więc
+    // po kliknięciu trzeba poczekać na odpowiedź. Wcześniej przesiewanie
+    // działo się w pamięci przeglądarki i było natychmiastowe — liczenie
+    // kafelków od razu po kliknięciu łapało wtedy gotowy wynik, a teraz
+    // złapałoby jeszcze poprzedni.
     await page.getByRole('button', { name: 'Audio', exact: true }).click();
+    await expect(page).toHaveURL(/kategoria=audio/);
+
     const audio = page.locator('.card');
     await expect(audio.first()).toBeVisible();
     expect(await audio.count()).toBeLessThan(wszystkie);
@@ -35,8 +42,11 @@ test.describe('Katalog', () => {
     }
 
     await page.getByRole('button', { name: 'Wszystkie' }).click();
+    await expect(page).not.toHaveURL(/kategoria=/);
+
     await page.getByRole('button', { name: 'Sortowanie' }).click();
     await page.getByRole('option', { name: 'Cena malejąco' }).click();
+    await expect(page).toHaveURL(/sort=price-desc/);
 
     const ceny = await page.locator('.card .price').allInnerTexts();
     const liczby = ceny.map((t) => Number.parseFloat(t.replace(/[^\d,]/g, '').replace(',', '.')));
@@ -49,6 +59,25 @@ test.describe('Katalog', () => {
     await expect(page.locator('.card')).toHaveCount(1);
 
     await page.getByPlaceholder('Szukaj').fill('czegoś takiego nie ma');
+    await expect(page.getByText('Brak produktów spełniających kryteria.')).toBeVisible();
+  });
+
+  test('filtr i fraza zostają w adresie i przeżywają odświeżenie', async ({ page }) => {
+    // Odkąd katalog filtruje baza, adres jest jedynym stanem — wynik szukania
+    // da się wysłać linkiem, a „wstecz" wraca do poprzedniego filtra.
+    await page.goto('/sklep?kategoria=audio&szukaj=sluchawki');
+
+    await expect(page.getByPlaceholder('Szukaj')).toHaveValue('sluchawki');
+    await expect(page.getByRole('button', { name: 'Audio', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+
+    await page.reload();
+    await expect(page.getByPlaceholder('Szukaj')).toHaveValue('sluchawki');
+
+    // Strona poza zakresem nie wywraca widoku, tylko oddaje pustą listę
+    await page.goto('/sklep?strona=99');
     await expect(page.getByText('Brak produktów spełniających kryteria.')).toBeVisible();
   });
 
