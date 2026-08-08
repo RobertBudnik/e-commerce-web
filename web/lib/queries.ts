@@ -96,7 +96,13 @@ export const getCategories = cache(async (): Promise<Category[]> => {
     .order('position');
 
   if (error || !data) return [];
-  return data.map((c) => ({ id: c.id, name: c.name, desc: c.description ?? '', icon: c.icon ?? 'grid' }));
+  return data.map((c) => ({
+    id: c.id,
+    name: c.name,
+    desc: c.description ?? '',
+    icon: c.icon ?? 'grid',
+    position: c.position ?? 0,
+  }));
 });
 
 /**

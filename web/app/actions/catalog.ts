@@ -47,13 +47,17 @@ export async function saveProductAction(formData: FormData): Promise<CatalogResu
     imagePath = path;
   }
 
+  // Rodzaj przyjeżdża jako tekst wpisany ręcznie — wiersz w słowniku zakłada
+  // się sam, jeśli takiego jeszcze nie było.
+  const categoryId = await rodzajNaId(supabase, String(formData.get('category') ?? ''));
+
   const row = {
     // Slug jest NOT NULL i unikalny; formularz go nie zna, więc przy edycji
     // niesie go ukryte pole, a przy nowym produkcie składamy go z nazwy.
     slug: String(formData.get('slug') ?? '').trim() || slugify(name),
     name,
     short: String(formData.get('short') ?? '').trim(),
-    category_id: String(formData.get('category') ?? '') || null,
+    category_id: categoryId,
     price_cents: Math.round(Number(formData.get('price') ?? 0) * 100),
     old_price_cents: formData.get('oldPrice')
       ? Math.round(Number(formData.get('oldPrice')) * 100)
@@ -92,6 +96,10 @@ export async function saveProductAction(formData: FormData): Promise<CatalogResu
     if (removeError) console.warn('Nie skasowano starego zdjęcia:', removeError.message);
   }
 
+  // Zmiana rodzaju mogła opróżnić poprzedni — kafel bez produktów prowadzi
+  // klienta w pustkę, więc znika razem z ostatnią pozycją.
+  await posprzatajPusteRodzaje(supabase);
+
   revalidateCatalog();
   return { ok: true };
 }
@@ -105,8 +113,98 @@ export async function deleteProductAction(id: string, imagePath: string | null):
   // Wiersz zniknął, więc plik nie ma już do czego należeć
   if (imagePath) await supabase.storage.from(BUCKET).remove([imagePath]);
 
+  await posprzatajPusteRodzaje(supabase);
+
   revalidateCatalog();
   return { ok: true };
+}
+
+/* ==========================================================================
+   Rodzaje produktów — słownik prowadzony w tle
+
+   Admin wpisuje rodzaj przy produkcie, jak zwykły tekst, i nie zarządza żadną
+   listą osobno. Wiersz w `categories` powstaje sam, bo strona główna pokazuje
+   kafle z ikoną i opisem, a filtr w sklepie chodzi po identyfikatorze — samo
+   pole tekstowe przy produkcie nie udźwignęłoby żadnego z tych dwóch.
+   ========================================================================== */
+
+/** Ikona zgadywana z nazwy rodzaju. Trafienie jest miłe, pudło nieszkodliwe. */
+const IKONY_RODZAJU: [RegExp, string][] = [
+  [/audio|słuchaw|sluchaw|głośn|glosn|dźwięk|dzwiek/i, 'headphones'],
+  [/laptop|komputer|notebook|pc\b/i, 'laptop'],
+  [/foto|aparat|kamer/i, 'camera'],
+  [/obiektyw|lens/i, 'lens'],
+  [/monitor|ekran|wyświetl|wyswietl/i, 'monitor'],
+  [/lamp|żarów|zarow|światł|swiatl/i, 'bulb'],
+  [/zamek|klucz|bezpiecz|smart\s*home/i, 'lock'],
+  [/głośnik|glosnik|speaker/i, 'speaker'],
+];
+
+function ikonaDlaRodzaju(nazwa: string): string {
+  return IKONY_RODZAJU.find(([wzor]) => wzor.test(nazwa))?.[1] ?? 'grid';
+}
+
+/**
+ * Zwraca identyfikator rodzaju, zakładając wiersz, jeśli takiego jeszcze nie ma.
+ *
+ * Identyfikator powstaje z nazwy i jest kluczem głównym — ten sam rodzaj wpisany
+ * drugi raz trafia w istniejący wiersz zamiast tworzyć duplikat. Nazwy nie
+ * nadpisujemy przy trafieniu: „AUDIO" wpisane w pośpiechu nie ma prawa zmienić
+ * „Audio", które stoi już na kaflu na stronie głównej.
+ */
+async function rodzajNaId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  nazwa: string
+): Promise<string | null> {
+  const czysta = nazwa.trim();
+  if (!czysta) return null;
+
+  const id = slugify(czysta);
+  if (!id) return null;
+
+  const { data: istnieje } = await supabase.from('categories').select('id').eq('id', id).maybeSingle();
+  if (istnieje) return id;
+
+  // Nowy rodzaj ląduje na końcu listy — kolejność poprawia się rzadko i ręcznie,
+  // a wskakiwanie nowej pozycji przed istniejące byłoby zaskoczeniem.
+  const { data: ostatnia } = await supabase
+    .from('categories')
+    .select('position')
+    .order('position', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const { error } = await supabase.from('categories').insert({
+    id,
+    name: czysta,
+    icon: ikonaDlaRodzaju(czysta),
+    position: (ostatnia?.position ?? -1) + 1,
+  });
+
+  // Wyścig dwóch zapisów z tym samym rodzajem kończy się kolizją klucza —
+  // to znaczy, że ktoś zdążył pierwszy, czyli dokładnie to, o co nam chodziło.
+  if (error && error.code !== '23505') return null;
+  return id;
+}
+
+/**
+ * Kasuje rodzaje, w których nie został ani jeden produkt.
+ *
+ * Bez tego lista rodzajów rośnie po każdej literówce i po każdym skasowanym
+ * produkcie, a klient dostaje na stronie głównej kafel prowadzący do pustki.
+ * Sprzątanie jest ciche: skoro admin nigdy tej listy nie zakładał, nie ma go
+ * po co pytać o zgodę na skasowanie pozycji, której nie widzi.
+ */
+async function posprzatajPusteRodzaje(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const [{ data: rodzaje }, { data: uzywane }] = await Promise.all([
+    supabase.from('categories').select('id'),
+    supabase.from('products').select('category_id').not('category_id', 'is', null),
+  ]);
+  if (!rodzaje) return;
+
+  const zajete = new Set((uzywane ?? []).map((p) => p.category_id));
+  const puste = rodzaje.map((r) => r.id).filter((id) => !zajete.has(id));
+  if (puste.length) await supabase.from('categories').delete().in('id', puste);
 }
 
 /* ==========================================================================

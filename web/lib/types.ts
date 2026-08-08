@@ -28,6 +28,8 @@ export type Category = {
   name: string;
   desc: string;
   icon: string;
+  /** Kolejność na stronie głównej i w filtrze sklepu; rosnąco. */
+  position: number;
 };
 
 export type OrderStatus =

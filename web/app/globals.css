@@ -1567,6 +1567,144 @@ code {
   font-size: .875em;
 }
 
+/* ---------- Panel produktu ----------
+   Formularz po lewej, żywy kafelek po prawej. Kafelek jest przyklejony, bo
+   przy czterech sekcjach pól znika z pola widzenia dokładnie wtedy, gdy
+   zaczyna być potrzebny — przy cenie i zdjęciu. */
+.panel-produkt {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 48px;
+  align-items: start;
+}
+
+.panel-sekcja {
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+.panel-sekcja:first-child { padding-top: 0; border-top: 0; }
+
+.panel-sekcja-tytul {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 22px;
+  font-size: 1.125rem;
+}
+.panel-sekcja-tytul .label { display: block; }
+
+/* Wejście sekcji kaskadą — panel otwiera się jako całość, a nie czterema
+   niezależnymi drgnięciami. Krok liczony zmienną, żeby opóźnienie zostało
+   w CSS-ie i nie wymagało obserwatora w JS-ie. */
+@media (prefers-reduced-motion: no-preference) {
+  .panel-sekcja,
+  .panel-podglad-pin {
+    animation: panel-wejscie .5s cubic-bezier(.16, .84, .34, 1) backwards;
+    animation-delay: calc(var(--krok, 0) * 60ms);
+  }
+}
+@keyframes panel-wejscie {
+  from { opacity: 0; translate: 0 16px; scale: .988; }
+  to   { opacity: 1; translate: 0; scale: 1; }
+}
+
+.panel-podglad-pin {
+  position: sticky;
+  top: calc(var(--header-h) + 24px);
+  display: grid;
+  gap: 18px;
+}
+.panel-podglad-kafel {
+  /* Podgląd jest obrazem, nie produktem — serce i szybki podgląd nie mają tu
+     czego robić, a klikalny odnośnik prowadziłby pod adres, którego nie ma. */
+  pointer-events: none;
+}
+.panel-podglad-kafel .card { transition: none; }
+
+.panel-fakty {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 16px 0;
+  border-block: 1px solid var(--line);
+}
+.panel-fakty > div { display: flex; justify-content: space-between; gap: 12px; }
+.panel-fakty dt { color: var(--ink-3); font-size: .8125rem; }
+.panel-fakty dd { margin: 0; font-weight: 500; }
+
+.panel-skrot { text-align: center; margin-top: 12px; }
+.panel-skrot kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  font-family: var(--mono);
+  font-size: .75rem;
+}
+
+/* Pole zrzutu zdjęcia. Reaguje na przeciągnięcie samą skalą i kolorem linii —
+   układ zostaje nietknięty, więc nic nie skacze pod kursorem z plikiem. */
+.dropzone {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r);
+  background: var(--bg-sunken);
+  transition: border-color .18s ease, background-color .18s ease, scale .18s ease;
+}
+.dropzone-nad {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  scale: 1.01;
+}
+.dropzone-podglad {
+  position: relative;
+  flex: none;
+  width: 112px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--r-sm);
+  background: var(--img);
+}
+.dropzone-podglad svg { width: 34%; height: auto; color: var(--img-line); }
+.dropzone-tresc { min-width: 0; display: grid; gap: 10px; }
+.dropzone-akcje { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.dropzone-akcje label { cursor: pointer; }
+
+.pole-para { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.pole-blad { margin-top: 6px; font-size: .8125rem; color: var(--accent); }
+.pole-uwaga { color: var(--accent); }
+.pole-rabat { color: var(--accent); font-weight: 500; }
+
+[aria-invalid='true'] { border-color: var(--accent); }
+
+.panel-lista { margin-top: 56px; }
+.panel-szukajka {
+  min-width: 280px;
+  height: 40px;
+  padding-inline: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .9375rem;
+  outline: none;
+  transition: border-color .18s ease;
+}
+.panel-szukajka:focus { border-color: var(--ink); }
+
+@media (max-width: 1000px) {
+  .panel-produkt { grid-template-columns: 1fr; gap: 32px; }
+  /* Przyklejony podgląd na wąskim ekranie zjadłby połowę wysokości. */
+  .panel-podglad-pin { position: static; }
+  .panel-podglad-kafel { max-width: 320px; }
+  .panel-szukajka { min-width: 0; width: 100%; }
+}
+
 @media (max-width: 1000px) {
   .admin-layout { grid-template-columns: 1fr; gap: 40px; }
   .admin-layout > section:first-child { position: static; }
