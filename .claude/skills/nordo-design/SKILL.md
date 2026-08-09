@@ -165,9 +165,26 @@ co robi ręka, a `cursor: none` odbiera użytkownikowi wskaźnik, do którego je
 przyzwyczajony, w zamian nie dając nic poza ozdobą. Sklep, w którym ludzie
 wydają pieniądze, nie jest miejscem na eksperymenty ze wskaźnikiem myszy.
 
-Ograniczenie ilościowe: **jeden mocny efekt na ekran**. Sekcja przypięta
-i spotlight nie mogą stać obok siebie bez oddechu między nimi, a pole cząsteczek
-wyklucza jakikolwiek inny ruch w tle tego samego bloku.
+**Limitu ilościowego nie ma.** Stała tu wcześniej reguła „jeden mocny efekt
+na ekran"; została zdjęta świadomie, decyzją właściciela, na rzecz mocniejszego
+wrażenia. Nie znaczy to, że wolno wszystko — znaczy, że o liczbie efektów
+decyduje próba na żywym ekranie, a nie licznik.
+
+Zamiast limitu obowiązuje kryterium: **ruch ma nieść informację albo ciężar.**
+
+- **Niesie informację** — pokazuje, co się z czym stało. Kafle przelatujące
+  na nowe pozycje po zmianie filtra mówią, które zostały. Produkt lecący
+  do ikony koszyka mówi, dokąd trafił. Takich efektów może być wiele naraz,
+  bo każdy odpowiada na pytanie, które użytkownik i tak sobie zadaje.
+- **Niesie ciężar** — buduje wrażenie masy i głębi. Paralaksa, opór przy
+  przeciąganiu, zdjęcie skalujące się wolniej niż karta. Tu obowiązuje umiar
+  wynikający z fizyki, nie z liczby: dwa efekty sugerujące sprzeczną głębię
+  w tym samym kadrze znoszą się i zostaje bałagan.
+- **Nie niesie nic** — miga, błyska, odbija się, przyciąga wzrok bez powodu.
+  Tego nie ma i nie było, niezależnie od limitu.
+
+Sprężyny i odbicia dalej są poza ruchem podstawowym. Odbicie to najszybsza
+droga, żeby „drogo" zamieniło się w „zabawkowo", a ten sklep celuje w pierwsze.
 
 ## prefers-reduced-motion — obowiązkowo
 

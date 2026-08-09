@@ -235,8 +235,12 @@ h1, h2 {
   letter-spacing: -.012em;
   line-height: 1.08;
 }
-h1 { font-size: clamp(2rem, 1.3rem + 2.6vw, 3.25rem); }
-h2 { font-size: clamp(1.4rem, 1.1rem + 1.1vw, 1.9rem); }
+/* Rozstrzał skali robi tu wrażenie ceny. Nagłówek dwa razy większy od treści
+   czyta się jako katalog; cztery razy większy — jako marka. Dolna granica
+   zostaje nietknięta, bo na telefonie większy szeryf zaczyna się łamać
+   w połowie słowa i wrażenie znika razem z czytelnością. */
+h1 { font-size: clamp(2rem, 1.15rem + 3.9vw, 4.25rem); }
+h2 { font-size: clamp(1.4rem, 1.05rem + 1.7vw, 2.4rem); }
 h3 { font-size: 1.05rem; letter-spacing: -.015em; }
 
 /* Nagłówki użytkowe — panele, karty, szuflada — zostają przy grotesku:
@@ -249,10 +253,12 @@ h3 { font-size: 1.05rem; letter-spacing: -.015em; }
 p { margin: 0 0 1em; }
 p:last-child { margin-bottom: 0; }
 
+/* Węższa kolumna niż wcześniejsze 44ch: przy nagłówku 4,25 rem szeroki akapit
+   pod spodem spłaszcza kontrast między nimi, a to on robi tu całą robotę. */
 .lede {
   font-size: 1.0625rem;
   color: var(--ink-soft);
-  max-width: 44ch;
+  max-width: 38ch;
   letter-spacing: -.005em;
 }
 
@@ -279,7 +285,10 @@ p:last-child { margin-bottom: 0; }
   padding-inline: var(--gutter);
 }
 
-.section { padding-block: clamp(56px, 7vw, 96px); }
+/* Powietrze między sekcjami jest tu materiałem, nie pustką — to ono oddziela
+   „katalog" od „marki". Podniesione wraz ze skalą nagłówków; jedno bez
+   drugiego wygląda na pomyłkę w arkuszu stylów. */
+.section { padding-block: clamp(56px, 8.5vw, 132px); }
 .section-tight { padding-block: clamp(40px, 5vw, 64px); }
 
 .section-head {
@@ -559,7 +568,10 @@ p:last-child { margin-bottom: 0; }
   grid-template-columns: 1fr 1fr;
   gap: 64px;
   align-items: center;
-  padding-block: clamp(64px, 9vw, 128px);
+  /* Skrócone o mniej więcej jedną trzecią wobec 128 px: przy większym
+     nagłówku hero i tak zajmuje swoje, a pierwsze kafle mają zahaczać
+     o dół pierwszego ekranu. Sklep ma pokazać towar, nie tylko nazwę. */
+  padding-block: clamp(48px, 6vw, 88px);
 }
 .hero h1 { margin-bottom: .35em; text-wrap: balance; }
 .hero .label { display: block; margin-bottom: 20px; }
@@ -1797,6 +1809,18 @@ code {
 .card:hover { transform: translateY(-3px); }
 .card:hover .card-media { box-shadow: var(--shadow); }
 .card-media { transition: background .25s ease, box-shadow .26s ease; }
+
+/* Paralaksa w kaflu: zdjęcie dochodzi na miejsce wolniej niż unosi się karta.
+   Wrażenie masy bierze się z różnicy czasów, nie z odległości — karta jedzie
+   260 ms, zdjęcie 550 ms, więc przez chwilę zostaje w tyle jak coś ciężkiego
+   za szybą. Skala celowo mała: przy 1.1 widać już kadrowanie, a nie głębię. */
+.card-media .media-img {
+  transition: transform .55s cubic-bezier(.2, .7, .3, 1);
+}
+.card:hover .card-media .media-img { transform: scale(1.055); }
+/* Ikona zastępcza dostaje ten sam czas, żeby kafle ze zdjęciem i bez niego
+   nie zachowywały się w siatce jak dwa różne komponenty. */
+.card-media-link svg { transition-duration: .55s; }
 
 /* ---------- Serce: jednorazowy akcent przy dodaniu ---------- */
 @keyframes wish-pop {

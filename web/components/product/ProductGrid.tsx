@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { ProductCard } from './ProductCard';
 import { useUjawnianie } from '@/lib/ujawnianie';
+import { useFlip } from '@/lib/flip';
 import { Tilt } from '@/components/ruch/Tilt';
 import type { Category, Product } from '@/lib/types';
 
@@ -25,6 +26,11 @@ export function ProductGrid({
   const grid = useRef<HTMLDivElement>(null);
 
   useUjawnianie(grid, products);
+  // Kafle, które przetrwały zmianę filtra, przelatują na nowe miejsca zamiast
+  // przeskakiwać. Klucz zależności to lista identyfikatorów, nie sama tablica:
+  // ta jest nową referencją przy każdym renderze i przelot odpalałby się także
+  // wtedy, gdy nic się nie zmieniło.
+  useFlip(grid, products.map((p) => p.id).join());
 
   if (!products.length) return <p className="muted">{empty}</p>;
 
@@ -33,7 +39,7 @@ export function ProductGrid({
   return (
     <div className="grid" ref={grid}>
       {products.map((product, i) => (
-        <Tilt key={product.id}>
+        <Tilt key={product.id} id={product.id}>
           <ProductCard
             product={product}
             categoryName={nameOf(product.category)}

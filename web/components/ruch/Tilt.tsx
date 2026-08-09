@@ -31,7 +31,7 @@ const KAT = 8; // stopni w każdą stronę
  * Kafelków nie było widać w ogóle. Bez efektu `--tilt-*` są zerowe, więc pusty
  * kontener nic nie kosztuje.
  */
-export function Tilt({ children }: { children: React.ReactNode }) {
+export function Tilt({ children, id }: { children: React.ReactNode; id?: string }) {
   const aktywny = useEfektKursora();
   const element = useRef<HTMLDivElement>(null);
 
@@ -64,6 +64,10 @@ export function Tilt({ children }: { children: React.ReactNode }) {
     <div
       className="tilt"
       ref={element}
+      /* Znacznik dla FLIP-a w siatce. Siedzi tutaj, a nie na dodatkowym
+         opakowaniu, bo to ten `div` jest polem siatki i jego pozycję
+         mierzy przelot kafli po zmianie filtra. */
+      data-flip={id}
       onPointerMove={aktywny ? ruch : undefined}
       onPointerLeave={aktywny ? powrot : undefined}
     >

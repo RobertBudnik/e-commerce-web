@@ -8,6 +8,8 @@ import { OdometrCeny } from '@/components/ruch/OdometrCeny';
 import { useCart } from '@/components/cart/CartProvider';
 import { useWishlist } from './WishlistProvider';
 import { openQuickView } from './QuickViewHost';
+import { lotDoKoszyka } from '@/lib/lot-do-koszyka';
+import { useRuchWylaczony } from '@/lib/ruch';
 import type { Product } from '@/lib/types';
 
 export function ProductCard({
@@ -20,6 +22,7 @@ export function ProductCard({
   delay?: number;
 }) {
   const cart = useCart();
+  const bezRuchu = useRuchWylaczony();
   const wish = useWishlist();
   const out = product.stock === 0;
   const saved = wish.has(product.id);
@@ -71,7 +74,14 @@ export function ProductCard({
             className="btn btn-ghost btn-block"
             type="button"
             disabled={out}
-            onClick={() => cart.add(product.id, 1, product.stock)}
+            onClick={(e) => {
+              // Lot startuje z kadru zdjęcia, nie z przycisku: to zdjęcie jest
+              // tym, co klient właśnie oglądał, i za nim powędruje wzrokiem.
+              if (!bezRuchu) {
+                lotDoKoszyka(e.currentTarget.closest('.card')?.querySelector('.card-media') ?? null);
+              }
+              cart.add(product.id, 1, product.stock);
+            }}
           >
             {out ? 'Niedostępny' : 'Do koszyka'}
           </button>

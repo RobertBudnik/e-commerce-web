@@ -8,6 +8,7 @@ import { PoleCzastek } from '@/components/ruch/PoleCzastek';
 import { StrzepkaPrzeciagana } from '@/components/ruch/StrzepkaPrzeciagana';
 import { SekcjaPrzypieta } from '@/components/ruch/SekcjaPrzypieta';
 import { Spotlight } from '@/components/ruch/Spotlight';
+import { Paralaksa } from '@/components/ruch/Paralaksa';
 import { ProductCard } from '@/components/product/ProductCard';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { getCategories, getProducts } from '@/lib/queries';
@@ -59,9 +60,14 @@ export default async function HomePage() {
               </div>
             )}
           </div>
-          <div className="hero-media" role="img" aria-label="Ilustracja produktu">
-            <Icon name="headphones" />
-          </div>
+          {/* Ilustracja jedzie wolniej niż tekst obok — hero dostaje głębię
+              bez ani jednego cienia. Siła celowo mała: ma być wyczuwalna,
+              a nie zauważalna jako efekt. */}
+          <Paralaksa sila={0.1} className="hero-media" >
+            <div role="img" aria-label="Ilustracja produktu">
+              <Icon name="headphones" />
+            </div>
+          </Paralaksa>
         </div>
       </section>
 
@@ -129,8 +135,9 @@ export default async function HomePage() {
       </section>
 
       {/* Sekcja przypięta i spotlight stoją osobno, z sekcją „ostatnio
-          oglądane" między nimi — skill dopuszcza jeden mocny efekt na ekran,
-          a dwa takie momenty pod rząd nie dają oddechu. */}
+          oglądane" między nimi. Limit ilościowy zniknął ze skilla, ale te dwa
+          sugerują sprzeczną głębię — jedna przykleja kadr, druga odsłania go
+          snopem — i postawione obok siebie znoszą się nawzajem. */}
       {JAK_TO_DZIALA.length > 0 && <SekcjaPrzypieta kroki={[...JAK_TO_DZIALA]} />}
 
       <RecentlyViewed categories={categories} className="section container" />
