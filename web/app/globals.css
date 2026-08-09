@@ -2399,12 +2399,16 @@ code {
 }
 .marquee-kropka { color: var(--accent); }
 
-/* Przesunięcie o dokładnie połowę toru: drugi komplet ląduje tam, gdzie
-   zaczynał pierwszy, więc powrót do zera jest niewidoczny. */
+/* Przesunięcie o dokładnie jedną kopię: następny komplet ląduje tam, gdzie
+   zaczynał poprzedni, więc powrót do zera jest niewidoczny. Dzielnik bierze
+   się z liczby kopii wstawionych przez komponent — przy dwóch było to sztywne
+   -50%, a pasek z krótką treścią pokazywał pustkę, zanim pętla wróciła. */
 @keyframes marquee-jedzie {
   from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(calc(-100% / var(--kopie, 2)), 0, 0); }
 }
+
+.marquee-komplet { display: flex; }
 
 /* Bez ruchu pasek stoi i pokazuje jeden komplet haseł. */
 .marquee-stoi .marquee-tor { animation: none; width: auto; }
