@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { zglosZwrotAction } from '@/app/actions/shop';
+import { useOknoModalne } from '@/lib/okno-modalne';
 import type { Order } from '@/lib/types';
 
 /**
@@ -23,24 +24,16 @@ export function ZgloszenieZwrotu({ order }: { order: Order }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const wyzwalaczRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (!otwarte) return;
-
-    const poprzedni = document.activeElement as HTMLElement | null;
-    document.body.style.overflow = 'hidden';
-    panelRef.current?.querySelector<HTMLElement>('button, input')?.focus();
-
-    function naKlawisz(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOtwarte(false);
-    }
-    document.addEventListener('keydown', naKlawisz);
-
-    return () => {
-      document.removeEventListener('keydown', naKlawisz);
-      document.body.style.overflow = '';
-      (poprzedni ?? wyzwalaczRef.current)?.focus();
-    };
-  }, [otwarte]);
+  // Wspólne zachowanie okien nakładkowych — patrz `lib/okno-modalne.ts`.
+  // Wcześniej brakowało tu pułapki fokusu: Tab wychodził z okna na listę
+  // zamówień pod spodem, a klient wybierał pozycje do zwrotu w oknie,
+  // którego już nie miał pod palcami.
+  useOknoModalne({
+    otwarte,
+    panel: panelRef,
+    zamknij: () => setOtwarte(false),
+    wyzwalacz: wyzwalaczRef,
+  });
 
   const wybrane = Object.entries(ilosci).filter(([, q]) => q > 0);
   const sztuk = wybrane.reduce((a, [, q]) => a + q, 0);

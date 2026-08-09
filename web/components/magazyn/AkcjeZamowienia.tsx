@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { OdczytKodu } from './OdczytKodu';
+import { useOknoModalne } from '@/lib/okno-modalne';
 import {
   nadajPrzesylkeAction,
   ustawStanZamowieniaAction,
@@ -39,24 +40,17 @@ export function AkcjeZamowienia({ zamowienieId, stan, numerPrzesylki }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const wyzwalaczRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (!arkusz) return;
-
-    const poprzedni = document.activeElement as HTMLElement | null;
-    document.body.style.overflow = 'hidden';
-    panelRef.current?.querySelector<HTMLElement>('input, button')?.focus();
-
-    function naKlawisz(e: KeyboardEvent) {
-      if (e.key === 'Escape') setArkusz(false);
-    }
-    document.addEventListener('keydown', naKlawisz);
-
-    return () => {
-      document.removeEventListener('keydown', naKlawisz);
-      document.body.style.overflow = '';
-      (poprzedni ?? wyzwalaczRef.current)?.focus();
-    };
-  }, [arkusz]);
+  // Wspólne zachowanie okien nakładkowych — patrz `lib/okno-modalne.ts`.
+  // Arkusz z numerem przesyłki otwiera się na telefonie w magazynie, więc
+  // fokus wchodzący prosto w pole numeru oszczędza jedno dotknięcie przy
+  // każdej paczce.
+  useOknoModalne({
+    otwarte: arkusz,
+    panel: panelRef,
+    zamknij: () => setArkusz(false),
+    wyzwalacz: wyzwalaczRef,
+    pierwszyCel: 'input',
+  });
 
   // Stabilne referencje, inaczej kadr montowałby się od nowa przy każdym
   // renderze arkusza i kamera mrugałaby po każdym znaku w polu.

@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from '@/components/Icon';
+import { useOknoModalne } from '@/lib/okno-modalne';
 
 type Pozycja = { href: string; label: string };
 
@@ -17,44 +18,15 @@ export function MobileNav({ pozycje }: { pozycje: Pozycja[] }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const wyzwalaczRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (!otwarte) return;
-
-    const poprzedniFokus = document.activeElement as HTMLElement | null;
-    document.body.style.overflow = 'hidden';
-    panelRef.current?.querySelector<HTMLElement>('a, button')?.focus();
-
-    function naKlawisz(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        setOtwarte(false);
-        return;
-      }
-      if (e.key !== 'Tab' || !panelRef.current) return;
-
-      // Pułapka focusu — wewnątrz panelu Tab krąży, nie ucieka na treść pod spodem
-      const cele = panelRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled])'
-      );
-      if (!cele.length) return;
-      const pierwszy = cele[0];
-      const ostatni = cele[cele.length - 1];
-
-      if (e.shiftKey && document.activeElement === pierwszy) {
-        e.preventDefault();
-        ostatni.focus();
-      } else if (!e.shiftKey && document.activeElement === ostatni) {
-        e.preventDefault();
-        pierwszy.focus();
-      }
-    }
-
-    document.addEventListener('keydown', naKlawisz);
-    return () => {
-      document.removeEventListener('keydown', naKlawisz);
-      document.body.style.overflow = '';
-      (poprzedniFokus ?? wyzwalaczRef.current)?.focus();
-    };
-  }, [otwarte]);
+  // Wspólne zachowanie okien nakładkowych — patrz `lib/okno-modalne.ts`.
+  // Ten komponent był wcześniej jedynym z pułapką fokusu; hak przeniósł ją
+  // do reszty, zamiast kopiować ten sam kod do pięciu innych miejsc.
+  useOknoModalne({
+    otwarte,
+    panel: panelRef,
+    zamknij: () => setOtwarte(false),
+    wyzwalacz: wyzwalaczRef,
+  });
 
   return (
     <>

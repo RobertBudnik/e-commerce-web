@@ -6,6 +6,7 @@ import { Icon } from '@/components/Icon';
 import { ProductMedia } from './ProductMedia';
 import { money, stars } from '@/lib/format';
 import { useCart } from '@/components/cart/CartProvider';
+import { useOknoModalne } from '@/lib/okno-modalne';
 import { useWishlist } from './WishlistProvider';
 import type { Product } from '@/lib/types';
 
@@ -22,40 +23,36 @@ export function QuickViewHost() {
   const [product, setProduct] = useState<Product | null>(null);
   const [visible, setVisible] = useState(false);
   const [qty, setQty] = useState(1);
-  const opener = useRef<HTMLElement | null>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
 
   const cart = useCart();
   const wish = useWishlist();
 
   useEffect(() => {
     const onOpen = (e: Event) => {
-      opener.current = document.activeElement as HTMLElement;
       setProduct((e as CustomEvent<Product>).detail);
       setQty(1);
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
     };
-    const onEsc = (e: KeyboardEvent) => e.key === 'Escape' && close();
 
     window.addEventListener('nordo:quickview', onOpen);
-    document.addEventListener('keydown', onEsc);
-    return () => {
-      window.removeEventListener('nordo:quickview', onOpen);
-      document.removeEventListener('keydown', onEsc);
-    };
+    return () => window.removeEventListener('nordo:quickview', onOpen);
   }, []);
 
-  useEffect(() => {
-    document.body.style.overflow = product ? 'hidden' : '';
-    if (product) closeBtn.current?.focus();
-  }, [product]);
+  // Okno żyje przez cały czas wyjścia, więc hak pilnuje `product`, nie
+  // `visible`: przy `visible` fokus wróciłby na wyzwalacz, zanim panel zdąży
+  // zjechać, a strona odblokowałaby przewijanie w połowie animacji.
+  useOknoModalne({
+    otwarte: product !== null,
+    panel,
+    zamknij: close,
+    pierwszyCel: '.icon-close',
+  });
 
   function close() {
     setVisible(false);
-    setTimeout(() => {
-      setProduct(null);
-      opener.current?.focus?.();
-    }, 280);
+    setTimeout(() => setProduct(null), 280);
   }
 
   if (!product) return null;
@@ -71,7 +68,7 @@ export function QuickViewHost() {
         aria-labelledby="quick-title"
         onClick={(e) => e.target === e.currentTarget && close()}
       >
-        <div className="quick-panel">
+        <div className="quick-panel" ref={panel}>
           <button
             className="icon-close quick-close"
             type="button"

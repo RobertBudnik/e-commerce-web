@@ -23,7 +23,7 @@ export default async function StronaInformacyjna({ params }: Props) {
 
   return (
     <main className="container doc">
-      <nav className="crumbs" aria-label="Ścieżka">
+      <nav className="crumbs" aria-label="Ścieżka nawigacji">
         <Link href="/">Start</Link>
         <span aria-hidden="true">/</span>
         <span>{strona.tytul}</span>

@@ -9,6 +9,7 @@ import { ShipBar } from './ShipBar';
 import { useCart } from './CartProvider';
 import { useCartQuote } from './useCartQuote';
 import { money } from '@/lib/format';
+import { useOknoModalne } from '@/lib/okno-modalne';
 
 /**
  * Szuflada zamiast skoku na osobną stronę po każdym „do koszyka".
@@ -17,6 +18,7 @@ import { money } from '@/lib/format';
 export function MiniCart() {
   const { lines, open, setOpen, setQty, bump, remove } = useCart();
   const closeBtn = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLElement>(null);
   const pathname = usePathname();
 
   // Na stronie koszyka szuflada byłaby zasłoną na to samo — otwieramy ją
@@ -30,16 +32,14 @@ export function MiniCart() {
     if (open && onCartPage) setOpen(false);
   }, [open, onCartPage, setOpen]);
 
-  useEffect(() => {
-    const onEsc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
-    document.addEventListener('keydown', onEsc);
-    return () => document.removeEventListener('keydown', onEsc);
-  }, [setOpen]);
-
-  useEffect(() => {
-    document.body.style.overflow = visible ? 'hidden' : '';
-    if (visible) closeBtn.current?.focus();
-  }, [visible]);
+  // Escape, pułapka fokusu, powrót fokusu i blokada przewijania — wspólne
+  // zachowanie wszystkich okien nakładkowych, patrz `lib/okno-modalne.ts`.
+  useOknoModalne({
+    otwarte: visible,
+    panel,
+    zamknij: () => setOpen(false),
+    pierwszyCel: '.icon-close',
+  });
 
   const byId = new Map(quote?.lines.map((l) => [l.id, l]) ?? []);
 
@@ -47,6 +47,7 @@ export function MiniCart() {
     <>
       <div className={`overlay${visible ? ' is-open' : ''}`} hidden={!visible} onClick={() => setOpen(false)} />
       <aside
+        ref={panel}
         className={`drawer${visible ? ' is-open' : ''}`}
         hidden={!visible}
         role="dialog"
@@ -159,7 +160,10 @@ export function MiniCart() {
               <span>Dostawa</span>
               <span className="num">{quote.shipping === 0 ? 'Gratis' : money(quote.shipping)}</span>
             </div>
-            <div className="summary-row total">
+            {/* Suma czytana na głos po każdej zmianie ilości. Bez tego zmiana
+                krokiem „+" i „−" jest dla czytnika ekranu niema: przycisk
+                mówi „Zwiększ ilość", a to, co z tego wyszło, zostaje na ekranie. */}
+            <div className="summary-row total" aria-live="polite">
               <span>Razem</span>
               <span className="num">{money(quote.total)}</span>
             </div>

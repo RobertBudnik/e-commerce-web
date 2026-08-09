@@ -155,8 +155,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <CartProvider>
           <WishlistProvider signedIn={Boolean(user)}>
+            {/* Odnośnik do treści. Bez niego klawiatura przechodzi na każdej
+                podstronie przez cały nagłówek — logo, cztery pozycje menu,
+                motyw, konto i koszyk — zanim dotrze do tego, po co ktoś
+                przyszedł. Widoczny dopiero na fokusie, więc mysz go nie widzi. */}
+            {!magazyn && !wAplikacji && (
+              <a className="skip-link" href="#tresc">
+                Przejdź do treści
+              </a>
+            )}
             {!magazyn && !wAplikacji && <SiteHeader user={user} />}
-            {children}
+            <div id="tresc" tabIndex={-1}>
+              {children}
+            </div>
             {!magazyn && !wAplikacji && <SiteFooter />}
             <MiniCart />
             <QuickViewHost />

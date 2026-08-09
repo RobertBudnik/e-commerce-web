@@ -627,7 +627,9 @@ export function AdminPanel({ products, categories }: { products: Product[]; cate
         <div className="section-head">
           <div>
             <span className="label">Katalog</span>
-            <h2>
+            {/* Wynik filtrowania czytany na głos — pole szukania nie mówi
+                samo z siebie, ile zostało po wpisaniu frazy. */}
+            <h2 aria-live="polite">
               {widoczne.length === products.length
                 ? `${products.length} pozycji`
                 : `${widoczne.length} z ${products.length}`}

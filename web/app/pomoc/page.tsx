@@ -13,7 +13,7 @@ export default function Pomoc() {
 
   return (
     <main className="container doc">
-      <nav className="crumbs" aria-label="Ścieżka">
+      <nav className="crumbs" aria-label="Ścieżka nawigacji">
         <Link href="/">Start</Link>
         <span aria-hidden="true">/</span>
         <span>Pomoc</span>
