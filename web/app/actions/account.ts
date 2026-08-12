@@ -67,8 +67,17 @@ export async function saveProfileAction(formData: FormData): Promise<ActionResul
 }
 
 /**
- * Zmiana statusu zamówienia. Wpuszcza wyłącznie polityka „zamówienia: obsługa"
- * (uprawnienie `orders.write`) — klient dostanie zero wierszy, nie błąd.
+ * Zmiana statusu zamówienia — przez `ustaw_stan_zamowienia()`, nie UPDATE-em
+ * na tabeli.
+ *
+ * UPDATE przechodził przez politykę „zamówienia: obsługa" i na tym kończyła się
+ * kontrola: wyzwalacz bronił wyłącznie stanu „anulowane", więc tą drogą dawało
+ * się postawić „wysłane" bez numeru listu i „dostarczone" z ręki, mijając
+ * wszystkie granice, dla których powstała migracja 20260807160000. Funkcja
+ * przepuszcza dwa stany samej kolejki i zapisuje zmianę w dzienniku.
+ *
+ * Wysyłkę nadaje panel wysyłek (razem z listem przewozowym), a „dostarczone"
+ * przychodzi od przewoźnika — dlatego nie ma tu dla nich ścieżki.
  */
 export async function setOrderStatusAction(
   orderId: string,
@@ -76,17 +85,24 @@ export async function setOrderStatusAction(
 ): Promise<ActionResult<Order>> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('orders')
-    .update({ status })
-    .eq('id', orderId)
-    .select('*, order_items(*)');
+  const { error } = await supabase.rpc('ustaw_stan_zamowienia', {
+    p_zamowienie: orderId,
+    p_stan: status,
+  });
 
   if (error) return { ok: false, error: error.message };
-  if (!data.length) return { ok: false, error: 'Brak uprawnień do zmiany statusu tego zamówienia.' };
+
+  const { data } = await supabase
+    .from('orders')
+    .select('*, order_items(*)')
+    .eq('id', orderId)
+    .maybeSingle();
+
+  if (!data) return { ok: false, error: 'Nie udało się odczytać zamówienia po zmianie.' };
 
   revalidatePath('/konto');
-  return { ok: true, data: toOrder(data[0] as OrderRow) };
+  revalidatePath('/panel/zamowienia');
+  return { ok: true, data: toOrder(data as OrderRow) };
 }
 
 /**

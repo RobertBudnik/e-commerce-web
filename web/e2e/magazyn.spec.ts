@@ -147,14 +147,12 @@ test.describe('Zwroty', () => {
 
     // Zwrot jest możliwy dopiero po dostarczeniu — zaplecze ustawia ten stan
     await zaloguj(page, KONTA.zaplecze);
-    await page.getByRole('button', { name: /Zamówienia/ }).click();
 
-    const zamowienie = page.locator('.order', { hasText: numer });
-    await zamowienie.locator('.sortbox-btn').click();
-    await page.getByRole('option', { name: 'dostarczone' }).click();
-    // Pigułka przy zamówieniu, nie komunikat — komunikat znika sam po chwili
-    // i test bywa od niego wolniejszy.
-    await expect(zamowienie.locator('.pill')).toHaveText('dostarczone');
+    // Doręczenie potwierdza panel, nie lista statusów w koncie — stan
+    // „dostarczone" jest faktem spoza sklepu i baza zapisuje jego źródło.
+    await page.goto(`/panel/zamowienia/${numer}`);
+    await page.getByRole('button', { name: 'Potwierdź doręczenie' }).click();
+    await expect(page.getByText('Oznaczono jako doręczone')).toBeVisible();
 
     // Zwrotów do przyjęcia przed zgłoszeniem
     await page.goto('/magazyn/zwroty');

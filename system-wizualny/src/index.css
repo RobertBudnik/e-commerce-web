@@ -1,0 +1,255 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+@import 'tailwindcss';
+
+/* ===========================================================================
+   Tokeny — jedyne miejsce z wartościami
+   ---------------------------------------------------------------------------
+   Nic poniżej tego bloku i nic w komponentach nie zapisuje koloru ani kroju
+   wprost. Utility Tailwinda (bg-surface, text-ink-2, font-display) biorą je
+   stąd, a strona dokumentacji odczytuje je z DOM-u zamiast trzymać własną
+   kopię — dzięki temu nie da się zmienić palety i zapomnieć o legendzie.
+
+   `static`, bo domyślnie Tailwind v4 wypisuje tylko te zmienne, po które
+   sięgnęło jakieś utility. Dla aplikacji to oszczędność; dla systemu
+   wizualnego wada — token, którego nikt jeszcze nie użył, znikałby z CSS-a
+   i z legendy, choć należy do palety.
+   =========================================================================== */
+@theme static {
+  --color-bg: #f5f2ec;
+  --color-surface: #ede8df;
+  --color-surface-2: #e4ddd4;
+  --color-nav-bg: #ffffff;
+
+  --color-ink: #1a1612;
+  --color-ink-2: #6b6258;
+  --color-ink-3: #9b9187;
+  --color-ink-4: #c4bcb4;
+
+  --color-orange: #c86030;
+  --color-orange-dim: rgba(200, 96, 48, 0.12);
+  --color-green: rgba(60, 160, 80, 0.14);
+  --color-green-text: #2a8040;
+  --color-amber: rgba(200, 150, 30, 0.14);
+  --color-amber-text: #8a6010;
+
+  /* Neutralne tło badge'a stanu — ta sama rodzina co obramowania, o stopień mocniej. */
+  --color-tint: rgba(26, 22, 18, 0.06);
+
+  --color-border: rgba(26, 22, 18, 0.08);
+  --color-border-md: rgba(26, 22, 18, 0.14);
+  --color-border-strong: rgba(26, 22, 18, 0.25);
+  --color-border-focus: #1a1612;
+
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===========================================================================
+   Skala typograficzna
+   ---------------------------------------------------------------------------
+   Serif zaczyna się od 22px i wyżej — poniżej gubi kreskę włosową i robi się
+   szary. Wszystko mniejsze jedzie Interem, łącznie z nagłówkami kart w
+   tabelach. Każdy rozmiar ma tu jedną definicję; komponenty sięgają po klasę,
+   nie po własny zestaw utility.
+   =========================================================================== */
+@layer components {
+  .t-page-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(40px, 5vw, 56px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+
+  .t-h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(26px, 3.5vw, 36px);
+    line-height: 1.1;
+  }
+
+  .t-card-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 1.2;
+  }
+
+  .t-stat {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(28px, 4vw, 48px);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .t-body {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .t-small {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .t-caption {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--color-ink-2);
+  }
+
+  .t-overline {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+  }
+
+  .t-th {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+  }
+
+  .t-nav {
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+
+  .t-price {
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* -------------------------------------------------------------------------
+     Przyciski i pola — pigułka wszędzie
+     Jedyny wyjątek od kanciastości w tym systemie, więc trzyma się jednej
+     definicji: wariant zmienia kolory, nigdy kształt.
+     ------------------------------------------------------------------------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      background-color 0.16s ease,
+      border-color 0.16s ease,
+      color 0.16s ease;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background-color: var(--color-ink);
+    color: var(--color-bg);
+    border: 1px solid var(--color-ink);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--color-ink) 88%, var(--color-bg));
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--color-ink);
+    border: 1px solid var(--color-border-strong);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    border-color: var(--color-ink);
+  }
+
+  .btn:disabled {
+    background-color: var(--color-surface-2);
+    border-color: transparent;
+    color: var(--color-ink-3);
+    cursor: not-allowed;
+  }
+
+  .btn-sm {
+    padding: 7px 16px;
+    font-size: 13px;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .field {
+    width: 100%;
+    padding: 9px 16px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--color-ink);
+    background-color: var(--color-nav-bg);
+    border: 1px solid var(--color-border-md);
+    outline: none;
+    transition: border-color 0.16s ease;
+  }
+
+  .field::placeholder {
+    color: var(--color-ink-3);
+  }
+
+  .field:focus {
+    border-color: var(--color-border-focus);
+  }
+
+  /* Szukanie jest pigułką jak przyciski; pole formularza zostaje łagodnie
+     zaokrąglone, bo stoi w kolumnie z innymi polami i pigułki rozjeżdżają rytm. */
+  .field-search {
+    border-radius: 9999px;
+  }
+
+  .field-form {
+    border-radius: 6px;
+  }
+
+  .field:disabled {
+    background-color: var(--color-surface-2);
+    color: var(--color-ink-3);
+    cursor: not-allowed;
+  }
+}
+
+/* Fokus widoczny w całym systemie — nie kasujemy go w komponencie. */
+:focus-visible {
+  outline: 1.5px solid var(--color-ink);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

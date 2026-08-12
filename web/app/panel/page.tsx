@@ -1,48 +1,116 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { AdminPanel } from '@/components/admin/AdminPanel';
-import { getCategories, getProducts, getSessionUser } from '@/lib/queries';
+import Link from 'next/link';
+import { wymagajPanelu } from '@/lib/panel-dostep';
+import { getDziennik, getFinanse, getPrzeglad } from '@/lib/queries';
+import { money } from '@/lib/format';
 
 export const metadata: Metadata = {
-  title: 'Panel produktów',
-  robots: { index: false },
+  title: 'Pulpit',
+  robots: { index: false, follow: false },
 };
 
-/**
- * Panel produktów. Przekierowanie poniżej to wyłącznie UX — o zapisie decyduje
- * polityka `produkty: edycja`, więc konto bez `products.write` dostanie odmowę
- * z bazy niezależnie od tego, co pokaże ten formularz.
- */
-export default async function PanelPage() {
-  const user = await getSessionUser();
-  if (!user) redirect('/logowanie?powrot=/panel');
-  if (user.role !== 'admin') redirect('/konto');
+/** Liczby zmieniają się przy każdym zamówieniu — nic tu nie może iść z cache. */
+export const dynamic = 'force-dynamic';
 
-  const [products, categories] = await Promise.all([getProducts(), getCategories()]);
+const CZAS = new Intl.DateTimeFormat('pl-PL', {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+export default async function Pulpit() {
+  const user = await wymagajPanelu('/panel');
+
+  const [przeglad, finanse, dziennik] = await Promise.all([
+    getPrzeglad(),
+    getFinanse(14),
+    user.rawRole === 'owner' ? getDziennik() : Promise.resolve([]),
+  ]);
+
+  // Porównanie z tym samym dniem tydzień temu, nie z wczoraj: poniedziałek
+  // kontra niedziela nie znaczy nic.
+  const tydzienTemu = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
+  const wtedy = finanse.dni.find((d) => d.dzien === tydzienTemu)?.przychod ?? 0;
+  const roznica = finanse.dzis - wtedy;
 
   return (
     <main className="container section">
       <div className="section-head">
         <div>
           <span className="label">Organizacja</span>
-          <h1>Panel produktów</h1>
+          <h1>Pulpit</h1>
         </div>
-        <div className="admin-toolbar">
-          <span className="muted">
-            <span className="num">{products.length}</span> pozycji w katalogu
+      </div>
+
+      <div className="pw-kafle">
+        <Link className="pw-kafel" href="/panel/finanse">
+          <span className="label">Utarg dziś</span>
+          <span className="pw-liczba num">{money(finanse.dzis)}</span>
+          <span className="pw-kafel-opis">
+            {wtedy === 0
+              ? 'brak porównania sprzed tygodnia'
+              : `${roznica >= 0 ? '+' : '−'}${money(Math.abs(roznica))} wobec tego dnia tydzień temu`}
+          </span>
+        </Link>
+
+        <Link className="pw-kafel" href="/panel/zamowienia?stan=kolejka">
+          <span className="label">Do wysłania</span>
+          <span className="pw-liczba num">{przeglad.doWyslania}</span>
+          <span className="pw-kafel-opis">zamówień czeka na paczkę</span>
+        </Link>
+
+        <Link className="pw-kafel" href="/magazyn/stany?segment=niskie">
+          <span className="label">Niskie stany</span>
+          <span className="pw-liczba num">{przeglad.niskieStany}</span>
+          <span className="pw-kafel-opis">pozycji poniżej progu</span>
+        </Link>
+
+        <Link className="pw-kafel" href="/panel/zamowienia?platnosc=zwrócone">
+          <span className="label">Zwroty</span>
+          <span className="pw-liczba num">{przeglad.zwroty}</span>
+          <span className="pw-kafel-opis">zgłoszeń do przyjęcia</span>
+        </Link>
+      </div>
+
+      {finanse.dni.length < 7 && (
+        <div className="notice">
+          <span>
+            Mniej niż tydzień danych — liczby są prawdziwe, ale na trend jest za wcześnie.
+            Wykresu w Finansach nie ma z tego samego powodu.
           </span>
         </div>
-      </div>
+      )}
 
-      <div className="notice">
-        <span>
-          Katalog jedzie z bazy — zmiany widzą wszyscy od razu. Zapis przepuszcza dopiero polityka
-          RLS <code>produkty: edycja</code>, więc konto bez uprawnienia <code>products.write</code>{' '}
-          dostanie odmowę niezależnie od tego, co pokazuje ten formularz.
-        </span>
-      </div>
+      {user.rawRole === 'owner' && (
+        <section className="pw-sekcja">
+          <div className="pw-sekcja-glowa">
+            <h2>Ostatnie zmiany</h2>
+            <Link className="pw-link" href="/panel/dziennik">
+              Cały dziennik
+            </Link>
+          </div>
 
-      <AdminPanel products={products} categories={categories} />
+          {dziennik.length === 0 ? (
+            <p className="muted">
+              Nic jeszcze nie zapisano. Każda zmiana stanu zamówienia, nadanie paczki, zmiana ceny
+              i roli zostawi tu ślad z nazwiskiem.
+            </p>
+          ) : (
+            <ul className="pw-lista">
+              {dziennik.slice(0, 6).map((w) => (
+                <li key={w.id} className="pw-wiersz">
+                  <span className="pw-wiersz-czas num">{CZAS.format(new Date(w.czas))}</span>
+                  <span className="pw-wiersz-tresc">
+                    <strong>{w.obiekt ?? w.obszar}</strong> — {w.opis}
+                  </span>
+                  <span className="pw-wiersz-kto muted">{w.kto}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </main>
   );
 }

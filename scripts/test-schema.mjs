@@ -186,7 +186,8 @@ const counts = await db.query(`
 const c = counts.rows[0];
 check('8 produktów w katalogu', Number(c.products) === 8, `jest ${c.products}`);
 check('4 kategorie', Number(c.categories) === 4, `jest ${c.categories}`);
-check('macierz uprawnień wypełniona', Number(c.perms) === 17, `jest ${c.perms}`);
+// 17 z macierzy podstawowej + 3 z panelu właściciela (finanse.read ×2, audyt.read)
+check('macierz uprawnień wypełniona', Number(c.perms) === 20, `jest ${c.perms}`);
 check('właściciel ma rolę', Number(c.roles) >= 1);
 
 // Użytkownicy testowi
@@ -845,6 +846,131 @@ check('zaplecze czyta adresy do wysyłki', Number(staffAddr.rows[0].n) >= 1, `${
 
 const ownProfile = await db.query(`select count(*) as n from public.profiles where id = $1`, [customer.id]);
 check('profil klienta widoczny dla zaplecza', Number(ownProfile.rows[0].n) === 1, `${ownProfile.rows[0].n}`);
+
+// ---------------------------------------------------------------------------
+// Panel właściciela: koszty, dziennik, role, przesyłki
+// ---------------------------------------------------------------------------
+console.log('\nPanel właściciela');
+
+await asService();
+const { rows: [towar] } = await db.query(`select id from public.products limit 1`);
+await db.query(
+  `insert into public.koszty_produktow (product_id, koszt_cents) values ($1, 4200)
+   on conflict (product_id) do update set koszt_cents = excluded.koszt_cents`,
+  [towar.id]
+);
+
+// Koszt zakupu to nie jest informacja dla kupującego
+await asUser(customer.id);
+const kosztKlient = await db.query(`select count(*) as n from public.koszty_produktow`);
+check('klient nie widzi kosztu zakupu', Number(kosztKlient.rows[0].n) === 0, `${kosztKlient.rows[0].n}`);
+
+await asUser(owner.id);
+const kosztZaplecze = await db.query(`select count(*) as n from public.koszty_produktow`);
+check('zaplecze widzi koszt zakupu', Number(kosztZaplecze.rows[0].n) >= 1, `${kosztZaplecze.rows[0].n}`);
+
+// Koszt pozycji utrwala się przy sprzedaży, a nie przelicza z dzisiejszego
+const zamKoszt = await zamowienieKlienta('nowe');
+await asService();
+await db.query(
+  `insert into public.order_items (order_id, product_id, name, unit_price_cents, qty, line_total_cents)
+   values ($1, $2, 'Towar testowy', 9900, 1, 9900)`,
+  [zamKoszt, towar.id]
+);
+const utrwalony = await db.query(
+  `select kp.koszt_jednostkowy_cents as koszt
+   from public.koszty_pozycji kp
+   join public.order_items oi on oi.id = kp.order_item_id
+   where oi.order_id = $1`,
+  [zamKoszt]
+);
+check(
+  'koszt pozycji utrwalony przy zamówieniu',
+  utrwalony.rows.some((r) => Number(r.koszt) === 4200),
+  `${utrwalony.rows.map((r) => r.koszt).join(',') || 'brak wierszy'}`
+);
+
+// Dziennik jest dopisywalny wyłącznie przez funkcje, i tylko przez nie
+await asUser(owner.id);
+await throws(
+  'klient zaplecza nie dopisze się do dziennika',
+  () =>
+    db.query(
+      `insert into public.dziennik_zaplecza (obszar, opis) values ('rola', 'awansowałem się')`
+    ),
+  // Nie „policy" — tabela nie ma nawet GRANT-u na insert, więc Postgres odbija
+  // żądanie o krok wcześniej, zanim dojdzie do polityk.
+  'permission denied'
+);
+
+await db.query(`select public.ustaw_stan_zamowienia($1, 'spakowane')`, [zamKoszt]);
+const wpis = await db.query(
+  `select opis from public.dziennik_zaplecza where obszar = 'zamowienie' order by id desc limit 1`
+);
+check(
+  'zmiana stanu zostawia ślad w dzienniku',
+  (wpis.rows[0]?.opis ?? '').includes('spakowane'),
+  `${wpis.rows[0]?.opis ?? 'brak wpisu'}`
+);
+
+await asUser(customer.id);
+const dziennikKlient = await db.query(`select count(*) as n from public.dziennik_zaplecza`);
+check('klient nie czyta dziennika', Number(dziennikKlient.rows[0].n) === 0, `${dziennikKlient.rows[0].n}`);
+
+// Nadanie idempotentne: drugie dotknięcie przycisku nie tworzy drugiej paczki
+const zamPaczka = await zamowienieKlienta('nowe');
+await asUser(owner.id);
+await db.query(`select public.nadaj_paczke($1, 'PACZKA-1', 'inpost', 'KRA012', 'ext-1')`, [zamPaczka]);
+const drugie = await db.query(
+  `select public.nadaj_paczke($1, 'PACZKA-2', 'inpost', 'KRA012', 'ext-2') as numer`,
+  [zamPaczka]
+);
+check('powtórne nadanie oddaje pierwszy numer', drugie.rows[0].numer === 'PACZKA-1', `${drugie.rows[0].numer}`);
+
+const ilePaczek = await db.query(`select count(*) as n from public.przesylki where order_id = $1`, [zamPaczka]);
+check('jedno zamówienie, jedna przesyłka', Number(ilePaczek.rows[0].n) === 1, `${ilePaczek.rows[0].n}`);
+
+// Role: ostatni właściciel i zakaz awansu ponad własną rolę
+await throws(
+  'ostatni właściciel nie do zdegradowania',
+  () => db.query(`select public.nadaj_role($1, 'staff')`, [owner.id]),
+  'jedyny właściciel'
+);
+
+await asService();
+const { rows: [pakujacy] } = await db.query(`
+  insert into auth.users (email, aud, role) values ('pakowacz@example.com', 'authenticated', 'authenticated')
+  returning id
+`);
+await asUser(owner.id);
+const nadana = await db.query(`select public.nadaj_role($1, 'staff') as rola`, [pakujacy.id]);
+check('właściciel nadaje rolę pracownikowi', nadana.rows[0].rola === 'staff', `${nadana.rows[0].rola}`);
+
+await asUser(pakujacy.id);
+await throws(
+  'pracownik nie nadaje ról',
+  () => db.query(`select public.nadaj_role($1, 'owner')`, [pakujacy.id]),
+  'Brak uprawnień'
+);
+
+// Widok marży musi mieć GRANT, nie tylko politykę. Bez niego PostgREST oddaje
+// pustą listę, a panel rysuje marżę zero przy prawdziwym przychodzie — cisza
+// droższa niż błąd, bo wygląda na prawdę.
+await asService();
+const grantMarzy = await db.query(
+  `select has_table_privilege('authenticated', 'public.marza_dziennie', 'select') as ma`
+);
+check('widok marży dostępny przez API', grantMarzy.rows[0].ma === true, `${grantMarzy.rows[0].ma}`);
+
+// Historia cen: zmiana ceny zostawia wiersz, z którego liczy się Omnibus
+await asUser(owner.id);
+await asUser(owner.id);
+await db.query(`update public.products set price_cents = price_cents - 500 where id = $1`, [towar.id]);
+const historia = await db.query(
+  `select count(*) as n from public.historia_cen where product_id = $1`,
+  [towar.id]
+);
+check('zmiana ceny dopisuje się do historii', Number(historia.rows[0].n) >= 1, `${historia.rows[0].n}`);
 
 // ---------------------------------------------------------------------------
 await asService();

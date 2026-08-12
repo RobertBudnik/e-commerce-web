@@ -5,6 +5,7 @@ import { ZgloszenieZwrotu } from './ZgloszenieZwrotu';
 import { formatDate, money } from '@/lib/format';
 import type { Order, OrderStatus } from '@/lib/types';
 
+/** Wszystkie stany, jakie zamówienie może mieć — do filtrowania listy. */
 export const ORDER_STATUSES: OrderStatus[] = [
   'nowe',
   'w realizacji',
@@ -13,6 +14,16 @@ export const ORDER_STATUSES: OrderStatus[] = [
   'dostarczone',
   'anulowane',
 ];
+
+/**
+ * Stany, które wolno ustawić z tego ekranu.
+ *
+ * Krótsza lista niż wyżej i taka ma być: „wysłane" nadaje panel wysyłek razem
+ * z listem przewozowym, a „dostarczone" przychodzi od przewoźnika. Wybór, po
+ * którym baza odpowiada odmową, jest gorszy niż brak wyboru — wygląda jak
+ * awaria, choć jest regułą.
+ */
+export const STANY_DO_USTAWIENIA: OrderStatus[] = ['nowe', 'spakowane', 'anulowane'];
 
 /** Kafelek zamówienia. `staff` dokłada dane kontaktowe i stos statusów. */
 export function OrderRow({
@@ -65,7 +76,7 @@ export function OrderRow({
           <SortStack
             compact
             label={`Status zamówienia ${order.number}`}
-            options={ORDER_STATUSES.map((s) => ({ value: s, label: s }))}
+            options={STANY_DO_USTAWIENIA.map((s) => ({ value: s, label: s }))}
             value={order.status}
             onChange={(value) => onStatus(value as OrderStatus)}
           />

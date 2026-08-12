@@ -76,7 +76,7 @@ export function AccountMenu({ user }: { user: SessionUser | null }) {
               <Icon name="box" /> Magazyn
             </Link>
             <Link href="/panel">
-              <Icon name="grid" /> Panel produktów
+              <Icon name="grid" /> Panel firmy
             </Link>
           </>
         )}

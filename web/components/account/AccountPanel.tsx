@@ -131,7 +131,7 @@ export function AccountPanel({
           <>
             <div className="menu-sep" />
             <Link className="admin-link" href="/panel">
-              <Icon name="grid" /> Panel produktów
+              <Icon name="grid" /> Panel firmy
             </Link>
           </>
         )}
@@ -175,7 +175,7 @@ export function AccountPanel({
                 <span className="num">{catalogCount}</span> produktów w sklepie.
               </p>
               <p style={{ marginTop: 14 }}>
-                <Link className="arrow-link" href="/panel">
+                <Link className="arrow-link" href="/panel/katalog">
                   Dodaj lub edytuj produkty
                 </Link>
               </p>

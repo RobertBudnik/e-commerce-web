@@ -75,17 +75,20 @@ test.describe('Konto i uprawnienia', () => {
     const zamowienie = page.locator('.order').first();
     const numer = await zamowienie.locator('.order-id').innerText();
 
+    // Lista w koncie przestawia wyłącznie stany kolejki pakowania. „Wysłane"
+    // stawia nadanie razem z listem przewozowym, „dostarczone" — potwierdzenie
+    // w panelu, więc żadnego z nich nie ma tu do wyboru.
     await zamowienie.locator('.sortbox-btn').click();
-    await page.getByRole('option', { name: 'w realizacji' }).click();
+    await page.getByRole('option', { name: 'spakowane' }).click();
 
-    await expect(page.getByText(`Status ${numer}: w realizacji`)).toBeVisible();
-    await expect(zamowienie.locator('.pill')).toHaveText('w realizacji');
+    await expect(page.getByText(`Status ${numer}: spakowane`)).toBeVisible();
+    await expect(zamowienie.locator('.pill')).toHaveText('spakowane');
 
     // Stan przetrwał przeładowanie, czyli poszedł do bazy
     await page.reload();
     await page.getByRole('button', { name: /Zamówienia/ }).click();
     await expect(page.locator('.order', { hasText: numer }).locator('.pill')).toHaveText(
-      'w realizacji'
+      'spakowane'
     );
   });
 

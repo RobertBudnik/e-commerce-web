@@ -128,3 +128,61 @@ export type SessionUser = {
 };
 
 export type CartLine = { id: string; qty: number };
+
+// ---------------------------------------------------------------------------
+// Panel właściciela
+// ---------------------------------------------------------------------------
+
+export type WpisDziennika = {
+  id: number;
+  czas: string;
+  kto: string;
+  obszar: string;
+  obiekt: string | null;
+  opis: string;
+};
+
+export type OsobaZaplecza = {
+  id: string;
+  email: string;
+  imie: string;
+  rola: string;
+  odKiedy: string;
+};
+
+export type PrzesylkaPanelu = {
+  orderId: string;
+  numer: string | null;
+  przewoznik: string;
+  punktOdbioru: string | null;
+  status: string | null;
+  statusOdczyt: string | null;
+};
+
+/** Jeden dzień sprzedaży. Kwoty w złotych — grosze zostają w bazie. */
+export type DzienSprzedazy = {
+  dzien: string;
+  przychod: number;
+  zamowien: number;
+  marza: number;
+  /** Ile pozycji nie miało zapisanego kosztu — marża jest o nie zaniżona. */
+  pozycjiBezKosztu: number;
+};
+
+export type SprzedazProduktu = {
+  productId: string | null;
+  nazwa: string;
+  sztuk: number;
+  przychod: number;
+};
+
+export type PodsumowanieFinansow = {
+  dzis: number;
+  miesiac: number;
+  marzaMiesiac: number;
+  pozycjiBezKosztu: number;
+  zamowienMiesiac: number;
+  sredniKoszyk: number;
+  dni: DzienSprzedazy[];
+  top: SprzedazProduktu[];
+};

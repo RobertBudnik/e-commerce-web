@@ -48,12 +48,12 @@ test.describe('Opinie', () => {
     await page.goto('/');
     await wyloguj(page);
     await zaloguj(page, KONTA.zaplecze);
-    await page.getByRole('button', { name: /Zamówienia/ }).click();
 
-    const zamowienie = page.locator('.order', { hasText: numer });
-    await zamowienie.locator('.sortbox-btn').click();
-    await page.getByRole('option', { name: 'dostarczone' }).click();
-    await expect(zamowienie.locator('.pill')).toHaveText('dostarczone');
+    // Doręczenie potwierdza panel, nie lista statusów w koncie: to fakt spoza
+    // sklepu, więc baza zapisuje przy nim źródło potwierdzenia.
+    await page.goto(`/panel/zamowienia/${numer}`);
+    await page.getByRole('button', { name: 'Potwierdź doręczenie' }).click();
+    await expect(page.getByText('Oznaczono jako doręczone')).toBeVisible();
 
     // Klient wystawia opinię
     await page.goto('/');
