@@ -8,12 +8,18 @@ import { toOrder, toProduct, toSessionUser } from './mappers';
 import type { OrderRow, ProductRow, RuchRow } from './rows';
 import type {
   Category,
+  DzienSprzedazy,
   Order,
+  OsobaZaplecza,
+  PodsumowanieFinansow,
   PozycjaZPokryciem,
   Product,
+  PrzesylkaPanelu,
   RuchMagazynowy,
   SessionUser,
+  SprzedazProduktu,
   StoreSettings,
+  WpisDziennika,
 } from './types';
 
 const BUCKET = 'product-images';
@@ -776,4 +782,273 @@ export async function getZwroty(): Promise<ZwrotDoPrzyjecia[]> {
       sztuk: pozycje.reduce((a, p) => a + Number(p.qty ?? 0), 0),
     };
   });
+}
+
+// ---------------------------------------------------------------------------
+// Panel właściciela
+//
+// Wszystko niżej jedzie przez klienta z sesją zalogowanego, więc RLS decyduje,
+// co wróci. Konto bez `orders.read_all` dostanie puste listy zamiast błędu —
+// i to jest właściwe zachowanie: ekran ma nie istnieć dla kogoś, kto nie ma
+// tam czego szukać, a nie krzyczeć o odmowie.
+// ---------------------------------------------------------------------------
+
+export type FiltrZamowien = {
+  stan?: string;
+  platnosc?: string;
+  od?: string;
+  do?: string;
+  szukaj?: string;
+};
+
+/** Lista zamówień do panelu. Filtry przychodzą z adresu, nie ze stanu ekranu. */
+export async function getZamowieniaPanelu(filtr: FiltrZamowien = {}): Promise<Order[]> {
+  const supabase = await createClient();
+
+  let zapytanie = supabase
+    .from('orders')
+    .select('*, order_items(*)')
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  // „kolejka" to nie stan w bazie, tylko to, co czeka na człowieka.
+  if (filtr.stan === 'kolejka') zapytanie = zapytanie.in('status', ['nowe', 'w realizacji', 'spakowane']);
+  else if (filtr.stan) zapytanie = zapytanie.eq('status', filtr.stan);
+
+  if (filtr.platnosc) zapytanie = zapytanie.eq('payment_status', filtr.platnosc);
+  if (filtr.od) zapytanie = zapytanie.gte('created_at', filtr.od);
+  // Data „do" obejmuje cały dzień: użytkownik wpisujący 10 sierpnia ma na myśli
+  // koniec tego dnia, nie jego północ.
+  if (filtr.do) zapytanie = zapytanie.lt('created_at', `${filtr.do}T23:59:59.999Z`);
+
+  const szukaj = filtr.szukaj?.trim();
+  if (szukaj) {
+    const wzor = `%${szukaj.replace(/[%,()]/g, '')}%`;
+    zapytanie = zapytanie.or(
+      `order_number.ilike.${wzor},email.ilike.${wzor},numer_przesylki.ilike.${wzor}`
+    );
+  }
+
+  const { data, error } = await zapytanie;
+  if (error || !data) return [];
+  return data.map((row) => toOrder(row as OrderRow));
+}
+
+/** Zamówienie po numerze wraz z przesyłką i śladem w dzienniku. */
+export async function getZamowieniePanelu(numer: string): Promise<{
+  zamowienie: Order;
+  przesylka: PrzesylkaPanelu | null;
+  slad: WpisDziennika[];
+} | null> {
+  const zamowienie = await getOrderByNumber(numer);
+  if (!zamowienie) return null;
+
+  const supabase = await createClient();
+  const [{ data: p }, { data: d }] = await Promise.all([
+    supabase.from('przesylki').select('*').eq('order_id', zamowienie.id).maybeSingle(),
+    supabase
+      .from('dziennik_zaplecza')
+      .select('id, created_at, obszar, obiekt, opis, kto')
+      .eq('obiekt', numer)
+      .order('id', { ascending: false })
+      .limit(20),
+  ]);
+
+  return {
+    zamowienie,
+    przesylka: p
+      ? {
+          orderId: p.order_id as string,
+          numer: (p.numer as string) ?? null,
+          przewoznik: (p.przewoznik as string) ?? 'inny',
+          punktOdbioru: (p.punkt_odbioru as string) ?? null,
+          status: (p.status as string) ?? null,
+          statusOdczyt: (p.status_odczyt as string) ?? null,
+        }
+      : null,
+    slad: (d ?? []).map((w) => ({
+      id: Number(w.id),
+      czas: String(w.created_at),
+      kto: '',
+      obszar: String(w.obszar),
+      obiekt: (w.obiekt as string) ?? null,
+      opis: String(w.opis),
+    })),
+  };
+}
+
+/** Kolejka nadań: spakowane paczki bez listu przewozowego. */
+export async function getDoNadania(): Promise<Order[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('orders')
+    .select('*, order_items(*)')
+    .eq('status', 'spakowane')
+    .is('numer_przesylki', null)
+    .order('created_at', { ascending: true })
+    .limit(50);
+
+  return (data ?? []).map((row) => toOrder(row as OrderRow));
+}
+
+/** Paczki w drodze — z numerem, jeszcze nie odebrane. */
+export async function getWDrodze(): Promise<{ zamowienie: Order; przesylka: PrzesylkaPanelu | null }[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('orders')
+    .select('*, order_items(*), przesylki(*)')
+    .not('numer_przesylki', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  return (data ?? []).map((row) => {
+    const przesylki = (row as { przesylki?: Record<string, unknown>[] }).przesylki ?? [];
+    const p = przesylki[0];
+    return {
+      zamowienie: toOrder(row as OrderRow),
+      przesylka: p
+        ? {
+            orderId: String(p.order_id),
+            numer: (p.numer as string) ?? null,
+            przewoznik: (p.przewoznik as string) ?? 'inny',
+            punktOdbioru: (p.punkt_odbioru as string) ?? null,
+            status: (p.status as string) ?? null,
+            statusOdczyt: (p.status_odczyt as string) ?? null,
+          }
+        : null,
+    };
+  });
+}
+
+/** Dziennik zaplecza. Bez uprawnienia `audyt.read` wraca pusty. */
+export async function getDziennik(obszar?: string): Promise<WpisDziennika[]> {
+  const supabase = await createClient();
+
+  let zapytanie = supabase
+    .from('dziennik_zaplecza')
+    .select('id, created_at, obszar, obiekt, opis, kto')
+    .order('id', { ascending: false })
+    .limit(100);
+
+  if (obszar) zapytanie = zapytanie.eq('obszar', obszar);
+
+  const { data } = await zapytanie;
+  if (!data?.length) return [];
+
+  // Kto zrobił zmianę — jednym zapytaniem po profilach, nie N zapytaniami.
+  const idOsob = [...new Set(data.map((w) => w.kto).filter(Boolean))] as string[];
+  const { data: osoby } = idOsob.length
+    ? await supabase.from('profiles').select('id, email, full_name').in('id', idOsob)
+    : { data: [] };
+
+  const nazwa = new Map(
+    (osoby ?? []).map((o) => [o.id as string, (o.full_name as string) || (o.email as string)])
+  );
+
+  return data.map((w) => ({
+    id: Number(w.id),
+    czas: String(w.created_at),
+    kto: w.kto ? nazwa.get(w.kto as string) ?? 'konto usunięte' : 'system',
+    obszar: String(w.obszar),
+    obiekt: (w.obiekt as string) ?? null,
+    opis: String(w.opis),
+  }));
+}
+
+/** Konta z rolą inną niż klient plus ci, którym rolę można nadać. */
+export async function getOsobyZaplecza(): Promise<OsobaZaplecza[]> {
+  const supabase = await createClient();
+
+  const { data: role } = await supabase
+    .from('user_roles')
+    .select('user_id, role, created_at')
+    .order('created_at', { ascending: true });
+
+  if (!role?.length) return [];
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, email, full_name')
+    .in('id', role.map((r) => r.user_id as string));
+
+  const dane = new Map((profile ?? []).map((p) => [p.id as string, p]));
+
+  return role.map((r) => {
+    const p = dane.get(r.user_id as string);
+    return {
+      id: r.user_id as string,
+      email: (p?.email as string) ?? '—',
+      imie: (p?.full_name as string) ?? '',
+      rola: String(r.role),
+      odKiedy: String(r.created_at),
+    };
+  });
+}
+
+/**
+ * Finanse. Przychód bierzemy z widoków, a nie liczymy drugi raz tutaj —
+ * definicja „opłacone i nieanulowane" ma zostać jedna dla całego sklepu.
+ */
+export async function getFinanse(dni = 30): Promise<PodsumowanieFinansow> {
+  const supabase = await createClient();
+  const od = new Date(Date.now() - dni * 86_400_000).toISOString().slice(0, 10);
+  const dzisIso = new Date().toISOString().slice(0, 10);
+  const poczatekMiesiaca = `${dzisIso.slice(0, 7)}-01`;
+
+  const [sprzedaz, marza, produkty] = await Promise.all([
+    supabase.from('sprzedaz_dziennie').select('*').gte('dzien', od).order('dzien'),
+    supabase.from('marza_dziennie').select('*').gte('dzien', od).order('dzien'),
+    supabase.from('sprzedaz_produktow').select('*').order('przychod_cents', { ascending: false }).limit(8),
+  ]);
+
+  const marzaDnia = new Map(
+    (marza.data ?? []).map((m) => [
+      String(m.dzien),
+      {
+        marza: Number(m.marza_cents ?? 0) / 100,
+        bezKosztu: Number(m.pozycji_bez_kosztu ?? 0),
+      },
+    ])
+  );
+
+  const dniSprzedazy: DzienSprzedazy[] = (sprzedaz.data ?? []).map((d) => {
+    const m = marzaDnia.get(String(d.dzien));
+    return {
+      dzien: String(d.dzien),
+      przychod: Number(d.przychod_cents ?? 0) / 100,
+      zamowien: Number(d.zamowien ?? 0),
+      marza: m?.marza ?? 0,
+      pozycjiBezKosztu: m?.bezKosztu ?? 0,
+    };
+  });
+
+  const wMiesiacu = dniSprzedazy.filter((d) => d.dzien >= poczatekMiesiaca);
+  const suma = (lista: number[]) => lista.reduce((a, b) => a + b, 0);
+  const zamowienMiesiac = suma(wMiesiacu.map((d) => d.zamowien));
+  const przychodMiesiac = suma(wMiesiacu.map((d) => d.przychod));
+
+  const top: SprzedazProduktu[] = (produkty.data ?? []).map((p) => ({
+    productId: (p.product_id as string) ?? null,
+    nazwa: String(p.name),
+    sztuk: Number(p.sztuk ?? 0),
+    przychod: Number(p.przychod_cents ?? 0) / 100,
+  }));
+
+  return {
+    dzis: dniSprzedazy.find((d) => d.dzien === dzisIso)?.przychod ?? 0,
+    miesiac: przychodMiesiac,
+    marzaMiesiac: suma(wMiesiacu.map((d) => d.marza)),
+    pozycjiBezKosztu: suma(wMiesiacu.map((d) => d.pozycjiBezKosztu)),
+    zamowienMiesiac,
+    sredniKoszyk: zamowienMiesiac ? przychodMiesiac / zamowienMiesiac : 0,
+    dni: dniSprzedazy,
+    top,
+  };
+}
+
+/** Koszty zakupu do ekranu katalogu. Bez `finanse.read` wraca pusta mapa. */
+export async function getKosztyProduktow(): Promise<Map<string, number>> {
+  const supabase = await createClient();
+  const { data } = await supabase.from('koszty_produktow').select('product_id, koszt_cents');
+  return new Map((data ?? []).map((k) => [k.product_id as string, Number(k.koszt_cents) / 100]));
 }

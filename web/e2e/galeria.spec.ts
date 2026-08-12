@@ -24,7 +24,7 @@ function pikselPNG(): Buffer {
 test.describe('Galeria produktu', () => {
   test('zaplecze dodaje ujęcie, karta produktu je pokazuje i przełącza', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
-    await page.goto('/panel');
+    await page.goto('/panel/katalog');
 
     // Pierwszy produkt z listy — nazwa potrzebna, żeby potem znaleźć jego kartę
     const wiersz = page.locator('.admin-row, .admin-item, tr').filter({ hasText: 'zł' }).first();

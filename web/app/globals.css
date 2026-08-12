@@ -4508,3 +4508,286 @@ body:has(.mag) { background: var(--panel); }
 .mag-sheet-pole::placeholder { font-family: inherit; letter-spacing: 0; color: var(--ink-3); }
 
 .mag-sheet-kadr { margin: 12px 0 0; }
+
+/* ---------- Panel właściciela ---------- */
+/* Biurko, nie telefon: tabele, kwoty do prawej, filtry w jednym rzędzie.
+   Aplikacja magazynu ma własny język (mag-*) i tamtego tu nie mieszamy —
+   inne urządzenie, inna praca, inne cele dotyku. */
+
+.pw-nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pw-zakladka {
+  padding: 10px 14px;
+  border-radius: var(--r-pill);
+  color: var(--ink-2);
+  font-size: .9375rem;
+  transition: background .16s ease, color .16s ease;
+}
+
+.pw-zakladka:hover { background: var(--panel); color: var(--ink); }
+.pw-zakladka-obok { margin-left: auto; color: var(--ink-3); }
+
+.pw-kafle {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.pw-kafel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
+  background: var(--surface);
+  color: inherit;
+  transition: background .16s ease;
+}
+
+a.pw-kafel:hover { background: var(--panel); }
+
+.pw-liczba {
+  font-size: 1.75rem;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+}
+
+.pw-kafel-opis { color: var(--ink-3); font-size: .8125rem; }
+
+.pw-sekcja { margin-top: 36px; }
+
+.pw-sekcja-glowa {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.pw-dwie-kolumny {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .pw-dwie-kolumny { grid-template-columns: 1fr; gap: 8px; }
+}
+
+/* Tabela przewija się we własnym kadrze — strona nigdy nie jedzie w bok. */
+.pw-tabela-kadr { overflow-x: auto; }
+
+.pw-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .9375rem;
+}
+
+.pw-tabela th {
+  font-family: var(--mono);
+  font-size: .6875rem;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--ink-3);
+  text-align: left;
+  font-weight: 400;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.pw-tabela td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.pw-tabela tbody tr { transition: background .16s ease; }
+.pw-tabela tbody tr:hover { background: var(--panel); }
+.pw-tabela tfoot td { border-bottom: 0; color: var(--ink-2); }
+.pw-do-prawej { text-align: right; }
+
+/* Cały wiersz jest wejściem w szczegóły, nie sam numer: cel wielkości wiersza
+   trafia się bez celowania. */
+.pw-komorka-link { position: relative; }
+
+.pw-wejscie { font-variant-numeric: tabular-nums; }
+
+.pw-komorka-link .pw-wejscie::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+}
+
+.pw-stan {
+  display: inline-block;
+  padding: 2px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  font-size: .75rem;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.pw-stan-ok { border-color: var(--ok); color: var(--ok-ink); background: var(--ok-soft); }
+
+.pw-filtry {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  padding: 16px 0 24px;
+}
+
+.pw-pole { display: flex; flex-direction: column; gap: 6px; }
+.pw-pole-szerokie { flex: 1 1 240px; }
+.pw-filtry-akcje { display: flex; align-items: center; gap: 12px; }
+
+.pw-input {
+  font: inherit;
+  font-size: .9375rem;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  min-width: 120px;
+}
+
+.pw-input:disabled { color: var(--ink-3); }
+
+.pw-akcje {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 0 6px;
+}
+
+.pw-akcje-rzad { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+
+.pw-lista { list-style: none; margin: 0; padding: 0; }
+.pw-lista-luzna { display: flex; flex-direction: column; gap: 1px; }
+
+.pw-wiersz {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.pw-wiersz-czas { color: var(--ink-3); font-size: .8125rem; flex: none; }
+.pw-wiersz-tresc { flex: 1; }
+.pw-wiersz-kto { flex: none; font-size: .8125rem; }
+
+.pw-karta-wysylki {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.pw-karta-glowa { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+
+.pw-dane {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 20px;
+  margin: 0;
+}
+
+.pw-dane dt {
+  font-family: var(--mono);
+  font-size: .6875rem;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--ink-3);
+  padding-top: 3px;
+}
+
+.pw-dane dd { margin: 0; }
+
+.pw-segmenty { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+
+.pw-segment {
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  font-size: .875rem;
+  color: var(--ink-2);
+}
+
+.pw-segment[aria-current] { border-color: var(--ink); color: var(--ink); }
+
+/* Wykres słupkowy bez biblioteki: 30 dni, wysokość w procentach kadru.
+   Animujemy tylko kolor tła na hover — wysokość to układ, nie kompozycja. */
+.pw-slupki {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 160px;
+  padding-top: 8px;
+}
+
+.pw-slupek-kadr {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pw-slupek {
+  width: 100%;
+  background: var(--accent-soft);
+  border-top: 2px solid var(--accent);
+  border-radius: 2px 2px 0 0;
+  transition: background .16s ease;
+}
+
+.pw-slupek-kadr:hover .pw-slupek { background: var(--accent); }
+
+.pw-slupek-opis {
+  font-size: .625rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+}
+
+.pw-pole-koszt { display: inline-flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.pw-pole-koszt .pw-input { width: 96px; min-width: 0; text-align: right; }
+
+.pw-rola { display: flex; flex-direction: column; gap: 6px; }
+
+.pw-komunikat { color: var(--ink-2); font-size: .8125rem; }
+
+/* Błąd niesie treść komunikatu z bazy, nie kolor — czerwieni w tej palecie nie ma. */
+.pw-blad {
+  color: var(--ink);
+  font-size: .8125rem;
+  border-left: 2px solid var(--ink);
+  padding-left: 10px;
+}
+
+.pw-link { color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+.pw-link:hover { color: var(--ink); }
+.pw-pusto { padding: 40px 0; }
+
+@media (max-width: 700px) {
+  .pw-slupek-opis { display: none; }
+  .pw-filtry { gap: 8px; }
+}
