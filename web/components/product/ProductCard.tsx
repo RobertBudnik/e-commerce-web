@@ -54,18 +54,23 @@ export function ProductCard({
       </div>
       <div className="card-body">
         <span className="card-cat">{categoryName}</span>
-        <h3 className="card-title">
-          <Link href={`/produkt/${product.slug}`}>{product.name}</Link>
-        </h3>
-        <span className="rating">
-          <span className="stars" aria-hidden="true">
-            {stars(product.rating)}
-          </span>
-          <span className="sr-only">Ocena {product.rating} na 5.</span> {product.reviews} opinii
-        </span>
-        <div className="price-row">
+        {/* Nazwa i cena w jednym wierszu, rozepchnięte do krawędzi kafla —
+            tak układa je makieta. Ocena schodzi pod spód, bo w tym rytmie
+            jest przypisem, nie treścią. */}
+        <div className="card-naglowek">
+          <h3 className="card-title">
+            <Link href={`/produkt/${product.slug}`}>{product.name}</Link>
+          </h3>
           <span className="price">
             <OdometrCeny cena={product.price} />
+          </span>
+        </div>
+        <div className="card-podpis">
+          <span className="rating">
+            <span className="stars" aria-hidden="true">
+              {stars(product.rating)}
+            </span>
+            <span className="sr-only">Ocena {product.rating} na 5.</span> {product.reviews} opinii
           </span>
           {product.oldPrice && <span className="price-old">{money(product.oldPrice)}</span>}
         </div>

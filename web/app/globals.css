@@ -17,91 +17,87 @@
 .motyw-jasny {
   color-scheme: light;
 
-  /* powierzchnie */
-  --bg: #faf9f7;
-  --surface: #ffffff;
-  --panel: #f2ede6;
+  /* ---------------------------------------------------------------------
+     Wartości zdjęte z opublikowanego makietowego builda
+     (wallow-relate-08564118.figma.site), nie z oka: kolory odczytane
+     z `getComputedStyle` na żywej stronie, więc to dokładnie te odcienie,
+     które widać w projekcie.
+     --------------------------------------------------------------------- */
 
-  /* tekst — trzy stopnie nasycenia.
-     --ink-3 przyciemniony o 18% wobec pierwotnego #8a8377: tamta wartość
-     dawała 3.22:1 na --panel i 3.57:1 na --bg, czyli poniżej progu 4.5:1.
-     Nosi etykiety mono w kapitalikach, a te są treścią, nie dekoracją.
-     Ten sam odcień, tylko ciemniej — 4.53:1 na --panel. */
-  --ink: #16150f;
-  --ink-2: #5f5a51;
-  --ink-3: #716b62;
+  /* powierzchnie — cztery stopnie ciepłej kości słoniowej */
+  --bg: #faf8f4;
+  --surface: #f2ece0;
+  --panel: #ede8dc;
 
-  /* linie */
-  --line: #e2ddd3;
+  /* tekst */
+  --ink: #1c1710;
+  --ink-2: #6b5e4a;
+  --ink-3: #9a8e7c;
 
-  /* akcent: rdzawy. Jedyny kolor poza monochromem —
-     przeceny, gwiazdki, kropka w logo, aktywne obramowania.
+  /* Linie są złote, nie szare. To one budują tu wrażenie zbytku —
+     hairline w kolorze akcentu zamiast neutralnej kreski. */
+  --line: rgba(184, 149, 42, .30);
 
-     Wartość zdjęta wprost z makiet: próbkowanie czterech plików w
-     `ss apki/zrzuty` daje w każdym ten sam #BC561B (750–1900 pikseli
-     nasyconych na plik), więc to kolor projektu, nie artefakt wygładzania.
+  /* Złoto. Wypełnienia i kreski biorą `--accent`; litery `--accent-ink`,
+     bo jasne złoto na kości słoniowej daje 2,4:1 i tekstu z niego nie ma. */
+  --accent: #b8952a;
+  --accent-ink: #9a7820;
+  --accent-soft: rgba(184, 149, 42, .15);
 
-     Koszt jest zmierzony i świadomy — poprzednie oklch(0.52 0.15 40)
-     dawało 5,50:1 na tle strony, ten odcień daje 4,45:1, a na panelu
-     4,02:1 i na wpuszczonym torze 3,67:1. Tekst 11–12 px w akcencie
-     (licznik przy zakładce, link powrotu, „Oznacz jako spakowane")
-     schodzi tym samym poniżej progu 4,5:1 z WCAG AA. Zgodność z makietą
-     wygrała tu z progiem świadomie; powrót to jedna linia niżej. */
-  --accent: #bc561b;
-  --accent-soft: oklch(0.94 0.03 60);
+  /* Przycisk główny: złoto pełne, napis w kolorze tła strony. */
+  --btn-bg: #b8952a;
+  --btn-ink: #faf8f4;
 
-  /* przyciski główne: odwrócony kontrast wobec tła */
-  --btn-bg: #16150f;
-  --btn-ink: #faf9f7;
+  --img: #e8e0d0;
+  --img-line: #d8ccb4;
 
-  /* kafle zdjęć i kreskowanie zastępcze */
-  --img: #f2ede6;
-  --img-line: #dad2c4;
+  --ok: #4a7c52;
+  --ok-soft: rgba(74, 124, 82, .14);
+  --ok-ink: #3a6340;
 
-  /* Jedyna zieleń w palecie: status dostępności i zrealizowanego zamówienia. */
-  --ok: #3f8f5f;
-  --ok-soft: #e6ede7;
-  --ok-ink: #2f5a3c;
+  /* Kanty. Ten projekt nie zna zaokrągleń — ani karta, ani przycisk,
+     ani pole. Zmiana jednej z tych wartości psuje cały charakter. */
+  --radius: 0px;
+  --radius-sm: 0px;
 
-  /* kształt */
-  --radius: 14px;
-  --radius-sm: 10px;
-
-  /* cień — ledwie widoczny, tylko na interakcji */
-  --shadow: 0 1px 2px rgba(22, 21, 15, .04), 0 18px 40px -24px rgba(22, 21, 15, .26);
+  --shadow: 0 1px 2px rgba(28, 23, 16, .04), 0 18px 40px -24px rgba(28, 23, 16, .22);
 }
 
-/* ---------- Tokeny bazowe: motyw ciemny ---------- */
+/* ---------- Tokeny bazowe: motyw ciemny ----------
+   Makieta opisuje tylko wariant jasny. Ciemny jest wyprowadzony: ta sama
+   ciepła rodzina, odwrócona jasność, złoto rozjaśnione do #c8a840 — na
+   ciemnym tle daje 7,9:1 zamiast 3,4:1 i dopiero wtedy nadaje się pod tekst. */
 .dark,
 .motyw-ciemny {
   color-scheme: dark;
 
-  --bg: #121110;
-  --surface: #1a1917;
-  --panel: #201e1b;
+  --bg: #14110c;
+  --surface: #1c1811;
+  --panel: #221d15;
 
-  --ink: #f5f2ec;
-  --ink-2: #b0a99d;
-  --ink-3: #8c8478;
+  --ink: #faf8f4;
+  --ink-2: #b8ae9e;
+  --ink-3: #9a8e7c;
 
-  --line: #302d29;
+  --line: rgba(200, 168, 64, .28);
 
-  /* w ciemności rdza gaśnie — akcent przechodzi w ciepły amber */
-  --accent: oklch(0.78 0.13 72);
-  --accent-soft: oklch(0.32 0.06 72);
+  --accent: #c8a840;
+  --accent-ink: #d9bc63;
+  --accent-soft: rgba(200, 168, 64, .16);
 
-  --btn-bg: #f5f2ec;
-  --btn-ink: #121110;
+  --btn-bg: #b8952a;
+  --btn-ink: #14110c;
 
-  --img: #201e1b;
-  --img-line: #38342f;
+  --img: #221d15;
+  --img-line: #3a3225;
 
   --ok: #6cc48a;
-  --ok-soft: #1d2a21;
-  --ok-ink: #9fd9b3;
+  --ok-soft: rgba(108, 196, 138, .16);
+  --ok-ink: #8fd6a5;
 
-  /* czarny cień na czarnym tle jest niewidoczny — w ciemnym motywie
-     głębię buduje jaśniejsza powierzchnia, więc cień tylko przygasza tło */
+  --radius: 0px;
+  --radius-sm: 0px;
+
   --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 18px 40px -24px rgba(0, 0, 0, .9);
 }
 
@@ -126,8 +122,11 @@
 
   --r-sm: var(--radius-sm);
   --r: var(--radius);
-  --r-lg: 20px;
-  --r-pill: 999px;
+  --r-lg: 0px;
+  /* Nazwa została, znaczenie nie: pigułek w tym projekcie nie ma. Token
+     zostaje, bo wisi na nim kilkadziesiąt reguł — zmiana wartości tutaj
+     wyprostowała je wszystkie naraz. */
+  --r-pill: 0px;
 
   /* układ */
   --maxw: 1160px;
@@ -146,19 +145,22 @@
   --z-toast: 120;
 
   /* typografia
-     Instrument Serif w nagłówkach, Instrument Sans w interfejsie,
-     IBM Plex Mono w etykietach technicznych. Podmiana kroju to zmiana
-     zmiennej niżej plus krój z next/font w web/app/layout.tsx.
-     Subset latin-ext obowiązkowy — polskie znaki. */
+     Playfair Display w nagłówkach, Jost w całym interfejsie. Trzeciego
+     kroju nie ma: `--mono` wskazuje na ten sam Jost, bo w tym języku
+     etykietę od treści odróżnia rozstrzelenie i wersaliki, nie krój.
+     Podmiana to zmiana zmiennej niżej plus krój z next/font
+     w web/app/layout.tsx. Subset latin-ext obowiązkowy — polskie znaki. */
   --sans: var(--font-sans), ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
   --display: var(--font-display), "Iowan Old Style", Georgia, "Times New Roman", serif;
-  --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --mono: var(--font-sans), ui-sans-serif, -apple-system, sans-serif;
 }
 
-:root { --bg-sunken: #e9e3d8; }
-.dark { --bg-sunken: #27241f; }
-:root { --line-strong: #d3ccbe; }
-.dark { --line-strong: #413c36; }
+:root { --bg-sunken: #e8e0d0; }
+.dark { --bg-sunken: #2a2419; }
+/* Obrys przycisku ghost i innych elementów, które mają być widoczne, ale nie
+   krzyczeć — mocniejszy stopień tej samej przezroczystości co `--line`. */
+:root { --line-strong: rgba(184, 149, 42, .40); }
+.dark { --line-strong: rgba(200, 168, 64, .40); }
 
 /* Obwódka pola formularza. Osobny token, bo `--line` ma wobec tła kontrast
    1,29:1 — dla kreski rozdzielającej to w zupełności dość, ale pole tekstowe
@@ -168,14 +170,18 @@
 
      jasny  #8a8377 → bg 3,57  surface 3,75  panel 3,22
      ciemny #726b61 → bg 3,58  surface 3,34  panel 3,16 */
-:root { --line-pole: #8a8377; }
-.dark { --line-pole: #726b61; }
+:root { --line-pole: #9a7820; }
+.dark { --line-pole: #8a7434; }
 
 /* Nadtytuł sekcji — jaśniejszy niż tekst drugorzędny, zdjęty z makiet.
    W ciemnym motywie makiet nie ma, więc trzyma tam dotychczasową rolę
    `--ink-3`, która czyta się poprawnie. */
-:root { --etykieta: #9b9489; }
-.dark { --etykieta: var(--ink-3); }
+/* Nadtytuł sekcji. Paleta przewiduje tu `--ink-3` (#9b9187), ale ten odcień
+   daje 2,53:1 na beżu — a nadtytuł niesie treść („ORGANIZACJA", „AUDIO"),
+   nie jest ozdobą. Bierze więc stopień ciemniejszy; `--ink-3` zostaje przy
+   placeholderach i wyciszonych metadanych. */
+:root { --etykieta: var(--accent-ink); }
+.dark { --etykieta: var(--accent-ink); }
 
 /* Próg ostrzegawczy w magazynie — trzeci stan obok „w porządku" i „zero".
    Nie da się go zrobić istniejącymi tokenami: `--ok` to zieleń dostępności,
@@ -226,15 +232,17 @@ h1, h2, h3, h4 {
   line-height: 1.1;
 }
 
-/* Duże nagłówki idą szeryfem. Trackingu prawie nie ściskamy — serif ma
-   własny rytm, ujemny odstęp zlepiałby mu zakończenia liter. */
+/* Duże nagłówki idą szeryfem. Playfair niesie je wagą, nie rozmiarem:
+   w makiecie h1 stoi na 900 z interlinią poniżej jedności, h2 na 700.
+   Trackingu nie ściskamy — didone ma własny rytm i ujemny odstęp zlepia mu
+   zakończenia liter. */
 h1, h2 {
   font-family: var(--display);
-  font-weight: 400;
   font-optical-sizing: auto;
-  letter-spacing: -.012em;
-  line-height: 1.08;
+  letter-spacing: normal;
 }
+h1 { font-weight: 900; line-height: .95; }
+h2 { font-weight: 700; line-height: 1.1; }
 /* Rozstrzał skali robi tu wrażenie ceny. Nagłówek dwa razy większy od treści
    czyta się jako katalog; cztery razy większy — jako marka. Dolna granica
    zostaje nietknięta, bo na telefonie większy szeryf zaczyna się łamać
@@ -250,6 +258,10 @@ h3 { font-size: 1.05rem; letter-spacing: -.015em; }
   font-weight: 500;
   letter-spacing: -.015em;
 }
+
+/* Trzeci stopień nagłówka w makiecie to nie mniejszy tytuł, tylko wersaliki
+   z szerokim rozstrzeleniem — tak podpisany jest sam szyld marki. */
+h3 { font-weight: 500; }
 p { margin: 0 0 1em; }
 p:last-child { margin-bottom: 0; }
 
@@ -264,13 +276,17 @@ p:last-child { margin-bottom: 0; }
 
 /* Etykieta techniczna: nadtytuł sekcji, kategoria na karcie, nagłówek kolumny
    w stopce. Krój maszynowy odróżnia ją od treści bez sięgania po kolor. */
+/* Mikroetykieta. W tym języku to ona niesie „drogo": dziewięć pikseli, waga
+   600 i ćwierć firetu rozstrzelenia. Kolor złoty, bo etykieta jest tu
+   ozdobą tak samo jak podpisem — stąd wyjątek od reguły, że złoto zostaje
+   dla danych. */
 .label {
-  font-family: var(--mono);
-  font-size: .6875rem;
-  font-weight: 400;
-  letter-spacing: .14em;
+  font-family: var(--sans);
+  font-size: .5625rem;
+  font-weight: 600;
+  letter-spacing: .25em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--etykieta);
 }
 
 .muted { color: var(--ink-soft); }
@@ -318,27 +334,36 @@ p:last-child { margin-bottom: 0; }
   border-radius: var(--r-pill);
   background: var(--b-bg);
   color: var(--b-fg);
-  font-size: .9375rem;
-  font-weight: 500;
-  letter-spacing: -.01em;
+  /* Przycisk mówi tu wersalikami i rozstrzeleniem, nie rozmiarem. Litera
+     jest drobna (11 px), więc cel dotyku trzyma wysokość, nie tekst —
+     44 px zostaje. */
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
   cursor: pointer;
   white-space: nowrap;
   transition: background .18s ease, border-color .18s ease, color .18s ease, opacity .18s ease;
 }
-.btn:hover { --b-bg: var(--ink); --b-bd: var(--ink); }
+/* Złoto ciemnieje pod kursorem zamiast przechodzić w czerń: przejście
+   w `--ink` gasiło jedyny kolor w tym interfejsie. */
+.btn:hover { --b-bg: var(--accent-ink); --b-bd: var(--accent-ink); }
 .btn:disabled { opacity: .35; cursor: not-allowed; }
 
+/* Obrys bierze `--line-pole`, nie `--line-strong`: przycisk jest kontrolką,
+   a spec-owe rgba(26,22,18,.25) daje wobec tła 1,71:1 przy wymaganych 3:1.
+   Różnicy nie widać na oko, widać ją dopiero w pomiarze. */
 .btn-ghost {
   --b-bg: transparent;
   --b-fg: var(--ink);
-  --b-bd: var(--line-strong);
+  --b-bd: var(--line-pole);
 }
 .btn-ghost:hover { --b-bg: var(--bg-soft); --b-bd: var(--ink); --b-fg: var(--ink); }
 
 .btn svg { width: 16px; height: 16px; flex: none; }
 .btn[aria-pressed="true"] svg { fill: currentColor; color: var(--sale); }
 
-.btn-sm { height: 38px; padding-inline: 16px; font-size: .875rem; }
+.btn-sm { height: 38px; padding-inline: 18px; font-size: .5625rem; letter-spacing: .16em; }
 .btn-block { width: 100%; }
 
 .btn-link {
@@ -384,18 +409,43 @@ p:last-child { margin-bottom: 0; }
 @supports not (background: color-mix(in srgb, red 50%, transparent)) {
   .site-header { background: var(--bg); }
 }
+/* Trzy strefy zamiast rzędu: nawigacja z lewej, szyld dokładnie pośrodku,
+   sprawy konta z prawej. Środkowa kolumna jest wyznaczona siatką, nie
+   marginesami — dzięki temu logo stoi w osi strony, a nie w osi tego, co
+   akurat zostało po linkach. */
 .header-inner {
   height: var(--header-h);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 36px;
 }
 
+/* Kolejność w HTML zostaje naturalna — szyld, nawigacja, konto — a o
+   położeniu decyduje siatka. Dzięki temu czytnik ekranu i klawiatura dostają
+   nagłówek w kolejności, jakiej się spodziewają, a oko widzi szyld w osi. */
+.header-inner > .logo { grid-column: 2; }
+.header-inner > .nav { grid-column: 1; grid-row: 1; }
+.header-inner > .header-actions { grid-column: 3; }
+
+@media (max-width: 860px) {
+  /* Na wąskim ekranie środek przestaje mieć sens — szyld wraca na lewo. */
+  .header-inner { display: flex; }
+  .header-inner > .logo,
+  .header-inner > .nav,
+  .header-inner > .header-actions { grid-column: auto; }
+}
+
 .logo {
   font-family: var(--display);
-  font-size: 1.1875rem;
-  font-weight: 500;
-  letter-spacing: -.01em;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  /* Rozstrzelenie dokłada światło po ostatniej literze — bez tego szyld
+     wygląda na przesunięty w lewo, choć siatka trzyma go w osi. */
+  padding-left: .28em;
 }
 .logo::after {
   content: "";
@@ -407,11 +457,17 @@ p:last-child { margin-bottom: 0; }
   vertical-align: middle;
 }
 
-.nav { display: flex; gap: 26px; }
+.nav { display: flex; gap: 32px; }
+/* Nawigacja w wersalikach z szerokim rozstrzeleniem — w tym języku to ona
+   ustawia ton całej górze strony. Podkreślenie na hoverze zostaje: jest
+   jedynym ruchem w nagłówku i nie kłóci się z kanciastością. */
 .nav a {
   position: relative;
-  font-size: .9375rem;
-  color: var(--ink-soft);
+  font-size: .6875rem;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink-2);
   transition: color .15s ease;
 }
 .nav a::after {
@@ -428,7 +484,7 @@ p:last-child { margin-bottom: 0; }
 .nav a:hover::after, .nav a[aria-current="page"]::after { transform: scaleX(1); }
 .nav a[aria-current="page"] { color: var(--ink); }
 
-.header-actions { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.header-actions { justify-self: end; display: flex; align-items: center; gap: 14px; }
 
 /* ---------- Przełącznik motywu ---------- */
 /* 44×44 to minimalny cel dotykowy; ikona zostaje mała, klikalne jest pole. */
@@ -659,22 +715,27 @@ p:last-child { margin-bottom: 0; }
   border-bottom: 1px solid var(--line);
 }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+/* Filtry: kanciaste pudełka z cienką złotą kreską, aktywny na pełnym złocie.
+   Wersaliki i rozstrzelenie jak w całej nawigacji. */
 .chip {
   height: 34px;
-  padding-inline: 15px;
-  border: 1px solid transparent;
+  padding-inline: 18px;
+  border: 1px solid var(--line);
   border-radius: var(--r-pill);
   background: transparent;
-  color: var(--ink-faint);
-  font-size: .875rem;
+  color: var(--ink-2);
+  font-size: .5625rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: color .15s ease, background .15s ease, border-color .15s ease;
 }
-.chip:hover { color: var(--ink); background: var(--bg-soft); }
+.chip:hover { color: var(--ink); border-color: var(--line-strong); }
 .chip[aria-pressed="true"] {
-  color: var(--ink);
-  background: var(--bg-sunken);
-  border-color: var(--line);
+  color: var(--btn-ink);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .select-wrap { margin-left: auto; position: relative; display: inline-flex; align-items: center; }
@@ -726,7 +787,7 @@ select:hover { border-color: var(--line-strong); }
 
 .card-media {
   position: relative;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 3 / 4;
   border-radius: var(--r);
   background: var(--bg-soft);
   display: grid;
@@ -786,9 +847,27 @@ select:hover { border-color: var(--line-strong); }
 }
 .badge-neutral { color: var(--ink); }
 
-.card-body { padding-top: 14px; display: flex; flex-direction: column; gap: 3px; flex: 1; }
-.card-cat { font-size: .6875rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
-.card-title { font-size: .9375rem; font-weight: 500; letter-spacing: -.012em; margin: 0; }
+.card-body { padding-top: 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+/* Nazwa z lewej, cena z prawej, wyrównane do linii pisma — nie do środka
+   wiersza, bo szeryf i cyfry mają różną wysokość x. */
+.card-naglowek { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.card-naglowek .price { flex: none; }
+.card-podpis { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+/* Przycisk przy dolnej krawędzi, niezależnie od tego, czy nazwa zmieściła
+   się w jednym wierszu, czy w dwóch. Bez tego rząd kafli rozjeżdża się przy
+   pierwszej dłuższej nazwie, a w siatce widać to od razu. */
+.card-body > .btn:last-child { margin-top: auto; }
+.card-cat { font-size: .5625rem; font-weight: 600; letter-spacing: .25em; text-transform: uppercase; color: var(--etykieta); }
+/* Nazwa produktu idzie szeryfem — w makiecie to ona, nie cena, jest
+   najmocniejszym elementem kafla. Grotesk zostaje przy liczbach. */
+.card-title {
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  line-height: 1.2;
+  margin: 0;
+}
 /* `inline-block` z wyściółką podnosi wiersz tytułu z 18 px do 24 px — progu
    celu dotykowego z WCAG 2.5.8. Podkreślenie rysowane tłem trzyma się
    krawędzi wiersza, więc wyściółka go nie odsuwa. */
@@ -798,6 +877,7 @@ select:hover { border-color: var(--line-strong); }
 .rating .stars { letter-spacing: .06em; color: var(--ink-soft); }
 
 .price-row { display: flex; align-items: baseline; gap: 9px; margin-top: 10px; }
+.price { font-family: var(--sans); }
 .price { font-size: .9375rem; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .price-old { font-size: .8125rem; color: var(--ink-faint); text-decoration: line-through; }
 
@@ -1363,12 +1443,15 @@ select {
   border: 0;
   border-radius: var(--r-pill);
   background: none;
-  color: var(--ink-faint);
-  font-size: .875rem;
+  color: var(--ink-2);
+  font-size: .5625rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: background .16s ease, color .16s ease;
 }
-.tab[aria-selected="true"] { background: var(--bg); color: var(--ink); box-shadow: 0 1px 2px rgba(26, 24, 21, .06); }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--btn-ink); }
 
 .auth-actions { margin-top: 26px; display: grid; gap: 14px; }
 .auth-alt { text-align: center; font-size: .875rem; color: var(--ink-faint); }
@@ -1490,14 +1573,17 @@ select {
   height: 22px;
   padding-inline: 10px;
   border-radius: var(--r-pill);
+  border: 1px solid var(--line);
   background: var(--bg-sunken);
-  font-size: .6875rem;
-  letter-spacing: .06em;
+  font-size: .5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .2em;
   text-transform: uppercase;
   color: var(--ink-soft);
 }
 .pill-done { background: var(--ok-soft); color: var(--ok-ink); }
-.pill-way { background: var(--accent-soft); color: var(--accent); }
+.pill-way { background: var(--accent-soft); color: var(--accent-ink); }
 
 .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border-radius: var(--r); overflow: hidden; border: 1px solid var(--line); margin-bottom: 28px; }
 .stat { background: var(--surface); padding: 20px 22px; }
@@ -2584,68 +2670,6 @@ code {
 @media (max-width: 760px) {
   .przypieta-tresc { grid-template-columns: minmax(0, 1fr); }
   .przypieta-media { display: none; }
-}
-
-/* ---------- Spotlight ---------- */
-.spotlight {
-  position: relative;
-  padding: clamp(64px, 10vw, 120px) 0;
-  background: var(--ink);
-  overflow: hidden;
-}
-/* Odwrócony kontrast składany z tokenów, nigdy z bieli wprost — w ciemnym
-   motywie `--ink` jest jasny i biel by zniknęła. */
-.spotlight .label { color: color-mix(in srgb, var(--bg) 55%, transparent); }
-
-.spotlight-tekst {
-  margin: 14px 0 0;
-  font-family: var(--display);
-  font-size: clamp(1.5rem, 1rem + 2.4vw, 2.75rem);
-  line-height: 1.14;
-  letter-spacing: -.012em;
-  max-width: 22ch;
-}
-/* 70%, nie 38%: bez myszy i przy ograniczonym ruchu ta warstwa jest jedyną,
-   jaką ktoś zobaczy, więc musi być czytelna sama z siebie. Kontrast wobec
-   snopu i tak zostaje — akcent jest cieplejszy i pełny, a spód przygaszony. */
-.spotlight-spod { color: color-mix(in srgb, var(--bg) 70%, transparent); }
-
-.spotlight-snop {
-  position: absolute;
-  top: clamp(64px, 10vw, 120px);
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  padding: 0 var(--gutter);
-  max-width: var(--maxw);
-  color: var(--accent);
-  pointer-events: none;
-  /* Snop podąża za kursorem. `clip-path` jest tu dopuszczony wyjątkowo
-     i wyłącznie w tej roli — patrz sekcja „Zaawansowany ruch" w skillu.
-     Wartość składa JavaScript: podstawienie `var()` wewnątrz `circle()` nie
-     dochodzi do skutku w każdym silniku i zostawiało snop na zerowym promieniu. */
-  clip-path: circle(0px at 50% 50%);
-  transition: clip-path .12s ease-out;
-}
-/* Nadtytuł zajmuje miejsce nad tekstem także w warstwie snopu — bez tego
-   górna kopia stoi wyżej niż dolna i snop odsłania przesunięty tekst. */
-.spotlight-snop::before {
-  content: '';
-  display: block;
-  height: calc(1em + 14px);
-}
-
-/* Wyłącznik zbiorczy. Globalna reguła ścina czasy, ale te efekty mają
-   zniknąć, nie przyspieszyć. */
-@media (prefers-reduced-motion: reduce) {
-  .marquee-tor { animation: none; }
-  .magnetyczny { translate: none; transition: none; }
-  .fala { display: none; }
-  .tilt { rotate: none; transition: none; }
-  .przypieta-ikona,
-  .przypieta-opis h3,
-  .przypieta-opis .lede { animation: none; }
-  .spotlight-snop { display: none; }
 }
 
 /* ---------- Stronicowanie katalogu ---------- */

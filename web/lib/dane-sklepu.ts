@@ -59,8 +59,6 @@ export const MARKA = {
   podtytulHero: '⟨akapit pod hasłem: dwa–trzy zdania o ofercie⟩',
 
   /** Tekst sekcji z mocnym wyróżnieniem, w połowie strony głównej. */
-  spotlightNadtytul: '⟨nadtytuł sekcji wyróżnionej⟩',
-  spotlightTekst: '⟨jedno zdanie, które ma zostać w głowie⟩',
 
   /** Tytuł karty przeglądarki na stronie głównej i w wynikach wyszukiwania. */
   tytulKarty: '⟨nazwa sklepu⟩ — ⟨czym handlujesz⟩',
