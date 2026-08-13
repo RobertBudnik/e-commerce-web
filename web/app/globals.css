@@ -32,7 +32,11 @@
   /* tekst */
   --ink: #1c1710;
   --ink-2: #6b5e4a;
-  --ink-3: #9a8e7c;
+  /* Trzeci stopień tekstu jest ciemniejszy niż w makiecie (#9a8e7c → #6f6557).
+     Tamten dawał 2,63:1 na beżu, a nosi etykiety, metadane i podpisy — czyli
+     treść, nie ozdobę. Powierzchnie i złoto zostają dokładnie takie, jak
+     w projekcie; zmienia się sam odcień liter. */
+  --ink-3: #6f6557;
 
   /* Linie są złote, nie szare. To one budują tu wrażenie zbytku —
      hairline w kolorze akcentu zamiast neutralnej kreski. */
@@ -41,12 +45,17 @@
   /* Złoto. Wypełnienia i kreski biorą `--accent`; litery `--accent-ink`,
      bo jasne złoto na kości słoniowej daje 2,4:1 i tekstu z niego nie ma. */
   --accent: #b8952a;
-  --accent-ink: #9a7820;
+  /* Złoto pod litery. Jasne #b8952a daje 2,33:1 na beżu i nie nadaje się pod
+     tekst w żadnym rozmiarze; ten odcień trzyma 4,76:1 przy zachowanym
+     charakterze. Wypełnienia, obwódki i ikony dalej biorą `--accent`. */
+  --accent-ink: #7e6118;
   --accent-soft: rgba(184, 149, 42, .15);
 
-  /* Przycisk główny: złoto pełne, napis w kolorze tła strony. */
+  /* Przycisk główny: złoto pełne. Napis idzie ciemną czernią, nie kremem —
+     krem na złocie to 2,69:1, czyli poniżej progu dla każdego rozmiaru,
+     a czerń na tym samym złocie daje 6,25:1. Kolor przycisku bez zmian. */
   --btn-bg: #b8952a;
-  --btn-ink: #faf8f4;
+  --btn-ink: #1c1710;
 
   --img: #e8e0d0;
   --img-line: #d8ccb4;
@@ -361,7 +370,7 @@ p:last-child { margin-bottom: 0; }
 .btn-ghost:hover { --b-bg: var(--bg-soft); --b-bd: var(--ink); --b-fg: var(--ink); }
 
 .btn svg { width: 16px; height: 16px; flex: none; }
-.btn[aria-pressed="true"] svg { fill: currentColor; color: var(--sale); }
+.btn[aria-pressed="true"] svg { fill: currentColor; color: var(--accent-ink); }
 
 .btn-sm { height: 38px; padding-inline: 18px; font-size: .5625rem; letter-spacing: .16em; }
 .btn-block { width: 100%; }
@@ -548,7 +557,7 @@ p:last-child { margin-bottom: 0; }
   border-bottom: 1px solid var(--line);
   transition: color .16s ease;
 }
-.navsheet-list a:hover { color: var(--accent); }
+.navsheet-list a:hover { color: var(--accent-ink); }
 
 @keyframes navsheet-tlo { from { opacity: 0 } }
 @keyframes navsheet-panel { from { translate: -18px 0; opacity: 0 } }
@@ -821,8 +830,8 @@ select:hover { border-color: var(--line-strong); }
   transition: color .2s ease, transform .2s ease;
 }
 .wish-btn svg { width: 16px; height: 16px; }
-.wish-btn:hover { color: var(--sale); transform: scale(1.06); }
-.wish-btn[aria-pressed="true"] { color: var(--sale); }
+.wish-btn:hover { color: var(--accent-ink); transform: scale(1.06); }
+.wish-btn[aria-pressed="true"] { color: var(--accent-ink); }
 .wish-btn[aria-pressed="true"] svg { fill: currentColor; }
 .wish-btn:disabled { opacity: .5; cursor: default; }
 @media (prefers-reduced-motion: reduce) {
@@ -839,7 +848,7 @@ select:hover { border-color: var(--line-strong); }
   padding-inline: 10px;
   border-radius: var(--r-pill);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
-  color: var(--sale);
+  color: var(--accent-ink);
   font-size: .6875rem;
   font-weight: 600;
   letter-spacing: .04em;
@@ -1490,7 +1499,7 @@ select {
 /* display:flex wygrywa z atrybutem hidden — trzeba go przywrócić ręcznie */
 .notice[hidden] { display: none; }
 /* Warianty komunikatu przy formularzu logowania */
-.notice-error { border-color: var(--sale); color: var(--sale); background: var(--bg); }
+.notice-error { border-color: var(--accent); color: var(--accent-ink); background: var(--bg); }
 .notice-ok { border-color: var(--line-strong); color: var(--ink); }
 
 @media (max-width: 900px) {
@@ -1796,9 +1805,9 @@ code {
 
 .pole-para { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-.pole-blad { margin-top: 6px; font-size: .8125rem; color: var(--accent); }
-.pole-uwaga { color: var(--accent); }
-.pole-rabat { color: var(--accent); font-weight: 500; }
+.pole-blad { margin-top: 6px; font-size: .8125rem; color: var(--accent-ink); }
+.pole-uwaga { color: var(--accent-ink); }
+.pole-rabat { color: var(--accent-ink); font-weight: 500; }
 
 [aria-invalid='true'] { border-color: var(--accent); }
 
@@ -2507,7 +2516,7 @@ code {
   text-transform: uppercase;
   color: var(--ink-3);
 }
-.marquee-kropka { color: var(--accent); }
+.marquee-kropka { color: var(--accent-ink); }
 
 /* Przesunięcie o dokładnie jedną kopię: następny komplet ląduje tam, gdzie
    zaczynał poprzedni, więc powrót do zera jest niewidoczny. Dzielnik bierze
@@ -2704,7 +2713,7 @@ code {
   gap: 12px;
   flex-wrap: wrap;
 }
-.opinia-glowa .stars { color: var(--accent); letter-spacing: .06em; }
+.opinia-glowa .stars { color: var(--accent-ink); letter-spacing: .06em; }
 .opinia-autor { font-weight: 500; }
 .opinia-moja { font-weight: 400; color: var(--ink-3); }
 .opinia-data { margin-left: auto; font-size: .875rem; }
@@ -2737,7 +2746,7 @@ code {
   position: relative;
   font-size: 1.75rem;
   line-height: 1;
-  color: var(--accent);
+  color: var(--accent-ink);
   cursor: pointer;
   transition: transform .16s ease;
 }
@@ -2804,7 +2813,7 @@ code {
 .trust { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
 .trust-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .trust-list li { display: flex; gap: 10px; align-items: flex-start; font-size: .9375rem; color: var(--ink-2); }
-.trust-list svg { width: 16px; height: 16px; flex: none; margin-top: 3px; color: var(--accent); }
+.trust-list svg { width: 16px; height: 16px; flex: none; margin-top: 3px; color: var(--accent-ink); }
 
 .trust-pay {
   margin-top: 18px;
@@ -2830,7 +2839,7 @@ code {
   padding: 4px 10px;
   border-radius: var(--r-pill);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: .8125rem;
   font-weight: 600;
 }
@@ -2962,7 +2971,7 @@ code {
   background: var(--panel);
   color: var(--ink-2);
 }
-.pack-status-nowe { background: var(--accent-soft); color: var(--accent); }
+.pack-status-nowe { background: var(--accent-soft); color: var(--accent-ink); }
 .pack-status-wysłane { background: var(--ok-soft); color: var(--ok-ink); }
 
 .pack-warn {
@@ -2972,7 +2981,7 @@ code {
   align-items: center;
   gap: 8px;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: .875rem;
 }
 .pack-warn svg { width: 15px; height: 15px; flex: none; }
@@ -2995,7 +3004,7 @@ code {
 .pack-meta dd { margin: 0; overflow-wrap: anywhere; }
 .pack-meta a { text-decoration: underline; text-decoration-color: var(--line-strong); }
 
-.pack-error { margin: 0; padding: 10px 16px; color: var(--accent); font-size: .875rem; }
+.pack-error { margin: 0; padding: 10px 16px; color: var(--accent-ink); font-size: .875rem; }
 .pack-cta { border-radius: 0; height: 52px; }
 
 /* ---------- Podpowiedź instalacji na iPhonie ---------- */
@@ -3068,7 +3077,7 @@ code {
 }
 .stock-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .stock-count { font-size: 1.25rem; font-weight: 600; flex: none; }
-.stock-brak .stock-count { color: var(--accent); }
+.stock-brak .stock-count { color: var(--accent-ink); }
 
 .stock-flag {
   margin: 0;
@@ -3077,7 +3086,7 @@ code {
   gap: 8px;
   align-items: center;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: .8125rem;
 }
 .stock-flag svg { width: 14px; height: 14px; flex: none; }
@@ -3103,7 +3112,7 @@ code {
 .stock-delta button:active { background: var(--bg-soft); }
 .stock-delta-val { text-align: center; font-size: 1.5rem; font-weight: 600; color: var(--ink-3); }
 .stock-delta-val.plus { color: var(--ok); }
-.stock-delta-val.minus { color: var(--accent); }
+.stock-delta-val.minus { color: var(--accent-ink); }
 
 .stock-powod { display: grid; gap: 6px; }
 .stock-powod select {
@@ -3117,7 +3126,7 @@ code {
 }
 .stock-podglad { margin: 0; text-align: center; color: var(--ink-2); }
 .stock-podglad strong { color: var(--ink); font-size: 1.125rem; }
-.stock-error { margin: 0; color: var(--accent); font-size: .875rem; }
+.stock-error { margin: 0; color: var(--accent-ink); font-size: .875rem; }
 
 /* ---------- Magazyn: skaner ---------- */
 .skan { display: grid; gap: 14px; }
@@ -3727,7 +3736,7 @@ body:has(.mag) { background: var(--panel); }
   line-height: 1.35;
   color: var(--ink-2);
 }
-.mag-meta-brak { color: var(--accent); }
+.mag-meta-brak { color: var(--accent-ink); }
 
 /* Odczyty: wszystko, co jest liczbą albo symbolem. */
 .mag-odczyt {
@@ -3742,7 +3751,7 @@ body:has(.mag) { background: var(--panel); }
 /* Jednostka przy liczbie: mniejsza i przygaszona, żeby liczba została
    najmocniejszym elementem wiersza, a „szt." tylko ją tłumaczyło. */
 .mag-odczyt-jednostka { font-size: 12px; font-weight: 400; color: var(--ink-3); }
-.mag-odczyt-uwaga { color: var(--accent); }
+.mag-odczyt-uwaga { color: var(--accent-ink); }
 /* Neutralna, nie alarmowa: tym samym stylem jedzie liczba przy pozycji, która
    nikogo nie woła do działania. Nazwa mówi o wyglądzie, bo znaczenie zależy
    od ekranu — patrz komentarz przy diodach niżej. */
@@ -3866,7 +3875,7 @@ body:has(.mag) { background: var(--panel); }
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
   font-size: 12px;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* Godzina przy zamówieniu to nie alarm, tylko znacznik czasu — szara.
@@ -3929,7 +3938,7 @@ body:has(.mag) { background: var(--panel); }
   gap: 4px;
   min-height: 44px;
   padding-inline: var(--mag-gutter);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: 15px;
   text-decoration: none;
 }
@@ -3980,7 +3989,7 @@ body:has(.mag) { background: var(--panel); }
 .mag-btn-link {
   min-height: 44px;
   background: none;
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 500;
 }
 
@@ -3989,7 +3998,7 @@ body:has(.mag) { background: var(--panel); }
 .mag-blad {
   margin: 0;
   font-size: 13px;
-  color: var(--accent);
+  color: var(--accent-ink);
   text-align: center;
 }
 
@@ -4001,7 +4010,7 @@ body:has(.mag) { background: var(--panel); }
   padding: 0 10px;
   border-radius: var(--r-pill);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: 12px;
   font-weight: 600;
 }
@@ -4098,7 +4107,7 @@ body:has(.mag) { background: var(--panel); }
   color: var(--ink-2);
 }
 .mag-korekta-delta .plus { color: var(--ok-ink); }
-.mag-korekta-delta .minus { color: var(--accent); }
+.mag-korekta-delta .minus { color: var(--accent-ink); }
 
 /* Oba kroki są wypełnione, różnią się kierunkiem kontrastu: minus jedzie
    powierzchnią wpuszczoną, plus odwróconą. Biały przycisk na białej karcie
@@ -4207,7 +4216,7 @@ body:has(.mag) { background: var(--panel); }
   font-weight: 600;
 }
 .mag-delta-plus { color: var(--ok-ink); }
-.mag-delta-minus { color: var(--accent); }
+.mag-delta-minus { color: var(--accent-ink); }
 /* Jednostka jest stała i nie niesie informacji — nie może ciągnąć wzroku
    tak samo jak liczba, która się zmienia. */
 .mag-delta-jednostka { font-weight: 400; opacity: .8; }
@@ -4455,7 +4464,7 @@ body:has(.mag) { background: var(--panel); }
   font-size: 16px;
 }
 
-.zwrot-blad { margin: 0 0 12px; font-size: .875rem; color: var(--accent); }
+.zwrot-blad { margin: 0 0 12px; font-size: .875rem; color: var(--accent-ink); }
 .zwrot-drobne { margin: 10px 0 0; font-size: .8125rem; color: var(--ink-2); text-align: center; }
 .zwrot-info { margin: 0; font-size: .875rem; color: var(--ok-ink); }
 
@@ -4507,7 +4516,7 @@ body:has(.mag) { background: var(--panel); }
   padding-inline: 8px;
   border: 0;
   background: none;
-  color: var(--accent);
+  color: var(--accent-ink);
   font: inherit;
   font-size: 15px;
   cursor: pointer;

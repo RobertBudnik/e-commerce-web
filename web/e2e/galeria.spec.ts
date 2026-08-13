@@ -36,7 +36,24 @@ test.describe('Galeria produktu', () => {
     const wejscie = page.locator('#a-galeria');
     await expect(wejscie).toBeVisible();
 
-    const przed = await page.locator('.galeria-panel-lista li').count();
+    // Punkt odniesienia bierzemy dopiero wtedy, gdy lista przestanie się
+    // dosypywać: dwa odczyty pod rząd o tej samej długości. Wcześniej test
+    // czytał zero, zanim galeria zdążyła się wyrenderować, i sam sobie
+    // zaniżał licznik — a potem padał na „2 zamiast 4" przy drugim przebiegu
+    // bez resetu bazy. Zwykłe `networkidle` tego nie łapie, bo dane wchodzą
+    // strumieniem RSC, nie osobnym żądaniem.
+    const lista = page.locator('.galeria-panel-lista li');
+    let poprzedni = -1;
+    await expect
+      .poll(async () => {
+        const teraz = await lista.count();
+        const ustabilizowane = teraz === poprzedni;
+        poprzedni = teraz;
+        return ustabilizowane;
+      }, { timeout: 5000 })
+      .toBe(true);
+
+    const przed = poprzedni;
 
     // Dwa ujęcia, nie jedno: seed nie ma okładek, więc przy jednym zdjęciu
     // karta pokazałaby sam kadr bez paska miniatur — i test nie sprawdziłby
