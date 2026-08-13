@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { animuj, easeOutCubic, useRuchWylaczony } from '@/lib/ruch';
+import { animate, useMotionValue, useMotionValueEvent } from 'motion/react';
+import { useRuchWylaczony } from '@/lib/ruch';
 
-const CZAS = 900; // ms — z tabeli „Zaawansowany ruch"
+const CZAS = 0.9; // s — Motion liczy w sekundach
+const KRZYWA: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
 
 /**
  * Liczba dolicza się od zera, gdy wjedzie w pole widzenia.
@@ -30,6 +32,11 @@ export function Licznik({
 }) {
   const bezRuchu = useRuchWylaczony();
   const [wartosc, setWartosc] = useState(bezRuchu ? cel : 0);
+  // Wartość pośrednia jako MotionValue: `animate` w wariancie reactowym
+  // prowadzi MotionValue albo element, nie dwie gołe liczby. Zmiany
+  // przepisujemy do stanu, bo tekst renderuje React, nie transform.
+  const licznik = useMotionValue(0);
+  useMotionValueEvent(licznik, 'change', setWartosc);
   const element = useRef<HTMLSpanElement>(null);
   const wystartowal = useRef(false);
 
@@ -50,9 +57,9 @@ export function Licznik({
         wystartowal.current = true;
         obserwator.disconnect();
 
-        sprzataj = animuj(CZAS, (postep) => {
-          setWartosc(cel * easeOutCubic(postep));
-        });
+        licznik.set(0);
+        const bieg = animate(licznik, cel, { duration: CZAS, ease: KRZYWA });
+        sprzataj = () => bieg.stop();
       },
       { threshold: 0.4 }
     );

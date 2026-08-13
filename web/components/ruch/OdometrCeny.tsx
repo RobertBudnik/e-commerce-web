@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { animuj, easeOutCubic, useRuchWylaczony } from '@/lib/ruch';
+import { animate, useMotionValue, useMotionValueEvent } from 'motion/react';
+import { useRuchWylaczony } from '@/lib/ruch';
 import { money } from '@/lib/format';
 
-const CZAS = 500; // ms — z tabeli „Zaawansowany ruch"
+const CZAS = 0.5; // s — Motion liczy w sekundach
+/** Krzywa z makiety: łagodne wyhamowanie, ta sama co przy kadrach zdjęć. */
+const KRZYWA: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
 
 /**
  * Cena dolicza się od zera, gdy karta wjedzie w pole widzenia.
@@ -21,6 +24,11 @@ const CZAS = 500; // ms — z tabeli „Zaawansowany ruch"
 export function OdometrCeny({ cena }: { cena: number }) {
   const bezRuchu = useRuchWylaczony();
   const [wartosc, setWartosc] = useState(bezRuchu ? cena : 0);
+  // Wartość pośrednia jako MotionValue: `animate` w wariancie reactowym
+  // prowadzi MotionValue albo element, nie dwie gołe liczby. Zmiany
+  // przepisujemy do stanu, bo tekst renderuje React, nie transform.
+  const licznik = useMotionValue(0);
+  useMotionValueEvent(licznik, 'change', setWartosc);
   const element = useRef<HTMLSpanElement>(null);
   const wystartowal = useRef(false);
 
@@ -41,9 +49,9 @@ export function OdometrCeny({ cena }: { cena: number }) {
         wystartowal.current = true;
         obserwator.disconnect();
 
-        sprzataj = animuj(CZAS, (postep) => {
-          setWartosc(cena * easeOutCubic(postep));
-        });
+        licznik.set(0);
+        const bieg = animate(licznik, cena, { duration: CZAS, ease: KRZYWA });
+        sprzataj = () => bieg.stop();
       },
       { threshold: 0.5 }
     );

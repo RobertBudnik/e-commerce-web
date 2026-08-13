@@ -66,33 +66,9 @@ export function useEfektKursora(): boolean {
   return mysz && !bezRuchu;
 }
 
-/** Wygładzenie użyte przez liczniki i odometr — zgodne z tabelą w skillu. */
-export function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
-}
+/* Pętla `animuj` i `easeOutCubic` mieszkały tutaj do czasu wejścia Motion.
+   Zostały skasowane, a nie zostawione „na wszelki wypadek": dwa sposoby
+   animowania w jednym repo znaczą, że przy każdej kolejnej zmianie trzeba
+   zgadywać, którym się animuje. Odliczanie liczb robi teraz `animate`
+   z Motion — liczy z czasu, nie z klatek, i samo sprząta po odmontowaniu. */
 
-/**
- * Pętla animacji na `requestAnimationFrame` ze sprzątaniem.
- *
- * Skill wymaga `rAF`, nie `setInterval`, i sprzątania w `useEffect` — efekt,
- * który zostaje po odmontowaniu, to wyciek. Ta funkcja pilnuje obu rzeczy
- * za wszystkie efekty naraz.
- *
- * `krok` dostaje postęp 0…1; zwrócenie `false` kończy pętlę wcześniej.
- */
-export function animuj(
-  czas: number,
-  krok: (postep: number) => void | false
-): () => void {
-  let klatka = 0;
-  const start = performance.now();
-
-  const tick = (teraz: number) => {
-    const postep = Math.min(1, (teraz - start) / czas);
-    if (krok(postep) === false) return;
-    if (postep < 1) klatka = requestAnimationFrame(tick);
-  };
-
-  klatka = requestAnimationFrame(tick);
-  return () => cancelAnimationFrame(klatka);
-}

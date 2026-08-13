@@ -18,91 +18,93 @@
   color-scheme: light;
 
   /* ---------------------------------------------------------------------
-     Wartości zdjęte z opublikowanego makietowego builda
-     (wallow-relate-08564118.figma.site), nie z oka: kolory odczytane
-     z `getComputedStyle` na żywej stronie, więc to dokładnie te odcienie,
-     które widać w projekcie.
+     Paleta wyjściowa: cztery odcienie piasku i brązu
+     f4e4c1 · dcc8a0 · c9a26a · 5c3d28
+
+     Cztery kolory nie wystarczą na interfejs, więc dwa są dołożone przez
+     zmieszanie, nie zgadnięte: `--surface` to piasek rozjaśniony bielą
+     w 55%, `--bg-sunken` to średni piasek pociemniony tanem w 35%. Reszta
+     to czyste wartości z palety albo ich przyciemnienia pod tekst.
+
+     Reguła nadrzędna tej palety: **tan niesie plamy i kreski, nigdy liter.**
+     Na piaskowym tle daje 1,45–2,14:1 — poniżej progu w każdym rozmiarze.
+     Litery biorą brązy, których w tej rodzinie nie brakuje.
      --------------------------------------------------------------------- */
 
-  /* powierzchnie — cztery stopnie ciepłej kości słoniowej */
-  --bg: #faf8f4;
-  --surface: #f2ece0;
-  --panel: #ede8dc;
+  /* powierzchnie — od najjaśniejszej do najgłębszej */
+  --surface: #faf3e3;
+  --bg: #f4e4c1;
+  --panel: #dcc8a0;
 
-  /* tekst */
-  --ink: #1c1710;
-  --ink-2: #6b5e4a;
-  /* Trzeci stopień tekstu jest ciemniejszy niż w makiecie (#9a8e7c → #6f6557).
-     Tamten dawał 2,63:1 na beżu, a nosi etykiety, metadane i podpisy — czyli
-     treść, nie ozdobę. Powierzchnie i złoto zostają dokładnie takie, jak
-     w projekcie; zmienia się sam odcień liter. */
-  --ink-3: #6f6557;
+  /* tekst — trzy stopnie tego samego brązu */
+  --ink: #3d2718;
+  --ink-2: #5c3d28;
+  --ink-3: #654a32;
 
-  /* Linie są złote, nie szare. To one budują tu wrażenie zbytku —
-     hairline w kolorze akcentu zamiast neutralnej kreski. */
-  --line: rgba(184, 149, 42, .30);
+  /* Linie z koloru tekstu, nie z tanu: złota kreska na piasku ginie. */
+  --line: rgba(92, 61, 40, .22);
 
-  /* Złoto. Wypełnienia i kreski biorą `--accent`; litery `--accent-ink`,
-     bo jasne złoto na kości słoniowej daje 2,4:1 i tekstu z niego nie ma. */
-  --accent: #b8952a;
-  /* Złoto pod litery. Jasne #b8952a daje 2,33:1 na beżu i nie nadaje się pod
-     tekst w żadnym rozmiarze; ten odcień trzyma 4,76:1 przy zachowanym
-     charakterze. Wypełnienia, obwódki i ikony dalej biorą `--accent`. */
-  --accent-ink: #7e6118;
-  --accent-soft: rgba(184, 149, 42, .15);
+  /* Akcent: tan wyłącznie jako wypełnienie, obwódka, ikona.
+     Pod tekst idzie brąz z palety — ten sam, który niesie opisy. */
+  --accent: #c9a26a;
+  --accent-ink: #5c3d28;
+  --accent-soft: rgba(201, 162, 106, .28);
 
-  /* Przycisk główny: złoto pełne. Napis idzie ciemną czernią, nie kremem —
-     krem na złocie to 2,69:1, czyli poniżej progu dla każdego rozmiaru,
-     a czerń na tym samym złocie daje 6,25:1. Kolor przycisku bez zmian. */
-  --btn-bg: #b8952a;
-  --btn-ink: #1c1710;
+  /* Przycisk główny: ciemny brąz z piaskowym napisem — 7,76:1. */
+  --btn-bg: #5c3d28;
+  --btn-ink: #f4e4c1;
 
-  --img: #e8e0d0;
-  --img-line: #d8ccb4;
+  /* Napis leżący wprost na tanie — aktywny filtr, zakładka, znacznik.
+     Piaskowy dawał tam 1,89:1, bo tan jest jasny; ciemny brąz daje 5,90:1
+     i to on jest jedynym poprawnym kolorem liter na tym wypełnieniu. */
+  --na-akcencie: #3d2718;
+
+  --img: #dcc8a0;
+  --img-line: #c0a97e;
 
   --ok: #4a7c52;
-  --ok-soft: rgba(74, 124, 82, .14);
-  --ok-ink: #3a6340;
+  --ok-soft: rgba(74, 124, 82, .16);
+  --ok-ink: #2c5c37;
 
-  /* Kanty. Ten projekt nie zna zaokrągleń — ani karta, ani przycisk,
-     ani pole. Zmiana jednej z tych wartości psuje cały charakter. */
+  /* Kanty zostają z poprzedniego kierunku — makieta nie zna zaokrągleń. */
   --radius: 0px;
   --radius-sm: 0px;
 
-  --shadow: 0 1px 2px rgba(28, 23, 16, .04), 0 18px 40px -24px rgba(28, 23, 16, .22);
+  --shadow: 0 1px 2px rgba(61, 39, 24, .06), 0 18px 40px -24px rgba(61, 39, 24, .28);
 }
 
 /* ---------- Tokeny bazowe: motyw ciemny ----------
-   Makieta opisuje tylko wariant jasny. Ciemny jest wyprowadzony: ta sama
-   ciepła rodzina, odwrócona jasność, złoto rozjaśnione do #c8a840 — na
-   ciemnym tle daje 7,9:1 zamiast 3,4:1 i dopiero wtedy nadaje się pod tekst. */
+   Ta sama rodzina, odwrócona jasność: tłem jest brąz zgaszony niemal do
+   czerni, literami — piasek z palety. Tan wreszcie może nieść tekst
+   (7,72:1 na tle), więc w ciemności akcent jest złoty także w literach. */
 .dark,
 .motyw-ciemny {
   color-scheme: dark;
 
-  --bg: #14110c;
-  --surface: #1c1811;
-  --panel: #221d15;
+  --surface: #241a12;
+  --bg: #1c130c;
+  --panel: #2e2117;
 
-  --ink: #faf8f4;
-  --ink-2: #b8ae9e;
-  --ink-3: #9a8e7c;
+  --ink: #f4e4c1;
+  --ink-2: #dcc8a0;
+  --ink-3: #b39a74;
 
-  --line: rgba(200, 168, 64, .28);
+  --line: rgba(244, 228, 193, .16);
 
-  --accent: #c8a840;
-  --accent-ink: #d9bc63;
-  --accent-soft: rgba(200, 168, 64, .16);
+  --accent: #c9a26a;
+  --accent-ink: #dcc8a0;
+  --accent-soft: rgba(201, 162, 106, .18);
 
-  --btn-bg: #b8952a;
-  --btn-ink: #14110c;
+  --btn-bg: #c9a26a;
+  --btn-ink: #1c130c;
+  --na-akcencie: #1c130c;
 
-  --img: #221d15;
-  --img-line: #3a3225;
+  --img: #2e2117;
+  --img-line: #4a3826;
 
-  --ok: #6cc48a;
-  --ok-soft: rgba(108, 196, 138, .16);
-  --ok-ink: #8fd6a5;
+  --ok: #7fc08c;
+  --ok-soft: rgba(127, 192, 140, .16);
+  --ok-ink: #9ed4a8;
 
   --radius: 0px;
   --radius-sm: 0px;
@@ -142,6 +144,16 @@
   --gutter: 28px;
   --header-h: 72px;
 
+  /* Ruch — czasy i krzywe odczytane z opublikowanej makiety, nie dobrane
+     z głowy. Kolor reaguje natychmiast (200 ms), tło i obwódka wolniej
+     (400 ms), a zdjęcie w kadrze jedzie 600 ms łagodną krzywą — to ono
+     buduje wrażenie ciężaru. Nazwy tokenów mówią o roli, nie o liczbie,
+     żeby zmiana tempa całego serwisu była zmianą w jednym miejscu. */
+  --ruch-kolor: .2s;
+  --ruch-tlo: .4s;
+  --ruch-kadr: .6s;
+  --krzywa: cubic-bezier(.25, .46, .45, .94);
+
   /* Warstwy elementów unoszących się nad treścią. Trzymane w jednym
      miejscu, żeby pasek zakupu nie wylądował nad modalem. */
   --z-header: 40;
@@ -164,12 +176,12 @@
   --mono: var(--font-sans), ui-sans-serif, -apple-system, sans-serif;
 }
 
-:root { --bg-sunken: #e8e0d0; }
-.dark { --bg-sunken: #2a2419; }
+:root { --bg-sunken: #d5bb8d; }
+.dark { --bg-sunken: #3a2a1c; }
 /* Obrys przycisku ghost i innych elementów, które mają być widoczne, ale nie
    krzyczeć — mocniejszy stopień tej samej przezroczystości co `--line`. */
-:root { --line-strong: rgba(184, 149, 42, .40); }
-.dark { --line-strong: rgba(200, 168, 64, .40); }
+:root { --line-strong: rgba(92, 61, 40, .38); }
+.dark { --line-strong: rgba(244, 228, 193, .32); }
 
 /* Obwódka pola formularza. Osobny token, bo `--line` ma wobec tła kontrast
    1,29:1 — dla kreski rozdzielającej to w zupełności dość, ale pole tekstowe
@@ -179,8 +191,8 @@
 
      jasny  #8a8377 → bg 3,57  surface 3,75  panel 3,22
      ciemny #726b61 → bg 3,58  surface 3,34  panel 3,16 */
-:root { --line-pole: #9a7820; }
-.dark { --line-pole: #8a7434; }
+:root { --line-pole: #8a6647; }
+.dark { --line-pole: #8c7458; }
 
 /* Nadtytuł sekcji — jaśniejszy niż tekst drugorzędny, zdjęty z makiet.
    W ciemnym motywie makiet nie ma, więc trzyma tam dotychczasową rolę
@@ -352,7 +364,7 @@ p:last-child { margin-bottom: 0; }
   text-transform: uppercase;
   cursor: pointer;
   white-space: nowrap;
-  transition: background .18s ease, border-color .18s ease, color .18s ease, opacity .18s ease;
+  transition: background var(--ruch-tlo) ease, border-color var(--ruch-tlo) ease, color var(--ruch-kolor) ease, opacity var(--ruch-kolor) ease;
 }
 /* Złoto ciemnieje pod kursorem zamiast przechodzić w czerń: przejście
    w `--ink` gasiło jedyny kolor w tym interfejsie. */
@@ -477,7 +489,7 @@ p:last-child { margin-bottom: 0; }
   letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--ink-2);
-  transition: color .15s ease;
+  transition: color var(--ruch-kolor) ease;
 }
 .nav a::after {
   content: "";
@@ -555,7 +567,7 @@ p:last-child { margin-bottom: 0; }
   padding: 15px 0;
   font-size: 1.125rem;
   border-bottom: 1px solid var(--line);
-  transition: color .16s ease;
+  transition: color var(--ruch-kolor) ease;
 }
 .navsheet-list a:hover { color: var(--accent-ink); }
 
@@ -608,7 +620,10 @@ p:last-child { margin-bottom: 0; }
   padding-inline: 6px;
   border-radius: var(--r-pill);
   background: var(--accent);
-  color: var(--bg);
+  /* Cyfra leży na tanie, więc bierze ten sam ciemny brąz co aktywny filtr.
+     `--bg` dawało tu 1,89:1 — liczbę na plakietce dosłownie trzeba było
+     zgadywać. */
+  color: var(--na-akcencie);
   font-size: .6875rem;
   font-weight: 600;
   display: inline-grid;
@@ -763,7 +778,7 @@ p:last-child { margin-bottom: 0; }
 }
 .chip:hover { color: var(--ink); border-color: var(--line-strong); }
 .chip[aria-pressed="true"] {
-  color: var(--btn-ink);
+  color: var(--na-akcencie);
   background: var(--accent);
   border-color: var(--accent);
 }
@@ -824,7 +839,7 @@ select:hover { border-color: var(--line-strong); }
   place-items: center;
   color: var(--line-strong);
   overflow: hidden;
-  transition: background .25s ease;
+  transition: background var(--ruch-tlo) ease;
 }
 .card:hover .card-media { background: var(--bg-sunken); }
 .card-media-link { position: absolute; inset: 0; display: grid; place-items: center; }
@@ -1481,7 +1496,7 @@ select {
   cursor: pointer;
   transition: background .16s ease, color .16s ease;
 }
-.tab[aria-selected="true"] { background: var(--accent); color: var(--btn-ink); }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--na-akcencie); }
 
 .auth-actions { margin-top: 26px; display: grid; gap: 14px; }
 .auth-alt { text-align: center; font-size: .875rem; color: var(--ink-faint); }
@@ -1931,7 +1946,7 @@ code {
    260 ms, zdjęcie 550 ms, więc przez chwilę zostaje w tyle jak coś ciężkiego
    za szybą. Skala celowo mała: przy 1.1 widać już kadrowanie, a nie głębię. */
 .card-media .media-img {
-  transition: transform .55s cubic-bezier(.2, .7, .3, 1);
+  transition: transform var(--ruch-kadr) var(--krzywa);
 }
 .card:hover .card-media .media-img { transform: scale(1.055); }
 /* Ikona zastępcza dostaje ten sam czas, żeby kafle ze zdjęciem i bez niego
@@ -2425,7 +2440,7 @@ code {
   text-transform: uppercase;
   color: var(--ink-3);
 }
-.crumbs a { transition: color .16s ease; }
+.crumbs a { transition: color var(--ruch-kolor) ease; }
 .crumbs a:hover { color: var(--ink); }
 
 .doc-section { margin-top: 38px; padding-top: 26px; border-top: 1px solid var(--line); }

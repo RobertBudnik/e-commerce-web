@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useMotionValueEvent, useScroll } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { useRuchWylaczony } from '@/lib/ruch';
 
@@ -18,51 +19,74 @@ export type Krok = { nadtytul: string; tytul: string; opis: string; ikona: strin
  * animacji: przyklejanie porywa kontrolę nad przewijaniem, a to jest dokładnie
  * to, czego ustawienie „ogranicz ruch" ma unikać.
  *
- * Pomiar w `requestAnimationFrame`, nie w samym `scroll`: zdarzenie
- * przewijania potrafi przyjść kilka razy między klatkami, a `getBoundingClientRect`
- * w każdym z nich to wymuszony przeliczony układ.
+ * Postęp liczy `useScroll` z Motion, nie własny nasłuch przewijania. Wcześniej
+ * stał tu `getBoundingClientRect` w `requestAnimationFrame` — działało, ale
+ * każdy pomiar wymuszał przeliczenie układu, a przy dwóch takich sekcjach na
+ * stronie robiły się z tego dwa niezależne nasłuchy scrolla. Motion mierzy raz,
+ * dla wszystkich, i oddaje gotowy ułamek drogi.
  */
 export function SekcjaPrzypieta({ kroki }: { kroki: Krok[] }) {
   const bezRuchu = useRuchWylaczony();
   const blok = useRef<HTMLDivElement>(null);
   const [aktywny, setAktywny] = useState(0);
 
+  // `start start` → `end end`: zero, gdy górna krawędź bloku dotyka górnej
+  // krawędzi okna, jedynka, gdy dolna dotyka dolnej. Dokładnie ta droga,
+  // na której sekcja jest przyklejona.
+  // Strumień przewijania bierzemy z Motion, ale bez `target`. Wariant z celem
+  // mierzy element w `useLayoutEffect` — czyli zanim React nawiąże połączenie
+  // z HTML-em przysłanym przez serwer — i przewraca się na
+  // „Target ref is defined but not hydrated", zostawiając postęp na zerze.
+  // Wersji z `layoutEffect: false` ta wersja biblioteki jeszcze nie zna.
+  const { scrollY } = useScroll();
+
+  // Własny pomiar, ale wykonywany raz przy montażu i przy zmianie okna,
+  // a nie przy każdym przewinięciu — to była właściwa wada poprzedniej wersji.
+  const [droga, setDroga] = useState({ start: 0, dlugosc: 1 });
+
   useEffect(() => {
     if (bezRuchu) return;
     const node = blok.current;
     if (!node) return;
 
-    let ramka = 0;
-    let czeka = false;
-
     const zmierz = () => {
-      czeka = false;
       const p = node.getBoundingClientRect();
-      const droga = p.height - window.innerHeight;
-      if (droga <= 0) return;
-
-      const postep = Math.min(1, Math.max(0, -p.top / droga));
-      // `min` z ostatnim indeksem, bo przy postępie równym 1 mnożenie daje
-      // indeks poza tablicą.
-      setAktywny(Math.min(kroki.length - 1, Math.floor(postep * kroki.length)));
-    };
-
-    const naScroll = () => {
-      if (czeka) return;
-      czeka = true;
-      ramka = requestAnimationFrame(zmierz);
+      setDroga({
+        start: p.top + window.scrollY,
+        dlugosc: Math.max(1, p.height - window.innerHeight),
+      });
     };
 
     zmierz();
-    window.addEventListener('scroll', naScroll, { passive: true });
-    window.addEventListener('resize', naScroll);
+    const obserwator = new ResizeObserver(zmierz);
+    obserwator.observe(node);
+    window.addEventListener('resize', zmierz);
 
     return () => {
-      cancelAnimationFrame(ramka);
-      window.removeEventListener('scroll', naScroll);
-      window.removeEventListener('resize', naScroll);
+      obserwator.disconnect();
+      window.removeEventListener('resize', zmierz);
     };
-  }, [bezRuchu, kroki.length]);
+  }, [bezRuchu]);
+
+  const ustaw = useCallback(
+    (y: number) => {
+      const postep = Math.min(1, Math.max(0, (y - droga.start) / droga.dlugosc));
+      // `min` z ostatnim indeksem, bo przy postępie równym 1 mnożenie daje
+      // indeks poza tablicą.
+      setAktywny(Math.min(kroki.length - 1, Math.floor(postep * kroki.length)));
+    },
+    [droga, kroki.length]
+  );
+
+  useMotionValueEvent(scrollY, 'change', (y) => {
+    if (!bezRuchu) ustaw(y);
+  });
+
+  // Wejście na stronę w środku sekcji (kotwica, powrót z karty produktu)
+  // nie wywoła zmiany wartości, więc pierwszy krok liczymy sami.
+  useEffect(() => {
+    if (!bezRuchu) ustaw(window.scrollY);
+  }, [bezRuchu, ustaw]);
 
   // Bez ruchu: zwykła lista, bez przyklejania i bez przejmowania przewijania.
   if (bezRuchu) {

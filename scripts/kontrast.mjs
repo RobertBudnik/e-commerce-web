@@ -133,6 +133,10 @@ const PARY = [
   ['accent-ink', 'accent-soft', 4.5, 'napis na znaczniku przeceny'],
   ['ok-ink', 'ok-soft', 4.5, 'napis „opłacone" na zielonym'],
   ['btn-ink', 'btn-bg', 4.5, 'napis na przycisku głównym'],
+  // Wypełnienie akcentem nosi litery w dwóch miejscach — aktywny filtr
+  // i plakietka koszyka. Para wpisana po tym, jak zrzut pokazał jasny napis
+  // na tanie: audyt mierzył wtedy tylko przycisk główny i tego nie widział.
+  ['na-akcencie', 'accent', 4.5, 'napis na wypełnieniu akcentem'],
   ['line-pole', 'bg', 3, 'obwódka pola na tle strony'],
   ['line-pole', 'surface', 3, 'obwódka pola na bieli'],
   ['line-pole', 'panel', 3, 'obwódka pola na beżu'],
