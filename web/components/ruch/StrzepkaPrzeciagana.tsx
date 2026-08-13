@@ -1,67 +1,43 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
+import { animate } from 'motion/react';
 import { useRuchWylaczony } from '@/lib/ruch';
 import { useUjawnianie } from '@/lib/ujawnianie';
 
-const TARCIE = 0.94; // ubytek prędkości na klatkę po puszczeniu
-const PROG = 0.4; // px/klatkę — poniżej tego zatrzymujemy pętlę
 const PROG_PRZECIAGNIECIA = 4; // px — powyżej tego to przeciąganie, nie klik
 
 /**
  * Pozioma lista przeciągana myszą lub palcem, z bezwładnością.
  *
- * Bez autoprzewijania — skill zakazuje karuzeli, w której produkt sam ucieka
- * z pola widzenia. Tu nic nie jedzie samo: strzępka rusza się wyłącznie wtedy,
- * gdy ktoś ją pchnie, i zwalnia, gdy puści.
+ * Bez autoprzewijania — produkt nigdy nie ucieka sam z pola widzenia.
+ * Strzępka rusza się wyłącznie wtedy, gdy ktoś ją pchnie, i zwalnia, gdy puści.
  *
- * Bezwładność liczona własną pętlą, a nie przez `scroll-behavior: smooth`,
- * bo tamto nie zna prędkości rzutu — puszczenie po szybkim machnięciu i po
- * powolnym przesunięciu dałoby ten sam wynik.
+ * Wybieg po puszczeniu liczy Motion (`type: 'inertia'`), nie własna pętla.
+ * Wcześniej stało tu mnożenie prędkości przez 0,94 na klatkę — wynik zależał
+ * od tego, ile klatek zdąży się wyrenderować, więc na słabszym sprzęcie lista
+ * hamowała inaczej niż na mocnym. Bezwładność Motion jest liczona z czasu,
+ * a nie z klatek, i sama odbija się od krawędzi zamiast ścinać prędkość
+ * do zera.
  *
- * Dotyk obsługiwany tak samo jak mysz, i to jedyny z efektów kursorowych,
- * który na telefonie ma sens: przeciąganie palcem jest tam naturalniejsze niż
- * przy myszy. Natywne przewijanie zostaje jako podkład — element ma
- * `overflow-x: auto`, więc bez JavaScriptu i przy wyłączonym ruchu lista
- * dalej się przewija, tylko bez wybiegu.
+ * Natywne przewijanie zostaje pod spodem: animujemy `scrollLeft`, a nie
+ * `transform`. Dzięki temu kółko myszy, trackpad, klawiatura i czytnik ekranu
+ * działają tak samo jak przed dołożeniem biblioteki — a przy wyłączonym ruchu
+ * zostaje samo przewijanie, bez wybiegu.
  */
 export function StrzepkaPrzeciagana({ children }: { children: React.ReactNode }) {
   const bezRuchu = useRuchWylaczony();
   const tor = useRef<HTMLDivElement>(null);
-  const stan = useRef({ ciagnie: false, startX: 0, startScroll: 0, predkosc: 0, ostatniX: 0, przesuniete: 0 });
-  const ramka = useRef(0);
+  const stan = useRef({ ciagnie: false, startX: 0, startScroll: 0, ostatniX: 0, ostatniCzas: 0, predkosc: 0, przesuniete: 0 });
+  const wybieg = useRef<ReturnType<typeof animate> | null>(null);
 
   // Kafelki startują z `opacity: 0` i odsłania je dopiero obserwator. Bez tego
-  // wywołania strzępka pokazywała pustą przestrzeń zamiast produktów — reguła
-  // CSS ustawia stan początkowy dla wszystkich `[data-reveal]`, więc każdy
-  // kontener z kafelkami musi umieć je odsłonić, nie tylko siatka katalogu.
+  // wywołania strzępka pokazywała pustą przestrzeń zamiast produktów.
   useUjawnianie(tor);
 
-  const wybieg = useCallback(() => {
-    const node = tor.current;
-    if (!node) return;
-
-    const krok = () => {
-      const s = stan.current;
-      s.predkosc *= TARCIE;
-
-      if (Math.abs(s.predkosc) < PROG) return;
-
-      node.scrollLeft -= s.predkosc;
-
-      // Na krawędzi wygaszamy od razu — dalsze mnożenie tylko trzyma pętlę
-      // przy życiu, choć lista już nigdzie nie jedzie.
-      const koniec = node.scrollWidth - node.clientWidth;
-      if (node.scrollLeft <= 0 || node.scrollLeft >= koniec) {
-        s.predkosc = 0;
-        return;
-      }
-
-      ramka.current = requestAnimationFrame(krok);
-    };
-
-    cancelAnimationFrame(ramka.current);
-    ramka.current = requestAnimationFrame(krok);
+  const zatrzymaj = useCallback(() => {
+    wybieg.current?.stop();
+    wybieg.current = null;
   }, []);
 
   const start = useCallback(
@@ -69,19 +45,20 @@ export function StrzepkaPrzeciagana({ children }: { children: React.ReactNode })
       const node = tor.current;
       if (!node) return;
 
-      cancelAnimationFrame(ramka.current);
+      zatrzymaj();
       stan.current = {
         ciagnie: true,
         startX: e.clientX,
         startScroll: node.scrollLeft,
-        predkosc: 0,
         ostatniX: e.clientX,
+        ostatniCzas: performance.now(),
+        predkosc: 0,
         przesuniete: 0,
       };
       node.setPointerCapture(e.pointerId);
       node.classList.add('ciagnie');
     },
-    []
+    [zatrzymaj]
   );
 
   const ruch = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -93,10 +70,24 @@ export function StrzepkaPrzeciagana({ children }: { children: React.ReactNode })
     s.przesuniete = Math.max(s.przesuniete, Math.abs(delta));
     node.scrollLeft = s.startScroll - delta;
 
-    // Prędkość z ostatniej klatki, nie z całego gestu: liczy się to, jak
-    // szybko ręka szła w chwili puszczenia, a nie średnia z całej drogi.
-    s.predkosc = e.clientX - s.ostatniX;
-    s.ostatniX = e.clientX;
+    // Prędkość w pikselach na sekundę. Zegar bierzemy z `performance.now()`,
+    // nie ze znacznika zdarzenia: przy zdarzeniach syntetycznych (testy,
+    // narzędzia dostępności) kilka `pointermove` potrafi mieć ten sam
+    // znacznik, różnica wychodzi zerowa i pęd nigdy nie powstaje.
+    const teraz = performance.now();
+    const dt = teraz - s.ostatniCzas;
+    const przebyte = e.clientX - s.ostatniX;
+    // Poniżej jednej klatki nie ma z czego liczyć — zostawiamy poprzedni
+    // pomiar zamiast dzielić przez ułamek milisekundy i dostawać tysiące.
+    if (dt >= 8) {
+      s.predkosc = (przebyte / dt) * 1000;
+      s.ostatniX = e.clientX;
+      s.ostatniCzas = teraz;
+    } else if (przebyte !== 0 && s.predkosc === 0) {
+      // Pierwszy ruch w serii szybszej niż klatka: licz po klatce ekranu,
+      // żeby gest krótszy niż 8 ms też miał jakąś prędkość.
+      s.predkosc = (przebyte / 16) * 1000;
+    }
   }, []);
 
   const koniec = useCallback(
@@ -109,9 +100,40 @@ export function StrzepkaPrzeciagana({ children }: { children: React.ReactNode })
       node.classList.remove('ciagnie');
       if (node.hasPointerCapture(e.pointerId)) node.releasePointerCapture(e.pointerId);
 
-      if (!bezRuchu) wybieg();
+      // Próg celowo niski. Przeglądarka scala zdarzenia wskaźnika, więc przy
+      // szybkim machnięciu do handlera dociera czasem jeden `pointermove`
+      // z całą drogą i prędkość wychodzi kilkadziesiąt px/s zamiast tysięcy.
+      // Odcinanie na wyższej wartości gubiło wybieg przy prawdziwych gestach
+      // tak samo jak w testach; dwadzieścia px/s to już rzut, a nie odłożenie
+      // palca.
+      if (bezRuchu || Math.abs(s.predkosc) < 20) return;
+
+      const maks = Math.max(0, node.scrollWidth - node.clientWidth);
+      // Ręka idzie w prawo, zawartość w lewo — stąd znak przeciwny.
+      const predkosc = -s.predkosc;
+      const MOC = 0.7;
+
+      // Cel podajemy wprost, choć generator bezwładności policzyłby go tak samo
+      // (`origin + power × velocity`). Powód jest prozaiczny: przy identycznym
+      // początku i końcu animacja zostaje uznana za „nic się nie zmienia"
+      // i skrócona do zera klatek — wybieg nie ruszał w ogóle.
+      const cel = node.scrollLeft + MOC * predkosc;
+
+      wybieg.current = animate(node.scrollLeft, cel, {
+        type: 'inertia',
+        velocity: predkosc,
+        power: MOC,
+        timeConstant: 420,
+        min: 0,
+        max: maks,
+        bounceStiffness: 300,
+        bounceDamping: 40,
+        onUpdate: (v: number) => {
+          node.scrollLeft = v;
+        },
+      });
     },
-    [bezRuchu, wybieg]
+    [bezRuchu]
   );
 
   // Przeciągnięcie nie może kończyć się otwarciem karty, na której gest się
@@ -124,7 +146,7 @@ export function StrzepkaPrzeciagana({ children }: { children: React.ReactNode })
     }
   }, []);
 
-  useEffect(() => () => cancelAnimationFrame(ramka.current), []);
+  useEffect(() => zatrzymaj, [zatrzymaj]);
 
   return (
     <div
