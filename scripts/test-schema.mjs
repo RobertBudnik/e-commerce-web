@@ -962,7 +962,27 @@ const grantMarzy = await db.query(
 );
 check('widok marży dostępny przez API', grantMarzy.rows[0].ma === true, `${grantMarzy.rows[0].ma}`);
 
+// Produkt bez nazwy nie wejdzie do katalogu — ani nowy, ani po edycji.
+// Formularz panelu pilnował tego w przeglądarce, czyli tam, gdzie klucz `anon`
+// i tak pozwala zapis ominąć.
+await asService();
+await throws(
+  'produkt bez nazwy odrzucony',
+  () =>
+    db.query(
+      `insert into public.products (slug, name, price_cents) values ('bezimienny', '   ', 100)`
+    ),
+  'produkt_ma_nazwe'
+);
+await throws(
+  'produkt bez sluga odrzucony',
+  () =>
+    db.query(`insert into public.products (slug, name, price_cents) values ('', 'Nazwa', 100)`),
+  'produkt_ma_slug'
+);
+
 // Historia cen: zmiana ceny zostawia wiersz, z którego liczy się Omnibus
+await asUser(owner.id);
 await asUser(owner.id);
 await asUser(owner.id);
 await db.query(`update public.products set price_cents = price_cents - 500 where id = $1`, [towar.id]);

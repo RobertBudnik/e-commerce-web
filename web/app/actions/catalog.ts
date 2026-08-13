@@ -23,6 +23,14 @@ export async function saveProductAction(formData: FormData): Promise<CatalogResu
 
   const id = String(formData.get('id') ?? '').trim();
   const name = String(formData.get('name') ?? '').trim();
+
+  // Bez nazwy produkt wchodzi do katalogu jako pusty kafel: klient widzi
+  // kategorię, cenę i dziurę tam, gdzie ma być tytuł. `products.name` jest
+  // NOT NULL, ale pusty ciąg przez to sito przechodził — stąd sprawdzenie
+  // tutaj i warunek w bazie, który zatrzyma też zapis inną drogą.
+  if (!name) {
+    return { ok: false, error: 'Produkt musi mieć nazwę — bez niej kafel w sklepie zostaje pusty.' };
+  }
   const currentImagePath = String(formData.get('currentImagePath') ?? '').trim() || null;
   const dropImage = formData.get('dropImage') === '1';
   const file = formData.get('image');
