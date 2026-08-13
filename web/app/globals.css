@@ -18,89 +18,84 @@
   color-scheme: light;
 
   /* ---------------------------------------------------------------------
-     Paleta wyjściowa: cztery odcienie piasku i brązu
-     f4e4c1 · dcc8a0 · c9a26a · 5c3d28
+     Paleta wyjściowa: len, tan, brązy
+     ede0d4 · e6ccb2 · ddb892 · b08968 · 7f5539 · 9c6644
 
-     Cztery kolory nie wystarczą na interfejs, więc dwa są dołożone przez
-     zmieszanie, nie zgadnięte: `--surface` to piasek rozjaśniony bielą
-     w 55%, `--bg-sunken` to średni piasek pociemniony tanem w 35%. Reszta
-     to czyste wartości z palety albo ich przyciemnienia pod tekst.
-
-     Reguła nadrzędna tej palety: **tan niesie plamy i kreski, nigdy liter.**
-     Na piaskowym tle daje 1,45–2,14:1 — poniżej progu w każdym rozmiarze.
-     Litery biorą brązy, których w tej rodzinie nie brakuje.
+     Sześć odcieni wystarcza na powierzchnie i akcent, ale nie na tekst:
+     najciemniejszy z palety (#7f5539) daje na beżowej karcie 4,18:1, czyli
+     poniżej progu. Litery biorą więc trzy przyciemnienia tej samej rodziny,
+     a `--surface` jest lnem rozjaśnionym bielą w połowie. Nic tu nie jest
+     zgadnięte — każda wartość ma policzony kontrast.
      --------------------------------------------------------------------- */
 
   /* powierzchnie — od najjaśniejszej do najgłębszej */
-  --surface: #faf3e3;
-  --bg: #f4e4c1;
-  --panel: #dcc8a0;
+  --surface: #f6f0ea;
+  --bg: #ede0d4;
+  --panel: #e6ccb2;
 
-  /* tekst — trzy stopnie tego samego brązu */
-  --ink: #3d2718;
-  --ink-2: #5c3d28;
-  --ink-3: #654a32;
+  /* tekst — trzy stopnie przyciemnionego brązu */
+  --ink: #4a3020;
+  --ink-2: #5a3a26;
+  --ink-3: #6b4630;
 
-  /* Linie z koloru tekstu, nie z tanu: złota kreska na piasku ginie. */
-  --line: rgba(92, 61, 40, .22);
+  --line: rgba(127, 85, 57, .22);
 
-  /* Akcent: tan wyłącznie jako wypełnienie, obwódka, ikona.
-     Pod tekst idzie brąz z palety — ten sam, który niesie opisy. */
-  --accent: #c9a26a;
-  --accent-ink: #5c3d28;
-  --accent-soft: rgba(201, 162, 106, .28);
+  /* Akcent: sienna. Plamy, kreski i ikony — 3,69:1 na tle strony, czyli dość
+     na element nietekstowy. Pod litery idzie przyciemnienie, bo sama sienna
+     schodzi na karcie do 3,10:1. */
+  --accent: #9c6644;
+  --accent-ink: #6b4630;
+  --accent-soft: rgba(156, 102, 68, .18);
 
-  /* Przycisk główny: ciemny brąz z piaskowym napisem — 7,76:1. */
-  --btn-bg: #5c3d28;
-  --btn-ink: #f4e4c1;
+  /* Przycisk główny: najciemniejszy brąz z palety, napis lnem — 4,97:1. */
+  --btn-bg: #7f5539;
+  --btn-ink: #ede0d4;
 
-  /* Napis leżący wprost na tanie — aktywny filtr, zakładka, znacznik.
-     Piaskowy dawał tam 1,89:1, bo tan jest jasny; ciemny brąz daje 5,90:1
-     i to on jest jedynym poprawnym kolorem liter na tym wypełnieniu. */
-  --na-akcencie: #3d2718;
+  /* Jedyna biel w tej palecie i jedyne jej zastosowanie: litery leżące wprost
+     na siennie. Len dawał tam 4,19:1, biel daje 4,78:1. */
+  --na-akcencie: #ffffff;
 
-  --img: #dcc8a0;
-  --img-line: #c0a97e;
+  --img: #ddb892;
+  --img-line: #c9a17c;
 
   --ok: #4a7c52;
   --ok-soft: rgba(74, 124, 82, .16);
   --ok-ink: #2c5c37;
 
-  /* Kanty zostają z poprzedniego kierunku — makieta nie zna zaokrągleń. */
   --radius: 0px;
   --radius-sm: 0px;
 
-  --shadow: 0 1px 2px rgba(61, 39, 24, .06), 0 18px 40px -24px rgba(61, 39, 24, .28);
+  --shadow: 0 1px 2px rgba(74, 48, 32, .06), 0 18px 40px -24px rgba(74, 48, 32, .28);
 }
 
 /* ---------- Tokeny bazowe: motyw ciemny ----------
-   Ta sama rodzina, odwrócona jasność: tłem jest brąz zgaszony niemal do
-   czerni, literami — piasek z palety. Tan wreszcie może nieść tekst
-   (7,72:1 na tle), więc w ciemności akcent jest złoty także w literach. */
+   Ta sama rodzina, odwrócona jasność. W ciemności role się przesuwają:
+   tan (#ddb892) ma na tle 9,63:1, więc to on jest akcentem i wolno mu nieść
+   litery; sienna schodzi do 3,73:1 i zostaje przy plamach. */
 .dark,
 .motyw-ciemny {
   color-scheme: dark;
 
-  --surface: #241a12;
-  --bg: #1c130c;
-  --panel: #2e2117;
+  --surface: #261c15;
+  --bg: #1e1611;
+  --panel: #30231a;
 
-  --ink: #f4e4c1;
-  --ink-2: #dcc8a0;
-  --ink-3: #b39a74;
+  --ink: #ede0d4;
+  --ink-2: #ddb892;
+  --ink-3: #b08968;
 
-  --line: rgba(244, 228, 193, .16);
+  --line: rgba(237, 224, 212, .16);
 
-  --accent: #c9a26a;
-  --accent-ink: #dcc8a0;
-  --accent-soft: rgba(201, 162, 106, .18);
+  --accent: #ddb892;
+  --accent-ink: #e6ccb2;
+  --accent-soft: rgba(221, 184, 146, .16);
 
-  --btn-bg: #c9a26a;
-  --btn-ink: #1c130c;
-  --na-akcencie: #1c130c;
+  --btn-bg: #ddb892;
+  --btn-ink: #1e1611;
+  --na-akcencie: #1e1611;
 
-  --img: #2e2117;
-  --img-line: #4a3826;
+  --img: #30231a;
+  --img-line: #4a382a;
 
   --ok: #7fc08c;
   --ok-soft: rgba(127, 192, 140, .16);
@@ -176,12 +171,12 @@
   --mono: var(--font-sans), ui-sans-serif, -apple-system, sans-serif;
 }
 
-:root { --bg-sunken: #d5bb8d; }
-.dark { --bg-sunken: #3a2a1c; }
+:root { --bg-sunken: #ddb892; }
+.dark { --bg-sunken: #3b2c20; }
 /* Obrys przycisku ghost i innych elementów, które mają być widoczne, ale nie
    krzyczeć — mocniejszy stopień tej samej przezroczystości co `--line`. */
-:root { --line-strong: rgba(92, 61, 40, .38); }
-.dark { --line-strong: rgba(244, 228, 193, .32); }
+:root { --line-strong: rgba(127, 85, 57, .38); }
+.dark { --line-strong: rgba(237, 224, 212, .30); }
 
 /* Obwódka pola formularza. Osobny token, bo `--line` ma wobec tła kontrast
    1,29:1 — dla kreski rozdzielającej to w zupełności dość, ale pole tekstowe
@@ -191,8 +186,8 @@
 
      jasny  #8a8377 → bg 3,57  surface 3,75  panel 3,22
      ciemny #726b61 → bg 3,58  surface 3,34  panel 3,16 */
-:root { --line-pole: #8a6647; }
-.dark { --line-pole: #8c7458; }
+:root { --line-pole: #8a5a3c; }
+.dark { --line-pole: #8f7259; }
 
 /* Nadtytuł sekcji — jaśniejszy niż tekst drugorzędny, zdjęty z makiet.
    W ciemnym motywie makiet nie ma, więc trzyma tam dotychczasową rolę
