@@ -78,36 +78,13 @@ test.describe('Zaawansowany ruch', () => {
     }
   });
 
-  test('spotlight odsłania tekst snopem za kursorem', async ({ page }) => {
-    await page.goto('/');
-    const panel = page.locator('.spotlight');
-    await panel.scrollIntoViewIfNeeded();
-
-    const snop = page.locator('.spotlight-snop');
-    await expect(snop).toBeAttached();
-
-    // Przed najechaniem snop jest zgaszony
-    await expect(snop).toHaveCSS('clip-path', /circle\(0px/);
-
-    const p = (await panel.boundingBox())!;
-    await page.mouse.move(p.x + 320, p.y + 120);
-
-    // Po najechaniu koło ma promień i siedzi tam, gdzie kursor
-    await expect(snop).toHaveCSS('clip-path', /circle\(130px/);
-
-    // Oba teksty niosą to samo zdanie, ale czytnik dostaje je raz
-    await expect(snop).toHaveAttribute('aria-hidden', 'true');
-    await expect(page.locator('.spotlight-spod')).toBeVisible();
-  });
-
   test('przy ograniczonym ruchu efekty znikają, a treść zostaje', async ({ browser }) => {
     const kontekst = await browser.newContext({ reducedMotion: 'reduce' });
     const page = await kontekst.newPage();
     await page.goto('/');
 
-    // Cząsteczki i snop spotlightu nie powstają w ogóle
+    // Cząsteczki nie powstają w ogóle
     await expect(page.locator('.pole-czastek')).toHaveCount(0);
-    await expect(page.locator('.spotlight-snop')).toHaveCount(0);
 
     // Marquee stoi, ale hasła są na stronie
     await expect(page.locator('.marquee-stoi')).toBeVisible();

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { IBM_Plex_Mono, Instrument_Sans, Instrument_Serif } from 'next/font/google';
+import { Jost, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
 import { CartProvider } from '@/components/cart/CartProvider';
@@ -19,25 +19,27 @@ import { siteUrl } from '@/lib/site';
  * do Google i skok układu przy zamianie fontu zastępczego.
  * Subset latin-ext jest obowiązkowy — polskie znaki.
  */
-const display = Instrument_Serif({
+/**
+ * Playfair Display niesie nagłówki: wysoki kontrast kreski, didone'owe
+ * zakończenia, waga 700–900 w tytułach. Z makiety, gdzie h1 stoi na 900.
+ */
+const display = Playfair_Display({
   subsets: ['latin-ext'],
-  weight: ['400'],
+  weight: ['400', '500', '700', '900'],
+  style: ['normal', 'italic'],
   variable: '--font-display',
   display: 'swap',
 });
 
-const sans = Instrument_Sans({
+/**
+ * Jost obsługuje cały interfejs i wszystkie mikroetykiety. W makiecie nie ma
+ * trzeciego kroju — te same litery niosą nawigację, przyciski i nagłówki
+ * kolumn, różnicę robi wyłącznie rozstrzelenie i wersaliki.
+ */
+const sans = Jost({
   subsets: ['latin-ext'],
-  weight: ['400', '500', '600'],
+  weight: ['300', '400', '500', '600'],
   variable: '--font-sans',
-  display: 'swap',
-});
-
-/** Etykiety techniczne: nadtytuły, kategorie na kartach, nagłówki w stopce. */
-const mono = IBM_Plex_Mono({
-  subsets: ['latin-ext'],
-  weight: ['400'],
-  variable: '--font-mono',
   display: 'swap',
 });
 
@@ -112,8 +114,8 @@ export const metadata: Metadata = {
  */
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#faf9f7' },
-    { media: '(prefers-color-scheme: dark)', color: '#121110' },
+    { media: '(prefers-color-scheme: light)', color: '#faf8f4' },
+    { media: '(prefers-color-scheme: dark)', color: '#14110c' },
   ],
   // Blokada powiększania szczypaniem byłaby wygodna przy skanowaniu, ale
   // odbiera możliwość powiększenia komuś, kto tego potrzebuje.
@@ -141,7 +143,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const klasy = [
     display.variable,
     sans.variable,
-    mono.variable,
     wAplikacji ? 'w-aplikacji w-powloce' : '',
   ]
     .filter(Boolean)

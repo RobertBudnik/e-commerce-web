@@ -58,7 +58,7 @@ export function useMysz(): boolean {
 
 /**
  * Czy efekt kursorowy ma w ogóle działać — skrót na najczęstszy warunek.
- * Tilt, magnes, spotlight, cząsteczki i własny kursor pytają dokładnie o to.
+ * Tilt, magnes, cząsteczki i podobne efekty pytają dokładnie o to.
  */
 export function useEfektKursora(): boolean {
   const mysz = useMysz();

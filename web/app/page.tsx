@@ -7,7 +7,6 @@ import { PrzyciskMagnetyczny } from '@/components/ruch/PrzyciskMagnetyczny';
 import { PoleCzastek } from '@/components/ruch/PoleCzastek';
 import { StrzepkaPrzeciagana } from '@/components/ruch/StrzepkaPrzeciagana';
 import { SekcjaPrzypieta } from '@/components/ruch/SekcjaPrzypieta';
-import { Spotlight } from '@/components/ruch/Spotlight';
 import { Paralaksa } from '@/components/ruch/Paralaksa';
 import { ProductCard } from '@/components/product/ProductCard';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
@@ -134,15 +133,9 @@ export default async function HomePage() {
         </StrzepkaPrzeciagana>
       </section>
 
-      {/* Sekcja przypięta i spotlight stoją osobno, z sekcją „ostatnio
-          oglądane" między nimi. Limit ilościowy zniknął ze skilla, ale te dwa
-          sugerują sprzeczną głębię — jedna przykleja kadr, druga odsłania go
-          snopem — i postawione obok siebie znoszą się nawzajem. */}
       {JAK_TO_DZIALA.length > 0 && <SekcjaPrzypieta kroki={[...JAK_TO_DZIALA]} />}
 
       <RecentlyViewed categories={categories} className="section container" />
-
-      <Spotlight nadtytul={MARKA.spotlightNadtytul} tekst={MARKA.spotlightTekst} />
 
       {/* Newsletter pokazuje się dopiero po wpisaniu rabatu w `dane-sklepu.ts`
           i po podpięciu formularza do prawdziwej listy. Zgoda marketingowa musi
