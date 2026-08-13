@@ -622,8 +622,29 @@ p:last-child { margin-bottom: 0; }
 .cart-count[hidden] { display: none; }
 
 @media (max-width: 900px) {
-  .nav, .search { display: none; }
+  /* Nawigacja chowa się pod przycisk menu. Szukajka zostaje: to jedyne pole
+     szukania w sklepie i siedzi w pasku narzędzi katalogu, nie w nagłówku —
+     reguła chowała je razem z nawigacją, więc na telefonie nie dawało się
+     w ogóle szukać. Zamiast znikać, rozciąga się na całą szerokość. */
+  .nav { display: none; }
   .header-inner { gap: 16px; }
+}
+
+@media (max-width: 700px) {
+  .shop-tools { width: 100%; margin-left: 0; }
+  .shop-tools .search { flex: 1 1 100%; }
+
+  /* W wąskiej kolumnie nazwa szeryfem łamie się na kilka wierszy i wjeżdża
+     na cenę. Rozdzielamy je na dwa wiersze — cena pod nazwą, do lewej,
+     bo prawa krawędź jest tu za blisko. */
+  .card-naglowek { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .card-title { font-size: 1.0625rem; }
+
+  /* Szyld z ćwiercią firetu rozstrzelenia jest szeroki i na telefonie
+     wypychał przycisk konta poza ekran. Węższy krok i mniejszy stopień
+     mieszczą cały rząd, nie ruszając charakteru. */
+  .logo { font-size: .875rem; letter-spacing: .16em; padding-left: .16em; }
+  .header-inner { gap: 10px; }
 }
 
 /* ---------- Hero ---------- */
@@ -2865,6 +2886,13 @@ code {
 .btn-sm { height: 44px; }
 
 @media (max-width: 460px) {
+  /* Rząd nagłówka jest tu ciasny co do piksela — koszyk stał okrakiem na
+     krawędzi ekranu. Ustępuje szyld, nie przyciski: cele dotyku zostają
+     przy 44 px, a nazwa sklepu przycina się wielokropkiem. Przy krótkiej
+     nazwie nie widać różnicy; przy długiej lepszy wielokropek niż koszyk
+     wypchnięty za ekran. */
+  .header-actions { gap: 2px; flex: none; }
+  .logo { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   /* Przy tej szerokości nagłówek nie mieści logo, nawigacji i dwóch pigułek
      z podpisami. Podpisy znikają — ikony i licznik zostają, bo one niosą
      informację. */

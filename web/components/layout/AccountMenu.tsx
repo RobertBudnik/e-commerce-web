@@ -35,7 +35,10 @@ export function AccountMenu({ user }: { user: SessionUser | null }) {
           aria-haspopup="true"
           onClick={() => setOpen((v) => !v)}
         >
-          <Icon name="user" /> Konto
+          {/* Podpis w tej samej klasie co przy zalogowanym koncie — wąski
+              nagłówek chowa go i zostawia samą ikonę, inaczej „Konto"
+              wypychało koszyk poza krawędź ekranu. */}
+          <Icon name="user" /> <span className="account-name">Konto</span>
         </button>
         <div className="menu" data-open={String(open)}>
           <Link href="/logowanie">
