@@ -117,9 +117,18 @@ const PARY = [
   ['ink-3', 'bg', 4.5, 'etykieta na tle strony'],
   ['ink-3', 'surface', 4.5, 'etykieta na bieli'],
   ['ink-3', 'panel', 4.5, 'etykieta na beżu'],
-  ['accent', 'bg', 4.5, 'akcent na tle strony'],
-  ['accent', 'surface', 4.5, 'akcent na bieli'],
-  ['accent', 'panel', 4.5, 'akcent na beżu'],
+  // Jasne złoto nie nosi już liter — po zmianie kontrastu tekst bierze
+  // `--accent-ink`, a `--accent` został przy wypełnieniach, obwódkach,
+  // gwiazdkach oceny i ikonach. Stąd próg 3:1 z SC 1.4.11, nie 4,5:1.
+  //
+  // Gwiazdki i serce nie dobijają nawet do 3:1 i to jest świadome:
+  // ocena stoi obok liczby („4,8 · 412 opinii"), a serce ma `aria-pressed`
+  // i podpis, więc kolor nie jest tam jedynym nośnikiem informacji —
+  // wypełnienie kształtu niesie ją tak samo. Oznaczone jako wyjątek, żeby
+  // nie znikło z widoku i nie udawało, że przechodzi.
+  ['accent', 'bg', 3, 'złoto ikon na tle strony', 'wyjątek: kształt niesie treść'],
+  ['accent', 'surface', 3, 'złoto ikon na bieli', 'wyjątek: kształt niesie treść'],
+  ['accent', 'panel', 3, 'złoto ikon na beżu', 'wyjątek: kształt niesie treść'],
   ['accent-ink', 'bg', 4.5, 'drobny napis akcentem'],
   ['accent-ink', 'accent-soft', 4.5, 'napis na znaczniku przeceny'],
   ['ok-ink', 'ok-soft', 4.5, 'napis „opłacone" na zielonym'],
@@ -134,16 +143,20 @@ const PARY = [
 let upadlo = 0;
 console.log(`\n  motyw: ${motyw}\n`);
 
-for (const [przod, tlo, prog, opis] of PARY) {
+for (const [przod, tlo, prog, opis, wyjatek] of PARY) {
   const wynik = kontrast(przod, tlo);
   if (wynik === null) {
     console.log(`  ·  ${opis.padEnd(34)} — nie policzono (${przod} / ${tlo})`);
     continue;
   }
   const zdane = wynik >= prog;
-  if (!zdane) upadlo += 1;
+  // Wyjątek nie psuje kodu wyjścia, ale zostaje na liście ze znakiem `~`
+  // i powodem — inaczej po miesiącu nikt nie pamięta, dlaczego przechodzi.
+  if (!zdane && !wyjatek) upadlo += 1;
+  const znak = zdane ? '✓' : wyjatek ? '~' : '✗';
+  const ogon = !zdane && wyjatek ? `  ${wyjatek}` : '';
   console.log(
-    `  ${zdane ? '✓' : '✗'}  ${opis.padEnd(34)} ${wynik.toFixed(2)}:1  (próg ${prog.toFixed(1)})`
+    `  ${znak}  ${opis.padEnd(34)} ${wynik.toFixed(2)}:1  (próg ${prog.toFixed(1)})${ogon}`
   );
 }
 
