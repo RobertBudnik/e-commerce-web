@@ -9,6 +9,7 @@ import { ShipBar } from './ShipBar';
 import { useCart } from './CartProvider';
 import { useCartQuote } from './useCartQuote';
 import { money } from '@/lib/format';
+import { useGestZamkniecia } from '@/lib/gest-zamkniecia';
 import { useOknoModalne } from '@/lib/okno-modalne';
 
 /**
@@ -40,6 +41,10 @@ export function MiniCart() {
     zamknij: () => setOpen(false),
     pierwszyCel: '.icon-close',
   });
+
+  // Na dotyku szufladę zamyka też przeciągnięcie w prawo. Otwieranie zostaje
+  // przy CSS-ie, więc pułapka fokusu i Escape działają jak wcześniej.
+  useGestZamkniecia(panel, visible, () => setOpen(false));
 
   const byId = new Map(quote?.lines.map((l) => [l.id, l]) ?? []);
 

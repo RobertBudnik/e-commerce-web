@@ -8,6 +8,8 @@ import { QuickViewHost } from '@/components/product/QuickViewHost';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ToastHost } from '@/components/ui/ToastHost';
+import { SladKursora } from '@/components/ruch/SladKursora';
+import { NaglowekChowany } from '@/components/ruch/NaglowekChowany';
 import { WishlistProvider } from '@/components/product/WishlistProvider';
 import { headers } from 'next/headers';
 import { getSessionUser } from '@/lib/queries';
@@ -173,6 +175,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <MiniCart />
             <QuickViewHost />
             <ToastHost />
+            {/* Ruch obejmujący całą stronę. Oba komponenty nic nie renderują
+                przy ograniczonym ruchu, a ślad kursora dodatkowo milczy na
+                dotyku — w magazynie i w powłoce aplikacji nie ma ich wcale. */}
+            {!magazyn && !wAplikacji && <SladKursora />}
+            {!magazyn && !wAplikacji && <NaglowekChowany />}
           </WishlistProvider>
         </CartProvider>
       </body>

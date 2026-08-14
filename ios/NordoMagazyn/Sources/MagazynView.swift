@@ -228,7 +228,7 @@ struct MagazynView: View {
                 WebTab(zakladka: .przeglad, powloka: powloka)
             }
         }
-        .tint(Color(red: 0.62, green: 0.29, blue: 0.13))
+        .tint(Color(red: 0.612, green: 0.400, blue: 0.267))  // #9c6644 — sienna z palety
         .background(Color(UIColor.tloNordo).ignoresSafeArea())
         .animation(.easeInOut(duration: 0.2), value: zalogowany)
     }
@@ -294,7 +294,7 @@ extension UIColor {
     /// przeładowania widoku.
     static let tloNordo = UIColor { cechy in
         cechy.userInterfaceStyle == .dark
-            ? UIColor(red: 0.071, green: 0.067, blue: 0.063, alpha: 1)  // #121110
-            : UIColor(red: 0.980, green: 0.976, blue: 0.969, alpha: 1)  // #faf9f7
+            ? UIColor(red: 0.118, green: 0.086, blue: 0.067, alpha: 1)  // #1e1611
+            : UIColor(red: 0.929, green: 0.878, blue: 0.831, alpha: 1)  // #ede0d4
     }
 }

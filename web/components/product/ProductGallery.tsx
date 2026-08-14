@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import { OdsloniecieKadru } from '@/components/ruch/OdsloniecieKadru';
 import { ProductMedia } from './ProductMedia';
 import type { ZdjecieGalerii } from '@/lib/queries';
 import type { Product } from '@/lib/types';
@@ -41,9 +42,9 @@ export function ProductGallery({
   // i pokazywała ikonę, gubiąc zdjęcie, które w bazie leżało.
   if (kadry.length === 0) {
     return (
-      <div className="product-media">
+      <OdsloniecieKadru className="product-media">
         <ProductMedia product={product} sizes="(max-width: 900px) 92vw, 560px" priority />
-      </div>
+      </OdsloniecieKadru>
     );
   }
 
@@ -51,7 +52,7 @@ export function ProductGallery({
 
   return (
     <div className="product-galeria">
-      <div className="product-media">
+      <OdsloniecieKadru className="product-media">
         <Image
           // Klucz na adresie: bez niego React podmienia sam atrybut w tym samym
           // elemencie i wejście `media-in` nie ma czego animować przy zmianie
@@ -64,7 +65,7 @@ export function ProductGallery({
           sizes="(max-width: 900px) 92vw, 560px"
           priority
         />
-      </div>
+      </OdsloniecieKadru>
 
       {/* Pasek miniatur ma sens dopiero przy drugim ujęciu — przy jednym
           byłby przyciskiem, który nic nie przełącza. */}
