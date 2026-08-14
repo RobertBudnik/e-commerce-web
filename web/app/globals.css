@@ -18,52 +18,63 @@
   color-scheme: light;
 
   /* ---------------------------------------------------------------------
-     Paleta wyjściowa: len, tan, brązy
-     ede0d4 · e6ccb2 · ddb892 · b08968 · 7f5539 · 9c6644
+     Paleta z KokonutUI (kokonutui.com), zdjęta z arkusza serwisu:
 
-     Sześć odcieni wystarcza na powierzchnie i akcent, ale nie na tekst:
-     najciemniejszy z palety (#7f5539) daje na beżowej karcie 4,18:1, czyli
-     poniżej progu. Litery biorą więc trzy przyciemnienia tej samej rodziny,
-     a `--surface` jest lnem rozjaśnionym bielą w połowie. Nic tu nie jest
-     zgadnięte — każda wartość ma policzony kontrast.
+       tło        #f5f5f5     tekst      #0a0a0a
+       karta      #f1f1f1     drugi plan #737373
+       podniesione#fafafa     obwódka    #cccccc80
+       primary    #171717     na primary #fafafa
+       ciemny: tło #121212 · tekst #ebebeb · karta #212121 · warstwa #1e1e1e
+
+     Charakter tej biblioteki: **zero barwy**. Cała paleta to neutralna szarość
+     Tailwinda, a powierzchnie robi się przezroczystością na atramencie
+     (`bg-black/5`, `dark:bg-white/5`, obwódki na 6%), nie osobnym odcieniem.
+     Stąd `--accent` nie jest tu kolorem, tylko najciemniejszą czernią —
+     w tym systemie wyróżnia kontrast, nie barwa.
+
+     Złoto i ciepła biel z poprzedniej rundy wypadły w całości.
      --------------------------------------------------------------------- */
 
   /* powierzchnie — od najjaśniejszej do najgłębszej */
-  --surface: #f6f0ea;
-  --bg: #ede0d4;
-  --panel: #e6ccb2;
+  --surface: #fafafa;
+  --bg: #f5f5f5;
+  --panel: #f1f1f1;
 
-  /* tekst — trzy stopnie przyciemnionego brązu */
-  --ink: #4a3020;
-  --ink-2: #5a3a26;
-  --ink-3: #6b4630;
+  /* tekst — trzy stopnie neutralnej czerni. `--ink-3` zszedł o stopień
+     wobec ich `#737373`: tamten daje na tle strony 4,35:1, czyli tuż pod
+     progiem AA. #6b6b6b trzyma 4,89:1 i nie rusza charakteru. */
+  --ink: #0a0a0a;
+  --ink-2: #525252;
+  --ink-3: #6b6b6b;
 
-  --line: rgba(127, 85, 57, .22);
+  /* Hairline przezroczystością na atramencie, nie własnym szarym — tak
+     robi to KokonutUI i dzięki temu linia działa na każdej powierzchni. */
+  --line: rgba(10, 10, 10, .12);
 
-  /* Akcent: sienna. Plamy, kreski i ikony — 3,69:1 na tle strony, czyli dość
-     na element nietekstowy. Pod litery idzie przyciemnienie, bo sama sienna
-     schodzi na karcie do 3,10:1. */
-  --accent: #9c6644;
-  --accent-ink: #6b4630;
-  --accent-soft: rgba(156, 102, 68, .18);
+  /* „Akcent" bez barwy: primary z ich palety. Wyróżnienie niesie kontrast. */
+  --accent: #171717;
+  --accent-ink: #171717;
+  --accent-soft: rgba(10, 10, 10, .05);
 
-  /* Przycisk główny: najciemniejszy brąz z palety, napis lnem — 4,97:1. */
-  --btn-bg: #7f5539;
-  --btn-ink: #ede0d4;
+  --btn-bg: #171717;
+  --btn-ink: #fafafa;
+  --na-akcencie: #fafafa;
 
-  /* Jedyna biel w tej palecie i jedyne jej zastosowanie: litery leżące wprost
-     na siennie. Len dawał tam 4,19:1, biel daje 4,78:1. */
-  --na-akcencie: #ffffff;
+  --img: #ededed;
+  --img-line: rgba(10, 10, 10, .14);
 
-  --img: #ddb892;
-  --img-line: #c9a17c;
+  /* Kolory znaczące zostają — KokonutUI też trzyma osobny zestaw dla stanów
+     (success #00c758, warning #f99c00, error #fb2c36). Bierzemy ich rodzinę,
+     ale o dwa stopnie ciemniej, bo #00c758 pod literami daje 2,1:1. */
+  --ok: #00a544;
+  --ok-soft: rgba(0, 199, 88, .14);
+  --ok-ink: #007138;
 
-  --ok: #4a7c52;
-  --ok-soft: rgba(74, 124, 82, .16);
-  --ok-ink: #2c5c37;
-
-  --radius: 0px;
-  --radius-sm: 0px;
+  /* KokonutUI stoi na `--radius:.5rem` i schodzi/rośnie stopniami:
+     sm 6 · lg 8 · xl 12 · 2xl 16 · 3xl 24 · full. Zerowy narożnik
+     z poprzedniej rundy znika — w tej bibliotece nie ma ani jednego. */
+  --radius: 8px;
+  --radius-sm: 6px;
 
   --shadow: 0 1px 2px rgba(74, 48, 32, .06), 0 18px 40px -24px rgba(74, 48, 32, .28);
 }
@@ -76,33 +87,39 @@
 .motyw-ciemny {
   color-scheme: dark;
 
-  --surface: #261c15;
-  --bg: #1e1611;
-  --panel: #30231a;
+  --surface: #1e1e1e;
+  --bg: #121212;
+  --panel: #212121;
 
-  --ink: #ede0d4;
-  --ink-2: #ddb892;
-  --ink-3: #b08968;
+  --ink: #ebebeb;
+  --ink-2: #b3b3b3;
+  --ink-3: #949494;
 
-  --line: rgba(237, 224, 212, .16);
+  --line: rgba(255, 255, 255, .12);
 
-  --accent: #ddb892;
-  --accent-ink: #e6ccb2;
-  --accent-soft: rgba(221, 184, 146, .16);
+  /* W ciemności role się odwracają: „akcent" to najjaśniejsza biel z ich
+     palety, a przycisk główny jest białym prostokątem z czarnym napisem —
+     dokładnie jak `dark:bg-white` u nich. */
+  --accent: #ebebeb;
+  --accent-ink: #ebebeb;
+  --accent-soft: rgba(255, 255, 255, .05);
 
-  --btn-bg: #ddb892;
-  --btn-ink: #1e1611;
-  --na-akcencie: #1e1611;
+  --btn-bg: #ebebeb;
+  --btn-ink: #121212;
+  --na-akcencie: #121212;
 
-  --img: #30231a;
-  --img-line: #4a382a;
+  --img: #212121;
+  --img-line: rgba(255, 255, 255, .14);
 
-  --ok: #7fc08c;
-  --ok-soft: rgba(127, 192, 140, .16);
-  --ok-ink: #9ed4a8;
+  --ok: #00c758;
+  --ok-soft: rgba(0, 199, 88, .16);
+  --ok-ink: #5ee9b5;
 
-  --radius: 0px;
-  --radius-sm: 0px;
+  /* KokonutUI stoi na `--radius:.5rem` i schodzi/rośnie stopniami:
+     sm 6 · lg 8 · xl 12 · 2xl 16 · 3xl 24 · full. Zerowy narożnik
+     z poprzedniej rundy znika — w tej bibliotece nie ma ani jednego. */
+  --radius: 8px;
+  --radius-sm: 6px;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 18px 40px -24px rgba(0, 0, 0, .9);
 }
@@ -128,26 +145,74 @@
 
   --r-sm: var(--radius-sm);
   --r: var(--radius);
-  --r-lg: 0px;
-  /* Nazwa została, znaczenie nie: pigułek w tym projekcie nie ma. Token
-     zostaje, bo wisi na nim kilkadziesiąt reguł — zmiana wartości tutaj
-     wyprostowała je wszystkie naraz. */
-  --r-pill: 0px;
+  --r-lg: 16px;
+  /* Pigułka wróciła do gry: `rounded-full` jest u nich drugim najczęstszym
+     promieniem zaraz po `rounded-lg` — noszą go znaczniki, awatary i małe
+     przyciski ikonowe. */
+  --r-pill: 9999px;
 
-  /* układ */
-  --maxw: 1160px;
-  --gutter: 28px;
+  /* Układ z Figmy: kontener 1400 px, margines boczny 32 px, oddech sekcji
+     120 px góra i dół (pasmo „the story" 140 px). Poprzednie 1160/28 ściskało
+     siatkę trzech kart — w Figmie te same trzy karty dostają 942 px na
+     tysiącpikselowym ekranie i 24 px rynny między kolumnami. */
+  --maxw: 1400px;
+  --gutter: 32px;
   --header-h: 72px;
 
-  /* Ruch — czasy i krzywe odczytane z opublikowanej makiety, nie dobrane
-     z głowy. Kolor reaguje natychmiast (200 ms), tło i obwódka wolniej
-     (400 ms), a zdjęcie w kadrze jedzie 600 ms łagodną krzywą — to ono
-     buduje wrażenie ciężaru. Nazwy tokenów mówią o roli, nie o liczbie,
-     żeby zmiana tempa całego serwisu była zmianą w jednym miejscu. */
-  --ruch-kolor: .2s;
-  --ruch-tlo: .4s;
-  --ruch-kadr: .6s;
-  --krzywa: cubic-bezier(.25, .46, .45, .94);
+  /* Oddech sekcji — jedna wartość, żeby rytm strony zmieniał się w jednym
+     miejscu. `--oddech-duzy` niosą pasma pełnej szerokości. */
+  --oddech: 120px;
+  --oddech-duzy: 140px;
+
+  /* Ruch — czasy i krzywe zdjęte z inspektora trzech referencji, nie dobrane
+     z głowy. Każda wartość niżej ma adres, pod którym ją zmierzono:
+
+       bang-olufsen.com  color .2s cubic-bezier(.165,.84,.44,1)  (42 elementy)
+                         all   .4s cubic-bezier(.165,.84,.44,1)
+                         transform .5s cubic-bezier(.85,0,.15,1)
+       cuberto.com       transform 1.2s cubic-bezier(.16,1,.3,1) (30 elementów)
+                         transform  .8s cubic-bezier(.16,1,.3,1) (20 elementów)
+       khaite.com        opacity .3s ease — samo wejście zdjęcia, nic więcej
+
+     Podział ról: detal (kolor, obwódka, drobny hover) reaguje szybko krzywą
+     kwartową z B&O, bo tam liczy się odzew. Wszystko, co niesie masę — kadr,
+     odsłonięcie sekcji, kurtyna — jedzie krzywą wykładniczą z Cuberto: rusza
+     mocno i długo dohamowuje, i to ona daje wrażenie ciężaru zamiast pośpiechu.
+     Nazwy mówią o roli, nie o liczbie, więc tempo całego serwisu zmienia się
+     tutaj, a nie w siedemdziesięciu regułach niżej.
+
+     ROZSTRZYGNIĘCIE: Figma ma własny motion system (`/animation-guide`) i on
+     wygrywa wszędzie tam, gdzie podaje liczbę — bo podaje ją wprost, a nie
+     przez „feeling". Twardych reguł stamtąd nie łamiemy:
+
+       hover 80–150 ms · komponenty 150–250 ms · panele 250–400 ms
+       przejście strony 350–500 ms · reveal 500–800 ms, nigdy > 800 ms
+       stagger = index × 60 ms, maks. 6 elementów
+       zakaz: bounce, elastic, spring · zakaz paralaksy na treści
+       scale karty maks. 1.03 — „więcej to tandeta"
+
+     Referencje wchodzą tam, gdzie Figma milczy: kształt krzywej w klasie
+     ease-out (Cuberto ma .16,1,.3,1 zamiast płaskiego 0,0,.3,1 — ta sama
+     rodzina, mocniejsze dohamowanie), rozdział czasów detalu i masy z B&O
+     oraz cały ślad kursora, którego w Figmie nie ma wcale.
+
+     Czasy niżej to górne krańce widełek Figmy, nie środek — stamtąd bierze
+     się „wolno i z celem" bez wychodzenia poza specyfikację. */
+  --ruch-kolor: .15s;
+  --ruch-tlo: .25s;
+  --ruch-kadr: .4s;
+  --ruch-odsloniecie: .8s;
+  /* Opóźnienie kaskady — formuła z Figmy, nie dobrana z oka. */
+  --ruch-stagger: 60ms;
+
+  /* easeOutExpo — Cuberto, w klasie ease-out z Figmy. Wszystko, co wchodzi. */
+  --krzywa: cubic-bezier(.16, 1, .3, 1);
+  /* easeOutQuart — B&O. Detal i odzew na kursor. */
+  --krzywa-detal: cubic-bezier(.165, .84, .44, 1);
+  /* ease-in z Figmy — wyłącznie wyjścia (element znika). */
+  --krzywa-wyjscie: cubic-bezier(.4, 0, 1, 1);
+  /* ease-in-out z Figmy — transformacja w miejscu. */
+  --krzywa-obie: cubic-bezier(.4, 0, .2, 1);
 
   /* Warstwy elementów unoszących się nad treścią. Trzymane w jednym
      miejscu, żeby pasek zakupu nie wylądował nad modalem. */
@@ -160,23 +225,22 @@
   --z-modal: 100;
   --z-toast: 120;
 
-  /* typografia
-     Playfair Display w nagłówkach, Jost w całym interfejsie. Trzeciego
-     kroju nie ma: `--mono` wskazuje na ten sam Jost, bo w tym języku
-     etykietę od treści odróżnia rozstrzelenie i wersaliki, nie krój.
-     Podmiana to zmiana zmiennej niżej plus krój z next/font
-     w web/app/layout.tsx. Subset latin-ext obowiązkowy — polskie znaki. */
+  /* typografia — Geist wszędzie, tak jak w KokonutUI.
+     Szeryf zniknął w całości: `--display` wskazuje na ten sam krój co
+     interfejs, bo w tej bibliotece hierarchię niesie stopień i waga, nie
+     zmiana pisma. `--mono` to Geist Mono i idzie wyłącznie pod liczby
+     stojące w kolumnie. Subset latin-ext obowiązkowy — polskie znaki. */
   --sans: var(--font-sans), ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --display: var(--font-display), "Iowan Old Style", Georgia, "Times New Roman", serif;
-  --mono: var(--font-sans), ui-sans-serif, -apple-system, sans-serif;
+  --display: var(--font-display), ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-:root { --bg-sunken: #ddb892; }
-.dark { --bg-sunken: #3b2c20; }
+:root { --bg-sunken: #e5e5e5; }
+.dark { --bg-sunken: #2a2a2a; }
 /* Obrys przycisku ghost i innych elementów, które mają być widoczne, ale nie
    krzyczeć — mocniejszy stopień tej samej przezroczystości co `--line`. */
-:root { --line-strong: rgba(127, 85, 57, .38); }
-.dark { --line-strong: rgba(237, 224, 212, .30); }
+:root { --line-strong: rgba(10, 10, 10, .28); }
+.dark { --line-strong: rgba(255, 255, 255, .28); }
 
 /* Obwódka pola formularza. Osobny token, bo `--line` ma wobec tła kontrast
    1,29:1 — dla kreski rozdzielającej to w zupełności dość, ale pole tekstowe
@@ -186,8 +250,8 @@
 
      jasny  #8a8377 → bg 3,57  surface 3,75  panel 3,22
      ciemny #726b61 → bg 3,58  surface 3,34  panel 3,16 */
-:root { --line-pole: #8a5a3c; }
-.dark { --line-pole: #8f7259; }
+:root { --line-pole: #737373; }
+.dark { --line-pole: #7a7a7a; }
 
 /* Nadtytuł sekcji — jaśniejszy niż tekst drugorzędny, zdjęty z makiet.
    W ciemnym motywie makiet nie ma, więc trzyma tam dotychczasową rolę
@@ -209,7 +273,7 @@
    nie nadaje się pod tekst, a jako element nietekstowy nie dobija do 3:1
    z SC 1.4.11. Dioda ma obok siebie podpis słowny („Niskie stany", „próg 5"),
    więc kolor nie jest jedynym nośnikiem informacji i to ratuje sytuację. */
-:root { --uwaga: #e2a438; --uwaga-soft: oklch(0.93 0.05 85); }
+:root { --uwaga: #dd7400; --uwaga-soft: oklch(0.93 0.05 85); }
 .dark { --uwaga: oklch(0.80 0.12 92); --uwaga-soft: oklch(0.31 0.05 92); }
 
 /* ---------- Reset / base ---------- */
@@ -248,17 +312,17 @@ h1, h2, h3, h4 {
   line-height: 1.1;
 }
 
-/* Duże nagłówki idą szeryfem. Playfair niesie je wagą, nie rozmiarem:
-   w makiecie h1 stoi na 900 z interlinią poniżej jedności, h2 na 700.
-   Trackingu nie ściskamy — didone ma własny rytm i ujemny odstęp zlepia mu
-   zakończenia liter. */
+/* Nagłówki bez szeryfa i bez ciężkich wag. KokonutUI trzyma je na 600 i ściska
+   tracking — przy grotesku to ujemny odstęp robi „drogi" nagłówek, tak jak
+   przy didone robiła go waga 900. Zostawienie tamtych 900 na Geiście dałoby
+   napis gruby, nie mocny. */
 h1, h2 {
   font-family: var(--display);
   font-optical-sizing: auto;
-  letter-spacing: normal;
+  letter-spacing: -.035em;
 }
-h1 { font-weight: 900; line-height: .95; }
-h2 { font-weight: 700; line-height: 1.1; }
+h1 { font-weight: 600; line-height: 1; }
+h2 { font-weight: 600; line-height: 1.1; }
 /* Rozstrzał skali robi tu wrażenie ceny. Nagłówek dwa razy większy od treści
    czyta się jako katalog; cztery razy większy — jako marka. Dolna granica
    zostaje nietknięta, bo na telefonie większy szeryf zaczyna się łamać
@@ -320,8 +384,11 @@ p:last-child { margin-bottom: 0; }
 /* Powietrze między sekcjami jest tu materiałem, nie pustką — to ono oddziela
    „katalog" od „marki". Podniesione wraz ze skalą nagłówków; jedno bez
    drugiego wygląda na pomyłkę w arkuszu stylów. */
-.section { padding-block: clamp(56px, 8.5vw, 132px); }
-.section-tight { padding-block: clamp(40px, 5vw, 64px); }
+.section { padding-block: clamp(80px, 9vw, var(--oddech)); }
+.section-tight { padding-block: clamp(48px, 5vw, 72px); }
+/* Pasma pełnej szerokości dostają w Figmie 140 px zamiast 120 — szerszy
+   blok potrzebuje więcej powietrza, żeby nie wyglądał na wklejony. */
+.section-szerokie { padding-block: clamp(96px, 10vw, var(--oddech-duzy)); }
 
 .section-head {
   display: flex;
@@ -329,7 +396,10 @@ p:last-child { margin-bottom: 0; }
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
-  margin-bottom: 36px;
+  /* Figma stawia siatkę wyraźnie niżej niż nagłówek — 36 px kleiło tytuł
+     do pierwszego rzędu kart i kasowało efekt oddechu, po który idzie
+     całe 120 px na sekcji. */
+  margin-bottom: 56px;
 }
 .section-head p { margin: 0; color: var(--ink-soft); }
 
@@ -657,18 +727,35 @@ p:last-child { margin-bottom: 0; }
   .header-inner { gap: 10px; }
 }
 
-/* ---------- Hero ---------- */
-.hero { border-bottom: 1px solid var(--line); }
-.hero-inner {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 64px;
-  align-items: center;
-  /* Skrócone o mniej więcej jedną trzecią wobec 128 px: przy większym
-     nagłówku hero i tak zajmuje swoje, a pierwsze kafle mają zahaczać
-     o dół pierwszego ekranu. Sklep ma pokazać towar, nie tylko nazwę. */
-  padding-block: clamp(48px, 6vw, 88px);
+/* ---------- Hero ----------
+   Figma daje hero cały pierwszy ekran i opiera treść o jego dół, a kadr
+   rozciąga od krawędzi do krawędzi — bez kontenera, bez podziału na kolumny.
+   Stąd `100svh`, nie `100vh`: na telefonie pasek adresu chowa się przy
+   przewijaniu i przy `vh` hero podskakiwałby w trakcie czytania.
+
+   Poprzedni układ (dwie kolumny, tekst obok ilustracji) zniknął, ale nic
+   z treści nie — nadtytuł, hasło, akapit, przyciski i statystyki stoją teraz
+   w jednej kolumnie nad kadrem. */
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
 }
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  /* Treść siada nad dolną krawędzią z tym samym oddechem, co sekcje niżej —
+     hero nie jest wyjątkiem od rytmu strony, tylko jego pierwszym taktem. */
+  padding-block: var(--oddech) clamp(56px, 7vw, 96px);
+  max-width: min(var(--maxw), 100%);
+}
+/* Hasło ma się łamać jak w Figmie — na własnej szerokości, nie na całej
+   stronie. Powyżej tej miary wiersz robi się za długi na szeryfa w tym
+   stopniu i oko gubi początek następnego. */
+.hero-inner > div:first-child { max-width: 62ch; }
 .hero h1 { margin-bottom: .35em; text-wrap: balance; }
 .hero .label { display: block; margin-bottom: 20px; }
 .hero-actions { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
@@ -688,18 +775,61 @@ p:last-child { margin-bottom: 0; }
 }
 .hero-stats div span { font-size: .8125rem; color: var(--ink-faint); }
 
+/* Kadr wypełnia całą sekcję i leży pod treścią. `inset: 0` zamiast proporcji,
+   bo o wysokości decyduje teraz hero, nie obrazek. Skala 1.06 daje paralaksie
+   zapas — bez niej przy przesunięciu wyjrzałaby spod kadru goła krawędź. */
 .hero-media {
-  aspect-ratio: 5 / 4;
-  border-radius: var(--r-lg);
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 0;
   background: var(--bg-soft);
   display: grid;
   place-items: center;
   color: var(--line-strong);
 }
-.hero-media svg { width: 42%; height: auto; }
+/* Dopóki w hero nie stoi zdjęcie, ikona jest znakiem miejsca, nie tematem
+   kadru. Siedzi w górnej części, żeby nie wchodzić pod hasło, i trzyma
+   rozmiar bliżej znaku wodnego — na 38vw wyglądała jak bohater strony,
+   którym nie jest. */
+/* Warstwa skalowana przez `KadrZoom`. Mierzony prostokąt (`.hero-media`)
+   musi zostać nieruchomy, więc transformacja siedzi o poziom niżej. */
+.kadr-zoom-warstwa {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 45%;
+}
+.hero-media > div > div {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding-bottom: 22vh;
+}
+.hero-media svg { width: min(18vw, 168px); height: auto; opacity: .7; }
+
+/* Treść leży wprost na kadrze, więc kadr musi ustąpić literom. Pionowy
+   gradient przygasza dolną połowę, gdzie siedzi hasło, i zostawia górę
+   czystą. Sam token `--bg` w obu motywach, więc nie trzeba drugiej reguły. */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    var(--bg) 0%,
+    color-mix(in srgb, var(--bg) 78%, transparent) 38%,
+    transparent 72%
+  );
+}
 
 @media (max-width: 900px) {
-  .hero-inner { grid-template-columns: 1fr; gap: 40px; padding-block: 56px; }
+  /* Na telefonie pełny ekran zjadałby całą pierwszą stronę na samo hasło.
+     Zostaje kadr i rytm, znika sztywne 100svh. */
+  .hero { min-height: 82svh; }
+  .hero-inner { padding-block: 72px 56px; }
   .hero-stats { gap: 28px; }
 }
 
@@ -720,29 +850,65 @@ p:last-child { margin-bottom: 0; }
 .features-wrap { max-width: var(--maxw); margin-inline: auto; }
 
 /* ---------- Kategorie ---------- */
+/* Rynna z Figmy jest niesymetryczna i to jest celowe: 24 px w poziomie,
+   40 px w pionie. Kolumny stoją wtedy blisko siebie jak w katalogu, a rzędy
+   oddychają. Próg 280 px zamiast 210 px trzyma trzy karty w rzędzie zamiast
+   czterech — w Figmie na tysiącu pikseli są trzy. */
 .categories {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 40px 24px;
 }
+/* Kategoria z Figmy to kadr, nie kafelek: pion 4:5, żadnej obwódki, żadnego
+   promienia, nazwa oparta o dolną krawędź. Obwódka i cień odpadły razem —
+   w tym systemie plamę od plamy oddziela sam kadr, a nie kreska wokół niego.
+
+   Figma trzyma tam zdjęcia i kładzie na nich kremowy szeryf. Dopóki zdjęć nie
+   ma, litery zostają czarne na jasnym kadrze — krem na beżu dawałby 1,2:1.
+   Wraca do kremu w chwili, gdy pod spodem stanie fotografia. */
 .category {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 26px 24px 24px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: var(--surface);
-  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  justify-content: flex-end;
+  gap: 4px;
+  aspect-ratio: 4 / 5;
+  padding: 28px;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--img);
+  overflow: hidden;
+  transition: background-color var(--ruch-tlo) var(--krzywa-detal);
 }
-.category:hover {
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow);
-  transform: translateY(-2px);
+.category:hover { background: var(--bg-sunken); }
+
+/* Ikona jest znakiem miejsca po zdjęciu — leży pod tekstem, na środku kadru,
+   i nie bierze udziału w hierarchii. */
+.category svg {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 34%;
+  height: auto;
+  color: var(--img-line);
+  transition: transform var(--ruch-kadr) var(--krzywa);
 }
-.category svg { width: 22px; height: 22px; color: var(--ink-faint); margin-bottom: 12px; }
-.category strong { font-weight: 500; letter-spacing: -.015em; }
-.category span { font-size: .875rem; color: var(--ink-faint); }
+/* Sufit 1.03 z motion systemu Figmy — ten sam, co na karcie produktu. */
+.category:hover svg { transform: scale(1.03); }
+
+.category strong {
+  position: relative;
+  font-family: var(--display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -.02em;
+}
+.category span {
+  position: relative;
+  font-size: .8125rem;
+  color: var(--ink-2);
+}
 
 /* ---------- Toolbar ---------- */
 .toolbar {
@@ -755,9 +921,10 @@ p:last-child { margin-bottom: 0; }
   border-bottom: 1px solid var(--line);
 }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-/* Filtry: kanciaste pudełka z cienką złotą kreską, aktywny na pełnym złocie.
+/* Filtry: pigułki z hairline'em, aktywna na pełnym atramencie.
    Wersaliki i rozstrzelenie jak w całej nawigacji. */
 .chip {
+  position: relative;
   height: 34px;
   padding-inline: 18px;
   border: 1px solid var(--line);
@@ -769,14 +936,24 @@ p:last-child { margin-bottom: 0; }
   letter-spacing: .18em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: color .15s ease, background .15s ease, border-color .15s ease;
+  transition: color .15s ease, border-color .15s ease;
 }
 .chip:hover { color: var(--ink); border-color: var(--line-strong); }
-.chip[aria-pressed="true"] {
-  color: var(--na-akcencie);
+
+/* Wypełnienie aktywnego filtra to osobny element ze wspólnym `layoutId`,
+   nie tło przypisane do przycisku — dzięki temu przy zmianie kategorii
+   plama nie gaśnie tu i nie zapala się tam, tylko przejeżdża między
+   pigułkami. To jest odpowiednik „shared layout animation" z katalogu
+   Motion, zbudowany na publicznym `layout`, nie na płatnym komponencie. */
+.chip-tlo {
+  position: absolute;
+  inset: -1px;
+  z-index: 0;
+  border-radius: var(--r-pill);
   background: var(--accent);
-  border-color: var(--accent);
 }
+.chip-tekst { position: relative; z-index: 1; }
+.chip[aria-pressed="true"] { color: var(--na-akcencie); border-color: transparent; }
 
 .select-wrap { margin-left: auto; position: relative; display: inline-flex; align-items: center; }
 .select-wrap::after {
@@ -827,7 +1004,9 @@ select:hover { border-color: var(--line-strong); }
 
 .card-media {
   position: relative;
-  aspect-ratio: 3 / 4;
+  /* 4:5 z Figmy — kadr produktu jest tam odrobinę niższy niż nasze 3:4
+     i przy trzech kolumnach to on ustawia wysokość całego rzędu. */
+  aspect-ratio: 4 / 5;
   border-radius: var(--r);
   background: var(--bg-soft);
   display: grid;
@@ -897,7 +1076,10 @@ select:hover { border-color: var(--line-strong); }
    się w jednym wierszu, czy w dwóch. Bez tego rząd kafli rozjeżdża się przy
    pierwszej dłuższej nazwie, a w siatce widać to od razu. */
 .card-body > .btn:last-child { margin-top: auto; }
-.card-cat { font-size: .5625rem; font-weight: 600; letter-spacing: .25em; text-transform: uppercase; color: var(--etykieta); }
+/* Nadtytuł kategorii idzie złotem — w Figmie to jedyne miejsce na karcie,
+   gdzie akcent dotyka liter. 4,76:1 na tle strony, więc mieści się w AA
+   mimo dziewięciu pikseli stopnia. */
+.card-cat { font-size: .5625rem; font-weight: 600; letter-spacing: .25em; text-transform: uppercase; color: var(--accent-ink); }
 /* Nazwa produktu idzie szeryfem — w makiecie to ona, nie cena, jest
    najmocniejszym elementem kafla. Grotesk zostaje przy liczbach. */
 .card-title {
@@ -1207,6 +1389,38 @@ select:hover { border-color: var(--line-strong); }
 
 /* ---------- Stopka ---------- */
 .site-footer { padding-block: clamp(48px, 6vw, 72px) 32px; font-size: .875rem; }
+
+/* ---------- Stopka odsłaniana spod treści ----------
+   Klasę i wysokość ustawia `OdsloniecieStopki` po zmierzeniu stopki. Dopóki
+   ich nie ma, stopka jest zwyczajna — efekt nie może zależeć od tego, czy
+   JavaScript zdążył.
+
+   Treść dostaje własne tło i wyższą warstwę, więc przewijając zsuwa się
+   z nieruchomej stopki jak kartka z blatu. Margines na dole rezerwuje pod nią
+   dokładnie tyle miejsca, ile stopka zajmuje. */
+.stopka-odslaniana .site-footer {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 0;
+  /* Odsłanianie musi być widać. Stopka w kolorze strony zsuwałaby się spod
+     treści niezauważona, więc dostaje o stopień głębszą powierzchnię —
+     tyle wystarczy, żeby krawędź czytała się jako druga warstwa. */
+  background: var(--bg-sunken);
+}
+.stopka-odslaniana #tresc {
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+  margin-bottom: var(--stopka-h, 0px);
+}
+
+/* Powyżej pewnej wysokości stopka zjadałaby cały ekran, więc efekt działa
+   tylko tam, gdzie zostaje miejsce na treść nad nim. Na niskich oknach
+   i przy ograniczonym ruchu stopka wraca do zwykłego przepływu. */
+@media (max-height: 700px), (prefers-reduced-motion: reduce) {
+  .stopka-odslaniana .site-footer { position: static; }
+  .stopka-odslaniana #tresc { margin-bottom: 0; }
+}
 .footer-grid {
   display: grid;
   grid-template-columns: 1.6fr repeat(3, 1fr);
@@ -1491,7 +1705,26 @@ select {
   cursor: pointer;
   transition: background .16s ease, color .16s ease;
 }
-.tab[aria-selected="true"] { background: var(--accent); color: var(--na-akcencie); }
+/* Wypełnienie aktywnej zakładki, jak przy filtrach katalogu: osobny element
+   ze wspólnym `layoutId`, więc przy przełączeniu plama przejeżdża między
+   zakładkami zamiast gasnąć i zapalać się. */
+/* Przycisk „do koszyka": napis i potwierdzenie leżą na sobie w jednej
+   komórce siatki, więc podmiana nie rusza szerokości przycisku. */
+.przycisk-koszyk-warstwa { display: grid; place-items: center; width: 100%; }
+.przycisk-koszyk-warstwa > * { grid-area: 1 / 1; }
+.przycisk-koszyk-tresc { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.przycisk-koszyk-tresc svg { width: 15px; height: 15px; }
+
+.tab { position: relative; }
+.tab-wskaznik {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+}
+.tab-tekst { position: relative; z-index: 1; }
+.tab[aria-selected="true"] { color: var(--na-akcencie); }
 
 .auth-actions { margin-top: 26px; display: grid; gap: 14px; }
 .auth-alt { text-align: center; font-size: .875rem; color: var(--ink-faint); }
@@ -1891,13 +2124,14 @@ code {
    natychmiastowy. */
 [data-reveal][data-reveal] {
   opacity: 0;
-  translate: 0 26px;
-  scale: .982;
+  /* 20 px i tylko tyle — Figma podaje tę wartość wprost przy fade-up. */
+  translate: 0 20px;
+  scale: .985;
   transition:
-    opacity .5s cubic-bezier(.22, .61, .36, 1) var(--reveal-delay, 0ms),
-    translate .66s cubic-bezier(.16, .84, .34, 1) var(--reveal-delay, 0ms),
-    scale .66s cubic-bezier(.16, .84, .34, 1) var(--reveal-delay, 0ms),
-    transform .26s cubic-bezier(.2, .7, .3, 1);
+    opacity .5s ease var(--reveal-delay, 0ms),
+    translate var(--ruch-odsloniecie) var(--krzywa) var(--reveal-delay, 0ms),
+    scale var(--ruch-odsloniecie) var(--krzywa) var(--reveal-delay, 0ms),
+    transform var(--ruch-tlo) var(--krzywa-detal);
   will-change: opacity, translate, scale;
 }
 [data-reveal][data-reveal].is-in {
@@ -1909,13 +2143,13 @@ code {
 
 /* Nagłówek sekcji jedzie krócej niż siatka pod nim — inaczej cała strona
    kołysze się w tym samym rytmie. */
-.section-head[data-reveal][data-reveal] { translate: 0 16px; scale: 1; }
+.section-head[data-reveal][data-reveal] { translate: 0 24px; scale: 1; }
 
 /* Ikona w kafelku osiada chwilę po samym kafelku. Reguła znika razem
    z klasą, więc nie wchodzi w drogę powiększeniu na hover. */
 .card[data-reveal]:not(.is-in) .card-media-link svg {
   transform: scale(1.05);
-  transition: transform .8s cubic-bezier(.16, .84, .34, 1);
+  transition: transform var(--ruch-odsloniecie) var(--krzywa);
   transition-delay: var(--reveal-delay, 0ms);
 }
 
@@ -1928,25 +2162,30 @@ code {
   .card[data-reveal]:not(.is-in) .card-media-link svg { transform: none; }
 }
 
-/* ---------- Kafelek: uniesienie na hover ---------- */
+/* ---------- Kafelek: uniesienie na hover ----------
+   Wzorzec z B&O: karta nie „skacze", tylko odchodzi od siatki jedną krzywą
+   kwartową. Cień dochodzi wolniej od samego uniesienia, więc kafelek najpierw
+   się rusza, a dopiero potem odrywa od tła. */
 .card {
-  transition: transform .26s cubic-bezier(.2, .7, .3, 1);
+  transition: transform var(--ruch-tlo) var(--krzywa-detal);
 }
-.card:hover { transform: translateY(-3px); }
+.card:hover { transform: translateY(-4px); }
 .card:hover .card-media { box-shadow: var(--shadow); }
-.card-media { transition: background .25s ease, box-shadow .26s ease; }
+.card-media { transition: background var(--ruch-tlo) var(--krzywa-detal), box-shadow .5s var(--krzywa-detal); }
 
 /* Paralaksa w kaflu: zdjęcie dochodzi na miejsce wolniej niż unosi się karta.
    Wrażenie masy bierze się z różnicy czasów, nie z odległości — karta jedzie
-   260 ms, zdjęcie 550 ms, więc przez chwilę zostaje w tyle jak coś ciężkiego
-   za szybą. Skala celowo mała: przy 1.1 widać już kadrowanie, a nie głębię. */
+   400 ms krzywą kwartową, zdjęcie 800 ms wykładniczą, więc przez chwilę
+   zostaje w tyle jak coś ciężkiego za szybą. Skala celowo mała: przy 1.1 widać
+   już kadrowanie, a nie głębię. */
 .card-media .media-img {
   transition: transform var(--ruch-kadr) var(--krzywa);
 }
-.card:hover .card-media .media-img { transform: scale(1.055); }
+/* 1.03 to sufit z Figmy („więcej to tandeta"), nie wynik dobierania. */
+.card:hover .card-media .media-img { transform: scale(1.03); }
 /* Ikona zastępcza dostaje ten sam czas, żeby kafle ze zdjęciem i bez niego
    nie zachowywały się w siatce jak dwa różne komponenty. */
-.card-media-link svg { transition-duration: .55s; }
+.card-media-link svg { transition-duration: var(--ruch-kadr); }
 
 /* ---------- Serce: jednorazowy akcent przy dodaniu ---------- */
 @keyframes wish-pop {
@@ -4270,7 +4509,7 @@ body:has(.mag) { background: var(--panel); }
   aspect-ratio: 1 / 1;
   border-radius: 12px;
   overflow: hidden;
-  background: #14130f;
+  background: #121212;
 }
 .mag-kadr video { width: 100%; height: 100%; object-fit: cover; }
 

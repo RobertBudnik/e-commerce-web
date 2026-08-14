@@ -5,6 +5,7 @@ import { Icon } from '@/components/Icon';
 import { ProductMedia } from './ProductMedia';
 import { money, stars } from '@/lib/format';
 import { OdometrCeny } from '@/components/ruch/OdometrCeny';
+import { PrzyciskDoKoszyka } from '@/components/ruch/PrzyciskDoKoszyka';
 import { useCart } from '@/components/cart/CartProvider';
 import { useWishlist } from './WishlistProvider';
 import { openQuickView } from './QuickViewHost';
@@ -75,21 +76,19 @@ export function ProductCard({
           {product.oldPrice && <span className="price-old">{money(product.oldPrice)}</span>}
         </div>
         <div className="card-cta">
-          <button
-            className="btn btn-ghost btn-block"
-            type="button"
+          <PrzyciskDoKoszyka
             disabled={out}
-            onClick={(e) => {
+            onAdd={(el) => {
               // Lot startuje z kadru zdjęcia, nie z przycisku: to zdjęcie jest
               // tym, co klient właśnie oglądał, i za nim powędruje wzrokiem.
               if (!bezRuchu) {
-                lotDoKoszyka(e.currentTarget.closest('.card')?.querySelector('.card-media') ?? null);
+                lotDoKoszyka(el.closest('.card')?.querySelector('.card-media') ?? null);
               }
               cart.add(product.id, 1, product.stock);
             }}
           >
             {out ? 'Niedostępny' : 'Do koszyka'}
-          </button>
+          </PrzyciskDoKoszyka>
         </div>
       </div>
     </article>

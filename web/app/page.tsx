@@ -7,7 +7,7 @@ import { PrzyciskMagnetyczny } from '@/components/ruch/PrzyciskMagnetyczny';
 import { PoleCzastek } from '@/components/ruch/PoleCzastek';
 import { StrzepkaPrzeciagana } from '@/components/ruch/StrzepkaPrzeciagana';
 import { SekcjaPrzypieta } from '@/components/ruch/SekcjaPrzypieta';
-import { Paralaksa } from '@/components/ruch/Paralaksa';
+import { KadrZoom } from '@/components/ruch/KadrZoom';
 import { ProductCard } from '@/components/product/ProductCard';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { getCategories, getProducts } from '@/lib/queries';
@@ -31,8 +31,18 @@ export default async function HomePage() {
           którymi sklep byłby związany wobec kupującego. */}
       {OBIETNICE.length > 0 && <Marquee hasla={OBIETNICE.map((o) => o.tytul)} />}
 
+      {/* Hero z Figmy: kadr na całą wysokość pierwszego ekranu, treść oparta
+          o jego dół. Ilustracja przestała być drugą kolumną siatki i zeszła
+          pod spód jako tło — dlatego stoi tu przed `.hero-inner`, a nie w
+          środku. Nic z zawartości nie ubyło: nadtytuł, hasło, akapit, oba
+          przyciski i statystyki są tam, gdzie były. */}
       <section className="hero">
         <PoleCzastek />
+        <KadrZoom className="hero-media">
+          <div role="img" aria-label="Ilustracja produktu">
+            <Icon name="headphones" />
+          </div>
+        </KadrZoom>
         <div className="container hero-inner">
           <div>
             <span className="label">{MARKA.nadtytulHero}</span>
@@ -59,14 +69,6 @@ export default async function HomePage() {
               </div>
             )}
           </div>
-          {/* Ilustracja jedzie wolniej niż tekst obok — hero dostaje głębię
-              bez ani jednego cienia. Siła celowo mała: ma być wyczuwalna,
-              a nie zauważalna jako efekt. */}
-          <Paralaksa sila={0.1} className="hero-media" >
-            <div role="img" aria-label="Ilustracja produktu">
-              <Icon name="headphones" />
-            </div>
-          </Paralaksa>
         </div>
       </section>
 

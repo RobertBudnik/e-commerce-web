@@ -2,11 +2,41 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { ProductGrid } from './ProductGrid';
 import { SortStack } from '@/components/ui/SortStack';
+import { useRuchWylaczony } from '@/lib/ruch';
 import type { Category, Product } from '@/lib/types';
 import { ile, PRODUKTY } from '@/lib/odmiana';
+
+/**
+ * Wypełnienie aktywnego filtra.
+ *
+ * Wspólny `layoutId` sprawia, że przy zmianie kategorii Motion nie odmontowuje
+ * jednej plamy i nie montuje drugiej, tylko animuje przejście między ich
+ * położeniami — jedna plama przejeżdża wzdłuż paska filtrów. To ten sam
+ * mechanizm, co „shared layout animation" w katalogu Motion; API jest
+ * publiczne, więc nie potrzeba stamtąd ani linijki kodu.
+ *
+ * Sprężyna zamiast czasu: pasek filtrów bywa klikany szybko po sobie i
+ * sprężyna przejmuje pęd trwającego ruchu, zamiast startować od zera przy
+ * każdym kliknięciu. Przy ograniczonym ruchu plama pojawia się na miejscu.
+ */
+function PlamaFiltra() {
+  const bezRuchu = useRuchWylaczony();
+
+  if (bezRuchu) return <span className="chip-tlo" aria-hidden="true" />;
+
+  return (
+    <motion.span
+      className="chip-tlo"
+      aria-hidden="true"
+      layoutId="chip-tlo"
+      transition={{ type: 'spring', stiffness: 380, damping: 34, mass: 0.8 }}
+    />
+  );
+}
 
 const SORT_OPTIONS = [
   { value: 'popular', label: 'Najpopularniejsze' },
@@ -102,7 +132,8 @@ export function ShopBrowser({
             aria-pressed={kategoria === 'all'}
             onClick={() => przejdz({ kategoria: 'all', strona: 1 })}
           >
-            Wszystkie
+            {kategoria === 'all' && <PlamaFiltra />}
+            <span className="chip-tekst">Wszystkie</span>
           </button>
           {categories.map((c) => (
             <button
@@ -112,7 +143,8 @@ export function ShopBrowser({
               aria-pressed={kategoria === c.id}
               onClick={() => przejdz({ kategoria: c.id, strona: 1 })}
             >
-              {c.name}
+              {kategoria === c.id && <PlamaFiltra />}
+              <span className="chip-tekst">{c.name}</span>
             </button>
           ))}
         </div>

@@ -5,9 +5,11 @@ import { animate, useMotionValue, useMotionValueEvent } from 'motion/react';
 import { useRuchWylaczony } from '@/lib/ruch';
 import { money } from '@/lib/format';
 
-const CZAS = 0.5; // s — Motion liczy w sekundach
-/** Krzywa z makiety: łagodne wyhamowanie, ta sama co przy kadrach zdjęć. */
-const KRZYWA: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
+const CZAS = 0.8; // s — Motion liczy w sekundach
+/** easeOutExpo — ta sama co przy kadrach zdjęć (`--krzywa` w globals.css)
+ *  i ten sam czas co `--ruch-kadr`. Cena jest w karcie razem ze zdjęciem,
+ *  więc obie rzeczy mają zatrzymywać się w tym samym momencie. */
+const KRZYWA: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 /**
  * Cena dolicza się od zera, gdy karta wjedzie w pole widzenia.

@@ -5,6 +5,7 @@ import { ProductCard } from './ProductCard';
 import { useUjawnianie } from '@/lib/ujawnianie';
 import { useFlip } from '@/lib/flip';
 import { Tilt } from '@/components/ruch/Tilt';
+import { PrzesuniecieOdPredkosci } from '@/components/ruch/PrzesuniecieOdPredkosci';
 import type { Category, Product } from '@/lib/types';
 
 /** Kaskada wejścia: 70 × √index — początek wyraźny, ósmy kafelek nie każe czekać. */
@@ -36,17 +37,22 @@ export function ProductGrid({
 
   const nameOf = (id: string) => categories.find((c) => c.id === id)?.name ?? id;
 
+  // Pochylenie od prędkości siedzi na opakowaniu, nie na samej siatce:
+  // `useFlip` i obserwator ujawniania mierzą tu prostokąty kafelków, a te
+  // muszą być czytane bez transformacji nałożonej na rodzica.
   return (
-    <div className="grid" ref={grid}>
-      {products.map((product, i) => (
-        <Tilt key={product.id} id={product.id}>
-          <ProductCard
-            product={product}
-            categoryName={nameOf(product.category)}
-            delay={delayFor(i)}
-          />
-        </Tilt>
-      ))}
-    </div>
+    <PrzesuniecieOdPredkosci className="grid-ruch">
+      <div className="grid" ref={grid}>
+        {products.map((product, i) => (
+          <Tilt key={product.id} id={product.id}>
+            <ProductCard
+              product={product}
+              categoryName={nameOf(product.category)}
+              delay={delayFor(i)}
+            />
+          </Tilt>
+        ))}
+      </div>
+    </PrzesuniecieOdPredkosci>
   );
 }

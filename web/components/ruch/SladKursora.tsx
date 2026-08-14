@@ -30,11 +30,19 @@ export function SladKursora() {
   const x = useMotionValue(-100);
   const y = useMotionValue(-100);
 
-  // Punkt niemal bez opóźnienia, pierścień miękko — stąd dwie różne sprężyny.
+  /* Punkt niemal bez opóźnienia, pierścień miękko — stąd dwie różne sprężyny.
+     Podział jest zdjęty z cuberto.com: tam zewnętrzny `.cb-cursor` siedzi
+     na kursorze klatka w klatkę (mierzone: dojazd w jednej klatce), a całe
+     wrażenie fizyki robi warstwa wewnętrzna, wyhamowywana osobno.
+
+     Pierścień jest tu cięższy niż był: sztywność z 170 na 120, masa z 0,6
+     na 0,9. Tłumienie 22 przy krytycznym 2·√(120·0,9) ≈ 20,8 zostawia go
+     ledwie przetłumionym — dojeżdża bez drgania, ale wyraźnie za ręką.
+     Sprężyna niedotłumiona wyglądałaby tu na usterkę, nie na ciężar. */
   const punktX = useSpring(x, { stiffness: 900, damping: 60, mass: 0.2 });
   const punktY = useSpring(y, { stiffness: 900, damping: 60, mass: 0.2 });
-  const kolkoX = useSpring(x, { stiffness: 170, damping: 22, mass: 0.6 });
-  const kolkoY = useSpring(y, { stiffness: 170, damping: 22, mass: 0.6 });
+  const kolkoX = useSpring(x, { stiffness: 120, damping: 22, mass: 0.9 });
+  const kolkoY = useSpring(y, { stiffness: 120, damping: 22, mass: 0.9 });
 
   const predkoscX = useVelocity(kolkoX);
   const predkoscY = useVelocity(kolkoY);
@@ -121,7 +129,14 @@ export function SladKursora() {
     const nad = (e: PointerEvent) => {
       const cel = e.target as HTMLElement | null;
       const klikalne = cel?.closest('a, button, [role="button"], input, select');
-      animate(node, { width: klikalne ? 56 : 30, height: klikalne ? 56 : 30 }, { duration: 0.22 });
+      // 0,35 s krzywą wykładniczą — dokładnie tyle, ile ma `.cb-cursor-inner`
+      // na cuberto.com. Przy 0,22 s puchnięcie czytało się jak przeskok stanu,
+      // a nie jak reakcja na zbliżenie do celu.
+      animate(
+        node,
+        { width: klikalne ? 56 : 30, height: klikalne ? 56 : 30 },
+        { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+      );
     };
 
     window.addEventListener('pointerover', nad, { passive: true });

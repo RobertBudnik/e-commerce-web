@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { ShipBar } from './ShipBar';
 import { useCart } from './CartProvider';
@@ -88,13 +89,32 @@ export function MiniCart() {
             <ShipBar value={quote.subtotal - quote.discount} goal={quote.freeShippingFrom} />
           )}
 
+          {/* Pozycje wchodzą i wychodzą jak talia kart: nowa kładzie się na
+              wierzchu, usunięta odjeżdża w bok, a te pod nią przesuwają się
+              na jej miejsce zamiast przeskakiwać. Wzorzec „Clerk: Card Stack"
+              z katalogu Motion — `layout` robi tu całą robotę z domykaniem
+              luki, `AnimatePresence` obsługuje samo wyjęcie.
+
+              `popLayout` jest tu konieczny: bez niego usuwana pozycja przez
+              cały czas animacji dalej zajmuje miejsce w kolumnie i reszta
+              rusza dopiero po jej zniknięciu, czyli dokładnie odwrotnie niż
+              ma wyglądać domykanie luki. */}
+          <AnimatePresence initial={false} mode="popLayout">
           {lines.map((line) => {
             const info = byId.get(line.id);
             const look = media.get(line.id);
             if (!info) return null;
 
             return (
-              <div className="drawer-item" key={line.id}>
+              <motion.div
+                className="drawer-item"
+                key={line.id}
+                layout
+                initial={{ opacity: 0, y: -12, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 32, scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 420, damping: 38, mass: 0.8 }}
+              >
                 <div className="drawer-item-media">
                   {look?.image ? (
                     <Image className="media-img" src={look.image} alt="" width={56} height={56} />
@@ -144,9 +164,10 @@ export function MiniCart() {
                   </div>
                 </div>
                 <div className="drawer-item-total num">{money(info.total)}</div>
-              </div>
+              </motion.div>
             );
           })}
+          </AnimatePresence>
         </div>
 
         {Boolean(lines.length) && quote && (
