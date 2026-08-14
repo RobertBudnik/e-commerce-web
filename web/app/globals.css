@@ -4862,3 +4862,77 @@ a.pw-kafel:hover { background: var(--panel); }
   .pw-slupek-opis { display: none; }
   .pw-filtry { gap: 8px; }
 }
+
+/* ---------- Ślad kursora ---------- */
+/* Dwie warstwy nad wszystkim, obie przezroczyste dla myszy. Systemowy kursor
+   zostaje na miejscu — to jest dodatek do wskaźnika, nie jego zamiennik. */
+.slad-punkt,
+.slad-pierscien {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-toast);
+  pointer-events: none;
+  translate: -50% -50%;
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+
+.slad-punkt[data-widoczny],
+.slad-pierscien[data-widoczny] { opacity: 1; }
+
+.slad-punkt {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.slad-pierscien {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  /* Rozciąganie w kierunku ruchu liczy komponent; tu tylko punkt obrotu,
+     żeby smuga szła przez środek, a nie z rogu. */
+  transform-origin: 50% 50%;
+}
+
+/* Dotyk nie ma czego śledzić, a na wąskim ekranie ślad tylko zasłania. */
+@media (hover: none), (pointer: coarse), (max-width: 700px) {
+  .slad-punkt, .slad-pierscien { display: none; }
+}
+
+/* ---------- Chowany nagłówek ---------- */
+.site-header {
+  transition: translate var(--ruch-tlo) var(--krzywa);
+}
+
+.naglowek-schowany .site-header { translate: 0 -100%; }
+
+/* Ograniczony ruch: nagłówek stoi, siatka się nie pochyla. Reguła globalna
+   ścina czasy, ale przesunięcia trzeba wyłączyć osobno — inaczej pasek
+   zniknąłby skokiem zamiast zostać na miejscu. */
+@media (prefers-reduced-motion: reduce) {
+  .naglowek-schowany .site-header { translate: none; }
+}
+
+/* ---------- Kurtyna przejścia ---------- */
+/* Pas przesuwający się w górę przy każdej zmianie trasy.
+   Kolor tła strony, nie akcentu: pełna sienna na cały ekran przez pół sekundy
+   czytała się jak błysk usterki, a nie jak przejście. Akcent został jako
+   trzypikselowa krawędź — widać ruch, nie widać plamy.
+   `pointer-events: none` jest warunkiem, nie ozdobą: kurtyna leży nad całą
+   stroną i bez tego łykałaby kliknięcia przez czas trwania. */
+.kurtyna {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  pointer-events: none;
+  background: var(--bg);
+  border-bottom: 3px solid var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kurtyna { display: none; }
+}
