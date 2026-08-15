@@ -4,8 +4,11 @@ import { useEffect, useRef, useState } from 'react';
 import { animate, useMotionValue, useMotionValueEvent } from 'motion/react';
 import { useRuchWylaczony } from '@/lib/ruch';
 
-const CZAS = 0.9; // s — Motion liczy w sekundach
-const KRZYWA: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
+const CZAS = 0.8; // s — sufit z motion systemu Figmy, nigdy więcej
+/** easeOutExpo — ta sama krzywa i ten sam czas, co ruch niosący masę
+ *  na cuberto.com. Liczba rusza mocno i długo dohamowuje, więc ostatnie
+ *  cyfry da się przeczytać, zamiast oglądać sam bęben. */
+const KRZYWA: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 /**
  * Liczba dolicza się od zera, gdy wjedzie w pole widzenia.

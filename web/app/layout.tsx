@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Jost, Playfair_Display } from 'next/font/google';
+import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 
 import { CartProvider } from '@/components/cart/CartProvider';
@@ -10,6 +10,7 @@ import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { SladKursora } from '@/components/ruch/SladKursora';
 import { NaglowekChowany } from '@/components/ruch/NaglowekChowany';
+import { OdsloniecieStopki } from '@/components/ruch/OdsloniecieStopki';
 import { WishlistProvider } from '@/components/product/WishlistProvider';
 import { headers } from 'next/headers';
 import { getSessionUser } from '@/lib/queries';
@@ -22,26 +23,27 @@ import { siteUrl } from '@/lib/site';
  * Subset latin-ext jest obowiązkowy — polskie znaki.
  */
 /**
- * Playfair Display niesie nagłówki: wysoki kontrast kreski, didone'owe
- * zakończenia, waga 700–900 w tytułach. Z makiety, gdzie h1 stoi na 900.
+ * KokonutUI nie ma szeryfa. Cały serwis — nagłówki, interfejs, etykiety —
+ * jedzie jednym krojem Geist; różnicę robi stopień i waga, nie zmiana pisma.
+ * Zmienna `--font-display` zostaje pod tą samą nazwą, bo wisi na niej kilkaset
+ * odwołań w `globals.css`; wskazuje teraz na ten sam krój co interfejs.
  */
-const display = Playfair_Display({
+const display = Geist({
   subsets: ['latin-ext'],
-  weight: ['400', '500', '700', '900'],
-  style: ['normal', 'italic'],
   variable: '--font-display',
   display: 'swap',
 });
 
-/**
- * Jost obsługuje cały interfejs i wszystkie mikroetykiety. W makiecie nie ma
- * trzeciego kroju — te same litery niosą nawigację, przyciski i nagłówki
- * kolumn, różnicę robi wyłącznie rozstrzelenie i wersaliki.
- */
-const sans = Jost({
+const sans = Geist({
   subsets: ['latin-ext'],
-  weight: ['300', '400', '500', '600'],
   variable: '--font-sans',
+  display: 'swap',
+});
+
+/** Geist Mono pod liczby, które mają stać w kolumnie: tabele i kwoty. */
+const mono = Geist_Mono({
+  subsets: ['latin-ext'],
+  variable: '--font-mono',
   display: 'swap',
 });
 
@@ -116,8 +118,8 @@ export const metadata: Metadata = {
  */
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#faf8f4' },
-    { media: '(prefers-color-scheme: dark)', color: '#14110c' },
+    { media: '(prefers-color-scheme: light)', color: '#f5f5f5' },
+    { media: '(prefers-color-scheme: dark)', color: '#121212' },
   ],
   // Blokada powiększania szczypaniem byłaby wygodna przy skanowaniu, ale
   // odbiera możliwość powiększenia komuś, kto tego potrzebuje.
@@ -145,6 +147,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const klasy = [
     display.variable,
     sans.variable,
+    mono.variable,
     wAplikacji ? 'w-aplikacji w-powloce' : '',
   ]
     .filter(Boolean)
@@ -172,6 +175,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {children}
             </div>
             {!magazyn && !wAplikacji && <SiteFooter />}
+            {!magazyn && !wAplikacji && <OdsloniecieStopki />}
             <MiniCart />
             <QuickViewHost />
             <ToastHost />

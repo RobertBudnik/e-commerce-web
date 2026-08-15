@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Icon } from '@/components/Icon';
 import { ProductGrid } from './ProductGrid';
 import { SortStack } from '@/components/ui/SortStack';
+import { PlamaWyboru } from '@/components/ruch/PlamaWyboru';
 import type { Category, Product } from '@/lib/types';
 import { ile, PRODUKTY } from '@/lib/odmiana';
 
@@ -102,7 +103,8 @@ export function ShopBrowser({
             aria-pressed={kategoria === 'all'}
             onClick={() => przejdz({ kategoria: 'all', strona: 1 })}
           >
-            Wszystkie
+            {kategoria === 'all' && <PlamaWyboru layoutId="chip-tlo" className="chip-tlo" />}
+            <span className="chip-tekst">Wszystkie</span>
           </button>
           {categories.map((c) => (
             <button
@@ -112,7 +114,8 @@ export function ShopBrowser({
               aria-pressed={kategoria === c.id}
               onClick={() => przejdz({ kategoria: c.id, strona: 1 })}
             >
-              {c.name}
+              {kategoria === c.id && <PlamaWyboru layoutId="chip-tlo" className="chip-tlo" />}
+              <span className="chip-tekst">{c.name}</span>
             </button>
           ))}
         </div>

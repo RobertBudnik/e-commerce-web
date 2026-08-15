@@ -16,9 +16,12 @@ import { useRuchWylaczony } from '@/lib/ruch';
  * przesuwa się pas w kolorze akcentu — odpowiednik „curtain wipe" z katalogu
  * Motion, zbudowany na `clip-path` zamiast płatnego komponentu.
  *
- * Czasy krótkie i to jest świadome: użytkownik czeka tu na treść, więc górna
- * granica z makiety (0,6 s na kadr) jest tu sufitem, nie celem. Kurtyna, która
- * trwa sekundę, przestaje być efektem, a staje się opóźnieniem.
+ * Czasy są tu jedynym miejscem, gdzie referencje przegrywają z użytkownikiem.
+ * Cuberto trzyma 1,2 s na ruchu niosącym masę i tak jedzie reszta serwisu
+ * (`--ruch-odsloniecie`), ale tam ruch zdobi treść, która już jest na ekranie.
+ * Kurtyna stoi między kliknięciem a treścią, więc dostaje 0,6 s — tyle, ile
+ * B&O daje swoim przejściom. Sekunda przestałaby być efektem, a stała się
+ * opóźnieniem. Krzywa zostaje ta sama co wszędzie: easeOutExpo.
  */
 export default function Template({ children }: { children: React.ReactNode }) {
   const bezRuchu = useRuchWylaczony();
@@ -34,13 +37,13 @@ export default function Template({ children }: { children: React.ReactNode }) {
         aria-hidden="true"
         initial={{ clipPath: 'inset(0 0 0 0)' }}
         animate={{ clipPath: 'inset(0 0 100% 0)' }}
-        transition={{ duration: 0.42, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
       />
       <motion.div
         key={sciezka}
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.08 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
       >
         {children}
       </motion.div>
