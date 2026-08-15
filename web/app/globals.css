@@ -3838,15 +3838,30 @@ code {
  *    sam wiersz zachowuje się tak samo w powłoce, w Safari i w podglądzie
  *    obok innej treści — liczy się miejsce, które faktycznie dostał.
  */
+/* Magazyn ma dwa wcielenia i różnią się tutaj, nie w komponentach.
+   Baza to **podstrona sklepu**: krój serwisu, tło serwisu, wysokość z treści.
+   Wcielenie przyrządu siedzi niżej, pod `.w-aplikacji`, i dopiero ono bierze
+   systemowy krój, własne tło i cały ekran.
+
+   Odwrotna kolejność byłaby wygodniejsza w pisaniu (przyrząd jako baza), ale
+   kłamałaby o tym, co jest normą: magazyn otwierany z laptopa to zwykła
+   podstrona pod nagłówkiem sklepu, a powłoka to przypadek szczególny. */
 .mag {
   --mag-gutter: clamp(12px, 4vw, 24px);
   --mag-maxw: 34rem;
   container: magazyn / inline-size;
-  min-height: 100dvh;
   padding-inline: 0;
+  padding-block: clamp(32px, 5vw, 56px) clamp(48px, 7vw, 88px);
+  color: var(--ink);
+}
+
+/* Powłoka: przyrząd. Kadr od krawędzi do krawędzi, systemowy krój, własne
+   tło i cała wysokość ekranu — tu magazyn nie jest podstroną, tylko całą
+   aplikacją. */
+.w-aplikacji .mag {
+  min-height: 100dvh;
   padding-block: max(8px, env(safe-area-inset-top)) 0;
   background: var(--panel);
-  color: var(--ink);
   font-family: -apple-system, "SF Pro Text", system-ui, var(--sans);
 }
 
@@ -3859,14 +3874,19 @@ code {
   margin-inline: auto;
 }
 
-/* Ekran magazynu ma własne tło, a po wyśrodkowaniu kolumny zostają boki.
-   Bez tego na tablecie po obu stronach świeciłby kremowy kolor sklepu. */
-body:has(.mag) { background: var(--panel); }
+/* Przyrząd ma własne tło, a po wyśrodkowaniu kolumny zostają boki. Bez tego
+   na tablecie po obu stronach świeciłby kolor sklepu.
 
-/* Powyżej szerokości telefonu ekran dostaje oddech u góry — inaczej tytuł
-   przykleja się do krawędzi tabletu tak samo jak do notcha. */
+   W przeglądarce reguła nie obowiązuje i to jest sedno tej pary wcieleń:
+   magazyn jako podstrona ma leżeć na tle sklepu, między jego nagłówkiem
+   a jego stopką, a nie wycinać z serwisu prostokąt w innym kolorze. */
+.w-aplikacji body:has(.mag) { background: var(--panel); }
+
+/* Powyżej szerokości telefonu przyrząd dostaje oddech u góry — inaczej tytuł
+   przykleja się do krawędzi tabletu tak samo jak do notcha. Podstrony to nie
+   dotyczy: tam odstęp od nagłówka daje już `padding-block` z bazy. */
 @container magazyn (min-width: 520px) {
-  .mag { padding-block-start: 24px; }
+  .w-aplikacji .mag { padding-block-start: 24px; }
 }
 
 /* ---------- Miejsce pod natywnym paskiem zakładek ----------
