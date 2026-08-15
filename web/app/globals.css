@@ -3990,12 +3990,20 @@ code {
 }
 
 /* ---------- Lista grupowana ---------- */
+/* Karta w języku KokonutUI: powierzchnia plus hairline liczony
+   przezroczystością na atramencie, nie własnym szarym. Sama powierzchnia
+   bez obrysu gubiła krawędź w przeglądarce — tam karta leży na tle sklepu,
+   które jest bliżej `--surface` niż tło przyrządu w powłoce. */
 .mag-karta {
   margin-inline: var(--mag-gutter);
-  border-radius: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   background: var(--surface);
   overflow: hidden;
 }
+/* W powłoce karta leży na `--panel` i obrys jest zbędny — kontrast robi
+   różnica powierzchni. */
+.w-aplikacji .mag-karta { border-color: transparent; }
 .mag-karta + .mag-karta { margin-top: 10px; }
 
 .mag-wiersz {
@@ -4112,9 +4120,11 @@ code {
 }
 .mag-kafel {
   padding: 14px;
-  border-radius: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   background: var(--surface);
 }
+.w-aplikacji .mag-kafel { border-color: transparent; }
 .mag-kafel-liczba {
   display: block;
   font-family: var(--mono);
@@ -4136,7 +4146,7 @@ code {
   gap: 2px;
   margin: 12px var(--mag-gutter) 0;
   padding: 2px;
-  border-radius: 10px;
+  border-radius: var(--r);
   background: var(--bg-sunken);
 }
 .mag-segment {
@@ -4198,7 +4208,7 @@ code {
   gap: 8px;
   min-height: 44px;
   padding-inline: 12px;
-  border-radius: 10px;
+  border-radius: var(--r);
   background: var(--surface);
 }
 .mag-szukaj input {
@@ -4221,7 +4231,7 @@ code {
 .mag-pusto {
   margin: 10px var(--mag-gutter) 0;
   padding: 22px 16px;
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   background: var(--surface);
   color: var(--ink-2);
   font-size: 14px;
@@ -4273,7 +4283,7 @@ code {
   width: 100%;
   padding-inline: 16px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   background: var(--btn-bg);
   color: var(--btn-ink);
   font: inherit;
@@ -4356,7 +4366,7 @@ code {
 }
 
 /* ---------- Korekta stanu ---------- */
-.mag-korekta { margin-inline: var(--mag-gutter); padding: 16px 14px; border-radius: 12px; background: var(--surface); }
+.mag-korekta { margin-inline: var(--mag-gutter); padding: 16px 14px; border-radius: var(--r-lg); background: var(--surface); }
 .mag-korekta-gora {
   display: flex;
   align-items: center;
@@ -4499,7 +4509,7 @@ code {
   min-height: 44px;
   padding: 11px 14px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   background: var(--surface);
   color: var(--ink);
   font: inherit;
@@ -4540,7 +4550,7 @@ code {
 .mag-kadr {
   position: relative;
   aspect-ratio: 1 / 1;
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   overflow: hidden;
   background: #121212;
 }
@@ -4641,7 +4651,7 @@ code {
 .mag-arkusz {
   margin: 12px var(--mag-gutter) 0;
   padding: 16px 14px;
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   background: var(--surface);
   animation: mag-arkusz .22s cubic-bezier(.2, .7, .3, 1);
 }
@@ -4839,7 +4849,7 @@ code {
   min-height: 52px;
   padding: 0 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   background: var(--surface);
   color: var(--ink);
   font-family: var(--mono);
