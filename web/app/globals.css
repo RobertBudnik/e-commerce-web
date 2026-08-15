@@ -4427,7 +4427,20 @@ body:has(.mag) { background: var(--panel); }
   font-weight: 500;
   cursor: pointer;
 }
-.mag-skrot[aria-pressed="true"] { border-color: var(--ink); border-width: 2px; }
+/* Wybrany skok bierze pełne wypełnienie, nie grubszą obwódkę. Na ekranie
+   trzymanym w rękawicy, pod magazynową lampą, dwa piksele kreski to za mało
+   — a plama ma tę zaletę, że przejeżdża między skokami zamiast przeskakiwać
+   (wspólny `layoutId`, jak filtry w katalogu). */
+.mag-skrot { position: relative; overflow: hidden; }
+.mag-skrot-tlo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+}
+.mag-skrot-tekst { position: relative; z-index: 1; }
+.mag-skrot[aria-pressed="true"] { border-color: var(--ink); color: var(--bg); }
 
 /* Przełącznik kierunku. Wcześniej był pełnowymiarowym rdzawym przyciskiem
    i przykuwał wzrok mocniej niż licznik, wokół którego kręci się ten ekran.

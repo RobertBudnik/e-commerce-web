@@ -5,6 +5,8 @@ import { useFormStatus } from 'react-dom';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { signInAction, signUpAction, type AuthState } from '@/app/actions/auth';
 import { useRuchWylaczony } from '@/lib/ruch';
+import { PlamaWyboru } from '@/components/ruch/PlamaWyboru';
+import { PoleWarunkowe } from '@/components/ruch/PoleWarunkowe';
 
 /**
  * Warianty panelu logowania i rejestracji.
@@ -23,58 +25,6 @@ const PANEL = {
   na_miejscu: { opacity: 1, x: 0 },
   wyjscie: (kierunek: number) => ({ opacity: 0, x: kierunek * -24 }),
 };
-
-/**
- * Treść, która dochodzi i znika w miejscu, nie spychając reszty skokiem.
- *
- * Wzorzec „Clerk: Conditional Field" z katalogu Motion: animowana jest
- * wysokość razem z przejrzystością, więc formularz pod spodem zjeżdża
- * płynnie zamiast przeskakiwać o wysokość komunikatu.
- *
- * `height: 'auto'` w Motion mierzy element i animuje do zmierzonej wartości,
- * więc działa też wtedy, gdy komunikat złamie się na dwa wiersze.
- * `overflow: hidden` jest konieczny — bez niego treść wystaje poza kurczące
- * się pudełko przez cały czas trwania animacji.
- */
-function PoleWarunkowe({
-  bezRuchu,
-  children,
-}: {
-  bezRuchu: boolean;
-  children: React.ReactNode;
-}) {
-  if (bezRuchu) return <>{children}</>;
-
-  return (
-    <AnimatePresence initial={false}>
-      {children ? (
-        <motion.div
-          style={{ overflow: 'hidden' }}
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
-        >
-          {children}
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
-  );
-}
-
-/** Podkreślenie aktywnej zakładki — ten sam `layoutId`, co przy filtrach. */
-function WskaznikZakladki({ bezRuchu }: { bezRuchu: boolean }) {
-  if (bezRuchu) return <span className="tab-wskaznik" aria-hidden="true" />;
-
-  return (
-    <motion.span
-      className="tab-wskaznik"
-      aria-hidden="true"
-      layoutId="tab-wskaznik"
-      transition={{ type: 'spring', stiffness: 420, damping: 36, mass: 0.7 }}
-    />
-  );
-}
 
 function Submit({ label }: { label: string }) {
   const { pending } = useFormStatus();
@@ -110,7 +60,7 @@ export function AuthTabs({ defaultTab, back }: { defaultTab: 'login' | 'register
           aria-selected={tab === 'login'}
           onClick={() => setTab('login')}
         >
-          {tab === 'login' && <WskaznikZakladki bezRuchu={bezRuchu} />}
+          {tab === 'login' && <PlamaWyboru layoutId="tab-wskaznik" className="tab-wskaznik" />}
           <span className="tab-tekst">Logowanie</span>
         </button>
         <button
@@ -120,19 +70,19 @@ export function AuthTabs({ defaultTab, back }: { defaultTab: 'login' | 'register
           aria-selected={tab === 'register'}
           onClick={() => setTab('register')}
         >
-          {tab === 'register' && <WskaznikZakladki bezRuchu={bezRuchu} />}
+          {tab === 'register' && <PlamaWyboru layoutId="tab-wskaznik" className="tab-wskaznik" />}
           <span className="tab-tekst">Rejestracja</span>
         </button>
       </div>
 
-      <PoleWarunkowe bezRuchu={bezRuchu}>
+      <PoleWarunkowe>
         {state.error && (
           <p className="notice notice-error" role="alert">
             {state.error}
           </p>
         )}
       </PoleWarunkowe>
-      <PoleWarunkowe bezRuchu={bezRuchu}>
+      <PoleWarunkowe>
         {state.notice && (
           <p className="notice notice-ok" role="status">
             {state.notice}
@@ -200,6 +150,11 @@ export function AuthTabs({ defaultTab, back }: { defaultTab: 'login' | 'register
  * `initial={false}` — pierwsze wejście nie jest animowane. Formularz logowania
  * to często pierwsza rzecz, którą ktoś widzi po kliknięciu „Konto"; wjeżdżanie
  * z boku na starcie wygląda jak opóźnienie, nie jak efekt.
+ *
+ * Przy wyłączonym ruchu schodzi czas, nie drzewo. Gałąź zwracająca goły
+ * fragment odmontowywałaby formularz tuż po hydratacji — `useRuchWylaczony`
+ * startuje od `true`, więc React zobaczyłby wtedy inny typ elementu w tym
+ * samym miejscu i skasował wpisane już pola.
  */
 function PanelPrzejscia({
   klucz,
@@ -212,10 +167,10 @@ function PanelPrzejscia({
   bezRuchu: boolean;
   children: React.ReactNode;
 }) {
-  if (bezRuchu) return <>{children}</>;
-
   return (
-    <MotionConfig transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}>
+    <MotionConfig
+      transition={bezRuchu ? { duration: 0 } : { duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+    >
       <AnimatePresence mode="wait" initial={false} custom={kierunek}>
         <motion.div
           key={klucz}

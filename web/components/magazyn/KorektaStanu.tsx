@@ -2,8 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
 import { korygujStanAction } from '@/app/actions/magazyn';
 import { POWODY_KOREKTY } from '@/lib/magazyn-powody';
+import { PoleWarunkowe } from '@/components/ruch/PoleWarunkowe';
+import { PlamaWyboru } from '@/components/ruch/PlamaWyboru';
+import { useRuchWylaczony } from '@/lib/ruch';
 import { zeZnakiem } from '@/lib/format';
 
 type Props = {
@@ -37,6 +41,7 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
   const [zapisuje, setZapisuje] = useState(false);
   const [blad, setBlad] = useState<string | null>(null);
   const [klucz, setKlucz] = useState(() => crypto.randomUUID());
+  const bezRuchu = useRuchWylaczony();
 
   const wynik = stan + delta;
   const ponizejZera = wynik < 0;
@@ -91,26 +96,34 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
           )}
         </p>
 
+        {/* Przyciski ustępują pod palcem. To nie ozdoba: ekran obsługuje się
+            w rękawicy, często nie patrząc na niego wprost, a `whileTap` jest
+            jedynym sygnałem „dotknięcie weszło", który nie wymaga czytania
+            liczby. Wzorzec z „Add to basket" w katalogu Motion. */}
         <div className="mag-korekta-srodek">
-          <button
+          <motion.button
             type="button"
             className="mag-krok"
             onClick={() => zmien(-1)}
             aria-label="Zdejmij jedną sztukę"
+            whileTap={bezRuchu ? undefined : { scale: 0.92 }}
+            transition={{ duration: 0.14, ease: [0.165, 0.84, 0.44, 1] }}
           >
             −
-          </button>
+          </motion.button>
           <span className="mag-korekta-wynik" aria-live="polite">
             {Math.max(wynik, 0)}
           </span>
-          <button
+          <motion.button
             type="button"
             className="mag-krok mag-krok-plus"
             onClick={() => zmien(1)}
             aria-label="Dodaj jedną sztukę"
+            whileTap={bezRuchu ? undefined : { scale: 0.92 }}
+            transition={{ duration: 0.14, ease: [0.165, 0.84, 0.44, 1] }}
           >
             +
-          </button>
+          </motion.button>
         </div>
 
         <p className="mag-korekta-delta">
@@ -123,12 +136,18 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
         </p>
 
         {/* Komunikat przy liczbie, nie w okienku — okienko zabiera ekran
-            i nie mówi, której liczby dotyczy. */}
-        {ponizejZera && (
-          <p className="mag-blad" style={{ marginTop: 8 }}>
-            Na stanie jest {stan} szt., nie można zdjąć {Math.abs(delta)}
-          </p>
-        )}
+            i nie mówi, której liczby dotyczy.
+
+            Dochodzi animowaną wysokością, bo pod nim stoją skoki: bez tego
+            pojawienie się ostrzeżenia zbija je o wysokość wiersza dokładnie
+            w chwili, gdy ktoś celuje w nie palcem. */}
+        <PoleWarunkowe>
+          {ponizejZera && (
+            <p className="mag-blad" style={{ marginTop: 8 }}>
+              Na stanie jest {stan} szt., nie można zdjąć {Math.abs(delta)}
+            </p>
+          )}
+        </PoleWarunkowe>
 
         {/* Skoki siedzą w tej samej karcie co licznik — należą do niego,
             a nie do ekranu. Poza kartą wyglądały jak osobna sekcja. */}
@@ -144,7 +163,10 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
                 setDelta(krok * kierunek);
               }}
             >
-              {kierunek > 0 ? `+${krok}` : `−${krok}`}
+              {delta === krok * kierunek && (
+                <PlamaWyboru layoutId="mag-skrot-plama" className="mag-skrot-tlo" />
+              )}
+              <span className="mag-skrot-tekst">{kierunek > 0 ? `+${krok}` : `−${krok}`}</span>
             </button>
           ))}
         </div>
@@ -210,7 +232,7 @@ export function KorektaStanu({ produktId, stanZBazy, progNiski }: Props) {
               ? 'Zapisz zmianę'
               : `Zapisz zmianę · ${zeZnakiem(delta)} szt.`}
         </button>
-        {blad && <p className="mag-blad">{blad}</p>}
+        <PoleWarunkowe>{blad && <p className="mag-blad">{blad}</p>}</PoleWarunkowe>
         <p className="mag-drobne" style={{ margin: 0 }}>
           zmiana widoczna w sklepie od razu
         </p>
