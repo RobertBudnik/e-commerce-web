@@ -9,7 +9,6 @@ import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { SladKursora } from '@/components/ruch/SladKursora';
-import { NaglowekChowany } from '@/components/ruch/NaglowekChowany';
 import { OdsloniecieStopki } from '@/components/ruch/OdsloniecieStopki';
 import { WishlistProvider } from '@/components/product/WishlistProvider';
 import { headers } from 'next/headers';
@@ -131,11 +130,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // dodatkowego zapytania, a token weryfikuje Auth, nie przeglądarka.
   const user = await getSessionUser();
 
-  // Magazyn to osobne narzędzie, nie mobilna odmiana sklepu. Nagłówek
-  // z koszykiem i stopka z regulaminem tylko zabierałyby tam miejsce.
+  // Magazyn ma dwie twarze i to jest świadome:
+  //
+  //   w przeglądarce — zwykła podstrona sklepu. Nagłówek, stopka, ta sama
+  //     typografia i to samo tło. Ktoś, kto wchodzi tu z laptopa, porusza się
+  //     po jednym serwisie, a nie po dwóch różnych aplikacjach pod jednym
+  //     adresem, i musi mieć jak wrócić do sklepu.
+  //
+  //   w powłoce — przyrząd. Bez nagłówka z koszykiem, bez stopki
+  //     z regulaminem, systemowy krój, kadr od krawędzi do krawędzi.
+  //     Tam magazyn jest całą aplikacją, więc nawigacja sklepu tylko
+  //     zabierałaby miejsce.
+  //
+  // Rozróżnia je wyłącznie `wAplikacji`, nie ścieżka.
   const naglowki = await headers();
-  const sciezka = naglowki.get('x-nordo-path') ?? '';
-  const magazyn = sciezka.startsWith('/magazyn');
 
   // Treść jedzie do natywnej powłoki? Wtedy pasek zakładek jest już na dole
   // ekranu, narysowany przez system — powtarzanie go w HTML-u byłoby dublem.
@@ -165,25 +173,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 podstronie przez cały nagłówek — logo, cztery pozycje menu,
                 motyw, konto i koszyk — zanim dotrze do tego, po co ktoś
                 przyszedł. Widoczny dopiero na fokusie, więc mysz go nie widzi. */}
-            {!magazyn && !wAplikacji && (
+            {!wAplikacji && (
               <a className="skip-link" href="#tresc">
                 Przejdź do treści
               </a>
             )}
-            {!magazyn && !wAplikacji && <SiteHeader user={user} />}
+            {!wAplikacji && <SiteHeader user={user} />}
             <div id="tresc" tabIndex={-1}>
               {children}
             </div>
-            {!magazyn && !wAplikacji && <SiteFooter />}
-            {!magazyn && !wAplikacji && <OdsloniecieStopki />}
+            {!wAplikacji && <SiteFooter />}
+            {!wAplikacji && <OdsloniecieStopki />}
             <MiniCart />
             <QuickViewHost />
             <ToastHost />
-            {/* Ruch obejmujący całą stronę. Oba komponenty nic nie renderują
-                przy ograniczonym ruchu, a ślad kursora dodatkowo milczy na
-                dotyku — w magazynie i w powłoce aplikacji nie ma ich wcale. */}
-            {!magazyn && !wAplikacji && <SladKursora />}
-            {!magazyn && !wAplikacji && <NaglowekChowany />}
+            {/* Ślad kursora nic nie renderuje przy ograniczonym ruchu ani
+                na dotyku, a w powłoce aplikacji nie ma go wcale. */}
+            {!wAplikacji && <SladKursora />}
           </WishlistProvider>
         </CartProvider>
       </body>
