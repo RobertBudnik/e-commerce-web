@@ -4158,7 +4158,7 @@ code {
   gap: 5px;
   padding-inline: 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink-2);
   font: inherit;
@@ -4168,10 +4168,26 @@ code {
   cursor: pointer;
   transition: color .16s ease, background-color .16s ease;
 }
-.mag-segment[aria-selected="true"] {
+/* Wypełnienie aktywnego segmentu to osobny element ze wspólnym `layoutId`,
+   nie tło przypisane do linku — dzięki temu przy zmianie filtra plama
+   przejeżdża wzdłuż paska zamiast gasnąć tu i zapalać się tam. Ten sam
+   mechanizm co przy filtrach katalogu i zakładkach konta. */
+.mag-segment { position: relative; }
+.mag-segment-tlo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--radius-sm);
   background: var(--surface);
-  color: var(--ink);
 }
+.mag-segment-tekst {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.mag-segment[aria-selected="true"] { color: var(--ink); }
 /* Licznik w kolorze akcentu: to jedyna liczba na tym pasku i mówi, ile
    pracy czeka w danej zakładce. `--ink-3` dawał na wpuszczonym torze 4.1:1,
    więc i tak nie mógł zostać; akcent trzyma próg z zapasem w obu motywach. */
@@ -4423,7 +4439,7 @@ code {
   width: 64px;
   height: 64px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-lg);
   background: var(--bg-sunken);
   color: var(--ink);
   font-size: 26px;
@@ -4807,9 +4823,12 @@ code {
   max-height: 88dvh;
   overflow-y: auto;
   padding: 18px var(--mag-gutter) calc(18px + env(safe-area-inset-bottom));
-  border-radius: 18px 18px 0 0;
+  /* Arkusz wysuwany od dołu — górne rogi z tej samej skali co karty,
+     dolne zerowe, bo przylegają do krawędzi ekranu. */
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
   background: var(--panel);
-  animation: mag-sheet .28s cubic-bezier(.2, .7, .3, 1);
+  /* Panele i szuflady: 250–400 ms, krzywa wykładnicza jak reszta ruchu. */
+  animation: mag-sheet .32s var(--krzywa);
 }
 @keyframes mag-sheet-tlo { from { opacity: 0 } }
 @keyframes mag-sheet { from { translate: 0 18px; opacity: 0 } }

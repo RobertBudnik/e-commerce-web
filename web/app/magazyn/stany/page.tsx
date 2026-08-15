@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { SzukajStanow } from '@/components/magazyn/SzukajStanow';
+import { SegmentyStanow } from '@/components/magazyn/SegmentyStanow';
 import { wymagajZaplecza } from '@/lib/magazyn-dostep';
 import { getLicznikiMagazynu, getStanyMagazynu } from '@/lib/queries';
 import { ile, POZYCJE } from '@/lib/odmiana';
@@ -67,22 +68,15 @@ export default async function Stany({
         <SzukajStanow startowa={szukaj} />
       </Suspense>
 
-      <div className="mag-segmenty" role="tablist" aria-label="Filtr stanów">
-        {SEGMENTY.map((s) => (
-          <Link
-            key={s.klucz}
-            className="mag-segment"
-            role="tab"
-            aria-selected={s.klucz === segment}
-            href={parametry(s.klucz)}
-          >
-            {s.etykieta}
-            {s.klucz === 'niskie' && (
-              <span className="mag-segment-licznik">{liczniki.niskie}</span>
-            )}
-          </Link>
-        ))}
-      </div>
+      <SegmentyStanow
+        aktywny={segment}
+        segmenty={SEGMENTY.map((s) => ({
+          klucz: s.klucz,
+          etykieta: s.etykieta,
+          href: parametry(s.klucz),
+          licznik: s.klucz === 'niskie' ? liczniki.niskie : undefined,
+        }))}
+      />
 
       {produkty.length === 0 ? (
         <p className="mag-pusto">{pustyKomunikat}</p>
