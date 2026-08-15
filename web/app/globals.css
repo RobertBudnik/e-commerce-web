@@ -3858,6 +3858,18 @@ code {
 /* Powłoka: przyrząd. Kadr od krawędzi do krawędzi, systemowy krój, własne
    tło i cała wysokość ekranu — tu magazyn nie jest podstroną, tylko całą
    aplikacją. */
+/* Ekran wyłamany z motywu aplikacji musi pomalować własne tło.
+   Pod „Auto" `.mag` zostaje przezroczysty i idzie za stroną — i o to chodzi.
+   Ale gdy magazynier wybierze „Jasny" albo „Ciemny", klasa podmienia tokeny,
+   a bez własnego tła nie ma czego nimi pomalować: obie odmiany pokazywałyby
+   to samo, czyli tło strony pod spodem.
+
+   W powłoce nie było tego widać, bo tam tło maluje `.w-aplikacji .mag` niżej.
+   Wyszło dopiero w przeglądarce — i słusznie, bo to tam magazyn stał się
+   podstroną bez własnego tła. */
+.mag.motyw-jasny,
+.mag.motyw-ciemny { background: var(--panel); }
+
 .w-aplikacji .mag {
   min-height: 100dvh;
   padding-block: max(8px, env(safe-area-inset-top)) 0;
