@@ -5175,19 +5175,14 @@ a.pw-kafel:hover { background: var(--panel); }
   .slad-punkt, .slad-pierscien { display: none; }
 }
 
-/* ---------- Chowany nagłówek ---------- */
-.site-header {
-  transition: translate var(--ruch-tlo) var(--krzywa);
-}
+/* ---------- Nagłówek stoi ----------
+   Pasek jest widoczny cały czas — `position: sticky; top: 0` wyżej w pliku
+   i nic go stamtąd nie rusza.
 
-.naglowek-schowany .site-header { translate: 0 -100%; }
-
-/* Ograniczony ruch: nagłówek stoi, siatka się nie pochyla. Reguła globalna
-   ścina czasy, ale przesunięcia trzeba wyłączyć osobno — inaczej pasek
-   zniknąłby skokiem zamiast zostać na miejscu. */
-@media (prefers-reduced-motion: reduce) {
-  .naglowek-schowany .site-header { translate: none; }
-}
+   Chowanie przy przewijaniu w dół zostało wycięte razem z komponentem
+   `NaglowekChowany`. Powód jest prosty: nawigacja, która znika, każe
+   zgadywać, gdzie jest — a w sklepie koszyk i konto muszą być pod ręką
+   w każdej chwili, nie po odruchu przewinięcia w górę. */
 
 /* ---------- Kurtyna przejścia ---------- */
 /* Pas przesuwający się w górę przy każdej zmianie trasy.
