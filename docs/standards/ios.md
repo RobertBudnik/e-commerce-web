@@ -54,11 +54,15 @@ proszenie się o odmowę z 4.2 przy zerowym zysku.
       i skaner mówi „brak zgody", zanim iOS zdąży zapytać.
 - [x] Zgoda na aparat wyłącznie dla własnego hosta (`origin.host == url.host`).
 - [x] `allowsBackForwardNavigationGestures` — gest cofania działa jak w Safari.
-- [ ] **Tło widoku.** `isOpaque = false` + `backgroundColor = .clear` sprawia,
-      że w obszarach bezpiecznych prześwituje tło SwiftUI, a nie tło strony.
-      W ciemnym systemie daje to czarne pasy nad paskiem stanu i pod treścią,
-      przy kremowej stronie w środku. Albo podłożyć kolor zgodny z motywem
-      strony, albo zostawić `isOpaque = true`.
+- [x] **Tło widoku.** `isOpaque = true`, a `backgroundColor` bierze
+      `UIColor.tloNordo` — dynamiczny kolor zależny od wariantu i od motywu
+      systemu. Sklep dostaje `--bg` z arkusza (`#f5f5f5` / `#121212`), magazyn
+      `--tlo` z bloku `.mag` (`#f2f2f7` / `#000000`).
+
+      Pilnować przy każdej zmianie palety: wartości siedzą w dwóch miejscach
+      i rozjazd widać jako pas obcego koloru nad paskiem stanu i przy odbiciu
+      sprężynowym. Tak było, gdy powłoka trzymała `#ede0d4` z palety
+      skasowanej w sklepie dwie rundy wcześniej.
 - [ ] Jawny limit czasu żądania — `WKWebView` sam nie przerywa wiszących połączeń.
 
 ## Safe area

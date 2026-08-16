@@ -1,21 +1,56 @@
 import SwiftUI
 import WebKit
 
-/// Bazowy adres z Info.plist, ustawiany flagą NORDO_URL przy budowaniu.
-/// Produkcja jest wartością domyślną projektu; build pod sieć lokalną
-/// nadpisuje ją w wierszu poleceń, więc repozytorium zostaje czyste.
+/// Które z dwóch wcieleń powłoki zbudowano. Ten sam kod stoi za aplikacją
+/// klienta i za aplikacją zaplecza — różni je wyłącznie ta flaga, ustawiana
+/// przez `zbuduj.sh` przez `NORDO_WARIANT`.
+///
+/// Bez niej obie aplikacje pokazywały pasek zakładek magazynu, bo zakładki
+/// mają ścieżki wpisane na sztywno. Sklep dostawał wtedy zaplecze pod cudzym
+/// identyfikatorem pakietu, a nie sklep.
+enum Wariant: String {
+    case sklep, magazyn
+
+    static let biezacy: Wariant = {
+        let zPlist = Bundle.main.object(forInfoDictionaryKey: "NordoWariant") as? String
+        // Domyślnie magazyn: to on był tu pierwszy i to jego buduje Xcode,
+        // gdy ktoś naciśnie „Run" zamiast wywołać `zbuduj.sh`.
+        return Wariant(rawValue: zPlist ?? "") ?? .magazyn
+    }()
+}
+
+/// Adres, pod którym stoi serwis. Z Info.plist, ustawiany flagą NORDO_URL
+/// przy budowaniu; produkcja jest wartością domyślną projektu, a build pod
+/// sieć lokalną nadpisuje ją w wierszu poleceń, więc repozytorium zostaje
+/// czyste.
+///
+/// NORDO_URL wskazuje ekran startowy wariantu (`/` albo `/magazyn`), a
+/// zakładki dokładają własne ścieżki — dlatego bierzemy sam korzeń.
 private let bazowyAdres: URL = {
     let zPlist = Bundle.main.object(forInfoDictionaryKey: "NordoURL") as? String
-    let adres = URL(string: zPlist ?? "") ?? URL(string: "https://nordo-one.vercel.app/magazyn")!
-    // NORDO_URL wskazuje na /magazyn; zakładki dokładają własne ścieżki
-    return adres.deletingLastPathComponent()
+    let adres = URL(string: zPlist ?? "") ?? URL(string: "https://nordo-one.vercel.app/")!
+    var skladniki = URLComponents(url: adres, resolvingAgainstBaseURL: false)
+    skladniki?.path = "/"
+    skladniki?.query = nil
+    skladniki?.fragment = nil
+    return skladniki?.url ?? adres
 }()
 
 enum Zakladka: String, CaseIterable {
-    case przeglad, zamowienia, magazyn, skaner
+    case sklep, przeglad, zamowienia, magazyn, skaner
+
+    /// Zakładki tego wariantu. Sklep ma jedną i dlatego nie dostaje paska —
+    /// pojedyncza zakładka to nie wybór, tylko pasek zajmujący miejsce.
+    static var dostepne: [Zakladka] {
+        switch Wariant.biezacy {
+        case .sklep: return [.sklep]
+        case .magazyn: return [.przeglad, .zamowienia, .magazyn, .skaner]
+        }
+    }
 
     var sciezka: String {
         switch self {
+        case .sklep: return ""
         case .przeglad: return "magazyn"
         case .zamowienia: return "magazyn/zamowienia"
         case .magazyn: return "magazyn/stany"
@@ -25,6 +60,7 @@ enum Zakladka: String, CaseIterable {
 
     var etykieta: String {
         switch self {
+        case .sklep: return "Sklep"
         case .przeglad: return "Przegląd"
         case .zamowienia: return "Zamówienia"
         case .magazyn: return "Magazyn"
@@ -37,6 +73,7 @@ enum Zakladka: String, CaseIterable {
     /// kształtu: prostokąt z poprzeczką, domek, ramka celownika.
     var ikona: String {
         switch self {
+        case .sklep: return "bag"
         case .przeglad: return "square.grid.2x2"
         case .zamowienia: return "archivebox"
         case .magazyn: return "house"
@@ -47,7 +84,7 @@ enum Zakladka: String, CaseIterable {
     var url: URL { bazowyAdres.appendingPathComponent(sciezka) }
 }
 
-/// Cztery widoki sieciowe powstają raz, przy starcie aplikacji, i od razu
+/// Widoki sieciowe wariantu powstają raz, przy starcie aplikacji, i od razu
 /// zaczynają wczytywać swoje ekrany.
 ///
 /// Wcześniej `TabView` tworzył widok dopiero przy pierwszym wejściu w zakładkę,
@@ -57,6 +94,7 @@ enum Zakladka: String, CaseIterable {
 ///
 /// Koszt: cztery lekkie listy w pamięci naraz. Przy narzędziu, w którym
 /// przeskakuje się między zakładkami co kilkanaście sekund, to dobra wymiana.
+/// W wariancie sklepu zakładka jest jedna, więc koszt znika.
 @MainActor
 final class Powloka: ObservableObject {
     /// Zakładki, które choć raz doczytały treść — kręciołek pokazujemy
@@ -71,7 +109,7 @@ final class Powloka: ObservableObject {
     @Published var sciezkaPrzegladu = ""
 
     init() {
-        for zakladka in Zakladka.allCases {
+        for zakladka in Zakladka.dostepne {
             let koordynator = Koordynator(zakladka: zakladka, powloka: self)
             let widok = Self.zbuduj(koordynator: koordynator)
             koordynator.web = widok
@@ -202,21 +240,37 @@ final class Powloka: ObservableObject {
 ///
 /// Przed zalogowaniem pasek się nie pokazuje: każda zakładka odbijałaby wtedy
 /// na ten sam ekran logowania, a trzy drogi do jednego miejsca to nie wybór,
-/// tylko zamieszanie.
+/// tylko zamieszanie. W wariancie sklepu paska nie ma nigdy — sklep to jeden
+/// ciąg stron z własną nawigacją w treści, a nie cztery przyrządy obok siebie.
 struct MagazynView: View {
     @StateObject private var powloka = Powloka()
-    @State private var wybrana: Zakladka = .przeglad
+    @State private var wybrana: Zakladka = Zakladka.dostepne[0]
 
-    /// Stan logowania czytamy z adresu, pod którym wylądował przegląd. Serwer
-    /// odsyła nieuprawnionych na /logowanie, więc to on pozostaje jedynym
-    /// źródłem prawdy — aplikacja niczego nie ocenia po swojemu.
-    private var zalogowany: Bool { powloka.sciezkaPrzegladu.hasPrefix("/magazyn") }
+    /// Czy pokazać pasek zakładek. Czytamy to z adresu, pod którym wylądował
+    /// przegląd — serwer odsyła nieuprawnionych na /logowanie albo na ścianę
+    /// „brak dostępu", więc to on pozostaje jedynym źródłem prawdy, a
+    /// aplikacja niczego nie ocenia po swojemu.
+    ///
+    /// Ściana braku dostępu liczy się jak brak logowania, choć adres zaczyna
+    /// się od /magazyn: konto bez uprawnień odbije się od niej w każdej
+    /// zakładce, a cztery drogi do jednego komunikatu to nie wybór, tylko
+    /// zamieszanie.
+    ///
+    /// Sklep nie ma czego pilnować: katalog jest jawny, a konto zakłada się
+    /// w treści strony.
+    private var zalogowany: Bool {
+        if Wariant.biezacy == .sklep { return true }
+        let sciezka = powloka.sciezkaPrzegladu
+        return sciezka.hasPrefix("/magazyn") && !sciezka.hasPrefix("/magazyn/brak-dostepu")
+    }
+
+    private var zakladki: [Zakladka] { Zakladka.dostepne }
 
     var body: some View {
         Group {
-            if zalogowany {
+            if zalogowany && zakladki.count > 1 {
                 TabView(selection: $wybrana) {
-                    ForEach(Zakladka.allCases, id: \.self) { zakladka in
+                    ForEach(zakladki, id: \.self) { zakladka in
                         WebTab(zakladka: zakladka, powloka: powloka)
                             .tabItem {
                                 Label(zakladka.etykieta, systemImage: zakladka.ikona)
@@ -225,10 +279,10 @@ struct MagazynView: View {
                     }
                 }
             } else {
-                WebTab(zakladka: .przeglad, powloka: powloka)
+                WebTab(zakladka: zakladki[0], powloka: powloka)
             }
         }
-        .tint(Color(red: 0.612, green: 0.400, blue: 0.267))  // #9c6644 — sienna z palety
+        .tint(Color(UIColor.akcentNordo))
         .background(Color(UIColor.tloNordo).ignoresSafeArea())
         .animation(.easeInOut(duration: 0.2), value: zalogowany)
     }
@@ -289,12 +343,54 @@ private struct Most: UIViewRepresentable {
 }
 
 extension UIColor {
-    /// Tło strony w obu motywach — te same wartości co `--bg` w `globals.css`.
+    /// Tło strony w obu motywach. Wartości muszą zgadzać się z tym, co maluje
+    /// przeglądarka, bo powłoka odsłania je w obszarach bezpiecznych i przy
+    /// odbiciu sprężynowym — rozjazd widać jako pas obcego koloru nad paskiem
+    /// stanu i pod treścią.
+    ///
+    /// Każdy wariant bierze tło swojej aplikacji:
+    ///
+    ///   sklep    `--bg` z `globals.css` — neutralna szarość KokonutUI,
+    ///            ta sama para co `themeColor` w `web/app/layout.tsx`
+    ///   magazyn  `--tlo` z bloku `.mag` — tło systemowe iOS, w ciemnym
+    ///            czysta czerń, żeby na OLED piksele tła nie świeciły
+    ///
     /// Dynamiczny kolor, więc zmiana motywu systemu przemalowuje wcięcia bez
     /// przeładowania widoku.
     static let tloNordo = UIColor { cechy in
-        cechy.userInterfaceStyle == .dark
-            ? UIColor(red: 0.118, green: 0.086, blue: 0.067, alpha: 1)  // #1e1611
-            : UIColor(red: 0.929, green: 0.878, blue: 0.831, alpha: 1)  // #ede0d4
+        let ciemny = cechy.userInterfaceStyle == .dark
+        switch Wariant.biezacy {
+        case .sklep:
+            return ciemny
+                ? UIColor(red: 0.071, green: 0.071, blue: 0.071, alpha: 1)  // #121212
+                : UIColor(red: 0.961, green: 0.961, blue: 0.961, alpha: 1)  // #f5f5f5
+        case .magazyn:
+            return ciemny
+                ? UIColor(red: 0, green: 0, blue: 0, alpha: 1)              // #000000
+                : UIColor(red: 0.949, green: 0.949, blue: 0.969, alpha: 1)  // #f2f2f7
+        }
+    }
+
+    /// Barwa zaznaczenia paska zakładek i kontrolek systemowych.
+    ///
+    /// Magazyn ma siennę i to jest decyzja z jego palety; sienna ciemnieje na
+    /// czerni, więc w ciemnym motywie idzie o stopień jaśniej — dokładnie tak
+    /// jak `--tint` w `.mag` i `.dark .mag`.
+    ///
+    /// Sklep nie ma barwy akcentu: w KokonutUI wyróżnia kontrast, nie kolor,
+    /// więc `--accent` jest tam najciemniejszą czernią (w ciemnym motywie —
+    /// najjaśniejszą bielą).
+    static let akcentNordo = UIColor { cechy in
+        let ciemny = cechy.userInterfaceStyle == .dark
+        switch Wariant.biezacy {
+        case .sklep:
+            return ciemny
+                ? UIColor(red: 0.922, green: 0.922, blue: 0.922, alpha: 1)  // #ebebeb
+                : UIColor(red: 0.090, green: 0.090, blue: 0.090, alpha: 1)  // #171717
+        case .magazyn:
+            return ciemny
+                ? UIColor(red: 0.812, green: 0.604, blue: 0.447, alpha: 1)  // #cf9a72
+                : UIColor(red: 0.612, green: 0.400, blue: 0.267, alpha: 1)  // #9c6644
+        }
     }
 }
