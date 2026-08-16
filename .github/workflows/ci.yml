@@ -41,6 +41,12 @@ jobs:
       - name: Typy
         run: npm run typecheck
 
+      # Kontrast liczony z tokenów, nie z DOM-u, więc nie potrzebuje ani
+      # przeglądarki, ani serwera — same wartości z globals.css. Obie palety
+      # w obu motywach, bo magazyn ma własną i to ona odjeżdżała po cichu.
+      - name: Kontrast palet
+        run: npm run kontrast
+
       # ESLint chodzi na płaskiej konfiguracji (web/eslint.config.mjs).
       # Wcześniej `npm run lint` wywoływał `next lint`, które bez konfiguracji
       # wchodziło w interaktywny kreator — czyli w CI wisiało do timeoutu.

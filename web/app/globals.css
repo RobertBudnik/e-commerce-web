@@ -3216,13 +3216,42 @@ code {
   --wypelnienie: rgba(118, 118, 128, .12);
   --etykieta: #000000;
   --etykieta-2: rgba(60, 60, 67, .6);
+  /* Czwarty stopień, którego w systemie Apple nie ma, i to jest świadome
+     odstępstwo. `secondaryLabel` na 60% daje na karcie 3,44:1 i na tle listy
+     3,29:1 — u Apple niesie podpisy, u nas trafiał też na opisy pozycji
+     i meta zamówienia, czyli na treść, którą magazynier czyta, żeby wiedzieć,
+     co spakować. W rękawicy, przy regale, pod magazynową lampą.
+
+     73% daje 4,85:1 i 4,60:1. Bierze to `--ink-2` i `--ink-soft`, czyli
+     wszystko, co się czyta; `--ink-3` zostaje przy sześćdziesięciu procentach
+     razem z podpisami, jednostkami i placeholderami, gdzie wartość systemowa
+     jest na miejscu. */
+  --etykieta-2-mocna: rgba(60, 60, 67, .73);
   --etykieta-3: rgba(60, 60, 67, .3);
   --sep: rgba(60, 60, 67, .29);
-  --tint: #9c6644;
+  /* Sienna z makiety to #9c6644 i tyle zostaje w charakterze — ale na tle
+     listy dawała 4,28:1, czyli tuż pod progiem, a to na nim leży odsyłacz
+     „Przejdź do sklepu" i podpisy pod przyciskami. Trzy procent ciemniej
+     wystarczy: 4,50:1 na tle listy, 5,02:1 na karcie i tyle samo dla bieli
+     na wypełnieniu. Różnicy nie widać na oko, widać ją w pomiarze. */
+  --tint: #976342;
   --tint-miekki: rgba(156, 102, 68, .12);
   --zielony: #34c759;
   --pomaranczowy: #ff9500;
   --czerwony: #ff3b30;
+  /* systemRed daje jako litery 3,55:1 — ten sam zabieg co przy zieleni. */
+  --czerwony-tekst: #d13027;
+
+  /* Zieleń systemowa świeci i to jest w niej dobre — na diodzie i na
+     wypełnieniu widać ją z drugiego końca stołu pakowego. Jako litery daje
+     2,22:1 na karcie, więc dodatnia korekta stanu była nieczytelna.
+     Ten sam odcień przyciemniony do 4,56:1 nosi tekst; `--zielony` zostaje
+     przy kształtach, gdzie próg 3:1 dotyczy tylko elementów niosących
+     treść samodzielnie.
+
+     Sklep przeszedł to samo rundę wcześniej — tam `--ok` to #00c758,
+     a `--ok-ink` #007138. */
+  --zielony-tekst: #23873d;
 
   /* przemapowanie na nazwy, po które sięgają reguły `.mag-*` */
   --bg: var(--tlo);
@@ -3231,11 +3260,10 @@ code {
   --bg-sunken: var(--karta-2);
   --bg-soft: var(--karta-2);
   --ink: var(--etykieta);
-  --ink-2: var(--etykieta-2);
+  --ink-2: var(--etykieta-2-mocna);
   --ink-3: var(--etykieta-2);
-  --ink-soft: var(--etykieta-2);
+  --ink-soft: var(--etykieta-2-mocna);
   --ink-faint: var(--etykieta-3);
-  --etykieta-kolor: var(--etykieta-2);
   --line: var(--sep);
   --line-strong: var(--sep);
   --img-line: var(--etykieta-3);
@@ -3246,8 +3274,9 @@ code {
   --btn-ink: #ffffff;
   --na-akcencie: #ffffff;
   --ok: var(--zielony);
-  --ok-ink: var(--zielony);
+  --ok-ink: var(--zielony-tekst);
   --uwaga: var(--pomaranczowy);
+  --blad: var(--czerwony-tekst);
 
   /* Promienie z makiety: kafel 12, karta 14, pigułka. iOS nie ma ostrych
      narożników i nie ma jednego promienia do wszystkiego. */
@@ -3260,30 +3289,22 @@ code {
 
   --mag-gutter: clamp(12px, 4vw, 24px);
   --mag-maxw: 34rem;
-  --oddech-mag: 26px;
-  --czerwony-miekki: rgba(255, 59, 48, .1);
 
-  /* Skala typograficzna ze specyfikacji makiety — wartosci wiazace.
-     Nazwy mowia o roli, bo ten sam stopien niesie rozne rzeczy: 17 px jest
-     i wierszem listy, i wartoscia liczbowa, tylko waga je rozroznia. */
+  /* Skala typograficzna magazynu — tylko te stopnie, po ktore arkusz
+     naprawde siega. Nazwy mowia o roli, bo ten sam stopien niesie rozne
+     rzeczy: 17 px jest i wierszem listy, i wartoscia liczbowa, tylko waga
+     je rozroznia.
+
+     Pelna skala z makiety stoi w docs/makieta-magazyn/specyfikacja.md.
+     Wykonanie w kilku miejscach od niej odeszlo — kafel „Dzisiaj" ma 26 px
+     zamiast 32, korekta 44 zamiast 60 — i trzymanie tamtych liczb tutaj
+     jako martwych zmiennych mowiloby, ze arkusz ich pilnuje. Nie pilnuje. */
   --t-ekran: 34px;      /* tytul ekranu, 700, -.028em, lh 1.1 */
   --t-karta: 28px;      /* tytul karty i ekranow auth, 700, -.026em */
-  --t-arkusz: 20px;     /* naglowek arkusza skanera, 680, -.024em */
   --t-wiersz: 17px;     /* wiersz listy, pole, przycisk glowny */
   --t-pomoc: 15px;      /* tekst pomocniczy, etykieta pola */
   --t-podpis: 13px;     /* podpis, meta, naglowek sekcji */
-  --t-plakietka: 12px;  /* numer w liscie, plakietki, 590, .02em */
-  --t-chip: 11px;
-  --t-zakladka: 10px;
-  --t-korekta: 60px;    /* liczba w korekcie, 680, -.04em */
-  --t-kafel: 32px;      /* liczba w kaflu „Dzisiaj", 680, -.03em */
 
-  /* Presety sprezyn — jeden zestaw na aplikacje. Trzymane jako zmienne,
-     zeby komponenty Motion siegaly po te same liczby co arkusz. */
-  --sprezyna-snap: 1218 70;
-  --sprezyna-ui: 305 33;
-  --sprezyna-gentle: 110 20;
-  --krzywa-mag: cubic-bezier(.32, .72, 0, 1);
 
   container: magazyn / inline-size;
   padding-inline: 0;
@@ -3301,6 +3322,9 @@ code {
   --wypelnienie: rgba(118, 118, 128, .24);
   --etykieta: #ffffff;
   --etykieta-2: rgba(235, 235, 245, .6);
+  /* Na czarnej karcie sześćdziesiąt procent daje 5,94:1 — próg wzięty
+     z zapasem, więc czwarty stopień nie ma tu czego poprawiać. */
+  --etykieta-2-mocna: var(--etykieta-2);
   --etykieta-3: rgba(235, 235, 245, .3);
   --sep: rgba(84, 84, 88, .65);
   --tint: #cf9a72;
@@ -3308,6 +3332,10 @@ code {
   --zielony: #30d158;
   --pomaranczowy: #ff9f0a;
   --czerwony: #ff453a;
+  --czerwony-tekst: var(--czerwony);
+  /* Na czarnej karcie zieleń systemowa daje 8,42:1 i nie potrzebuje korekty
+     pod litery — przyciemnianie zabrałoby tu czytelność, nie dodało. */
+  --zielony-tekst: var(--zielony);
   --btn-ink: #000000;
   --na-akcencie: #000000;
 }
@@ -3340,12 +3368,20 @@ code {
   --karta-2: #f2f2f7;
   --etykieta: #000000;
   --etykieta-2: rgba(60, 60, 67, .6);
+  --etykieta-2-mocna: rgba(60, 60, 67, .73);
   --etykieta-3: rgba(60, 60, 67, .3);
   --sep: rgba(60, 60, 67, .29);
-  --tint: #9c6644;
+  --tint: #976342;
   --tint-miekki: rgba(156, 102, 68, .12);
   --btn-ink: #ffffff;
   --na-akcencie: #ffffff;
+  /* Barwy stanu też, bo bez nich wyłamanie brało je z motywu systemu:
+     zieleń z ciemnego bloku dawała na białej karcie 1,9:1. */
+  --zielony: #34c759;
+  --zielony-tekst: #23873d;
+  --pomaranczowy: #ff9500;
+  --czerwony: #ff3b30;
+  --czerwony-tekst: #d13027;
 }
 .mag.motyw-ciemny {
   --tlo: #000000;
@@ -3353,12 +3389,22 @@ code {
   --karta-2: #2c2c2e;
   --etykieta: #ffffff;
   --etykieta-2: rgba(235, 235, 245, .6);
+  /* Na czarnej karcie sześćdziesiąt procent daje 5,94:1 — próg wzięty
+     z zapasem, więc czwarty stopień nie ma tu czego poprawiać. */
+  --etykieta-2-mocna: var(--etykieta-2);
   --etykieta-3: rgba(235, 235, 245, .3);
   --sep: rgba(84, 84, 88, .65);
   --tint: #cf9a72;
   --tint-miekki: rgba(207, 154, 114, .18);
   --btn-ink: #000000;
   --na-akcencie: #000000;
+  /* Jak wyżej, w drugą stronę: zieleń i czerwień z bloku jasnego dawały
+     na czarnej karcie 3,73:1 i 3,37:1. */
+  --zielony: #30d158;
+  --zielony-tekst: var(--zielony);
+  --pomaranczowy: #ff9f0a;
+  --czerwony: #ff453a;
+  --czerwony-tekst: var(--czerwony);
 }
 
 .w-aplikacji .mag {
@@ -3970,10 +4016,14 @@ code {
 
 /* Komunikat błędu siedzi przy przycisku, nie w okienku — okienko zabiera
    ekran i nie mówi, czego dotyczy. */
+/* Komunikat błędu jechał `--accent-ink`, czyli sienną — tym samym kolorem,
+   co przyciski, odsyłacze i licznik przy zakładce. „Nie udało się zapisać"
+   wyglądało wtedy jak kolejny element sterujący, a nie jak coś, co poszło
+   nie tak. Czerwień systemowa jest w palecie od początku i do tego służy. */
 .mag-blad {
   margin: 0;
   font-size: 13px;
-  color: var(--accent-ink);
+  color: var(--blad);
   text-align: center;
 }
 
