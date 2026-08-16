@@ -187,12 +187,11 @@ test.describe('Zwroty', () => {
 
     // Sztuki wróciły na stan przez historię magazynu
     await page.goto('/magazyn');
-    // Wielka litera nie jest przypadkiem: `przyjmij_zwrot` zapisuje powód
-    // ruchu jako „Zwrot od klienta", a magazynier czyta go w historii jako
-    // początek zdania. `toContainText` rozróżnia wielkość liter, więc mała
-    // litera tutaj nie mogła przejść nigdy — asercja była zepsuta od
-    // napisania, tylko maskowały ją wcześniejsze timeouty na zajeżdżonej bazie.
-    await expect(page.locator('.mag-karta').last()).toContainText('Zwrot od klienta');
+    // Mała litera jest poprawna i celowa: baza zapisuje powód jako „Zwrot od
+    // klienta", ale `getOstatnieRuchy` zbija pierwszą literę do małej, zeby
+    // wpis czytal sie jak zdanie, a nie jak naglowek (queries.ts:684).
+    // Asercja sprawdza to, co widzi magazynier, nie to, co stoi w kolumnie.
+    await expect(page.locator('.mag-karta').last()).toContainText('zwrot od klienta');
   });
 });
 
