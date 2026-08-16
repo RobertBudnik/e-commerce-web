@@ -143,9 +143,9 @@ export default function App() {
       <main className="mx-auto max-w-[1160px] px-6 pb-24">
         <div className="py-16">
           <Naglowek
-            overline="System wizualny"
+            overline="Zapis kierunku · nie stan sklepu"
             tytul="Editorial dla sklepu"
-            opis="Ciepła biel jako intencja, nie brak decyzji. Serif niesie treść, Inter obsługuje interfejs, terakota pojawia się wyłącznie przy danych i rabacie. Wartości żyją w jednym bloku @theme — wszystko poniżej tylko z nich korzysta."
+            opis="Ciepła biel jako intencja, nie brak decyzji. Serif niesie treść, Inter obsługuje interfejs, terakota pojawia się wyłącznie przy danych i rabacie. Wartości żyją w jednym bloku @theme — wszystko poniżej tylko z nich korzysta. Sklep poszedł jednak w drugą stronę: neutralny KokonutUI, Geist, akcent bez barwy. Tamte tokeny stoją w web/app/globals.css."
             akcja={
               <div className="flex gap-3">
                 <Button wariant="ghost">Dokumentacja</Button>
