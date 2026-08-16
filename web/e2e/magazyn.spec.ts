@@ -187,7 +187,12 @@ test.describe('Zwroty', () => {
 
     // Sztuki wróciły na stan przez historię magazynu
     await page.goto('/magazyn');
-    await expect(page.locator('.mag-karta').last()).toContainText('zwrot od klienta');
+    // Wielka litera nie jest przypadkiem: `przyjmij_zwrot` zapisuje powód
+    // ruchu jako „Zwrot od klienta", a magazynier czyta go w historii jako
+    // początek zdania. `toContainText` rozróżnia wielkość liter, więc mała
+    // litera tutaj nie mogła przejść nigdy — asercja była zepsuta od
+    // napisania, tylko maskowały ją wcześniejsze timeouty na zajeżdżonej bazie.
+    await expect(page.locator('.mag-karta').last()).toContainText('Zwrot od klienta');
   });
 });
 
