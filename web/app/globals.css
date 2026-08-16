@@ -3912,6 +3912,30 @@ code {
   --mag-gutter: clamp(12px, 4vw, 24px);
   --mag-maxw: 34rem;
   --oddech-mag: 26px;
+  --czerwony-miekki: rgba(255, 59, 48, .1);
+
+  /* Skala typograficzna ze specyfikacji makiety — wartosci wiazace.
+     Nazwy mowia o roli, bo ten sam stopien niesie rozne rzeczy: 17 px jest
+     i wierszem listy, i wartoscia liczbowa, tylko waga je rozroznia. */
+  --t-ekran: 34px;      /* tytul ekranu, 700, -.028em, lh 1.1 */
+  --t-karta: 28px;      /* tytul karty i ekranow auth, 700, -.026em */
+  --t-arkusz: 20px;     /* naglowek arkusza skanera, 680, -.024em */
+  --t-wiersz: 17px;     /* wiersz listy, pole, przycisk glowny */
+  --t-pomoc: 15px;      /* tekst pomocniczy, etykieta pola */
+  --t-podpis: 13px;     /* podpis, meta, naglowek sekcji */
+  --t-plakietka: 12px;  /* numer w liscie, plakietki, 590, .02em */
+  --t-chip: 11px;
+  --t-zakladka: 10px;
+  --t-korekta: 60px;    /* liczba w korekcie, 680, -.04em */
+  --t-kafel: 32px;      /* liczba w kaflu „Dzisiaj", 680, -.03em */
+
+  /* Presety sprezyn — jeden zestaw na aplikacje. Trzymane jako zmienne,
+     zeby komponenty Motion siegaly po te same liczby co arkusz. */
+  --sprezyna-snap: 1218 70;
+  --sprezyna-ui: 305 33;
+  --sprezyna-gentle: 110 20;
+  --krzywa-mag: cubic-bezier(.32, .72, 0, 1);
+
   container: magazyn / inline-size;
   padding-inline: 0;
   padding-block: clamp(32px, 5vw, 56px) clamp(48px, 7vw, 88px);
@@ -4059,6 +4083,17 @@ code {
   justify-content: space-between;
   gap: 12px;
 }
+
+/* Ekrany podrzedne (korekta, karta zamowienia) maja tytul o stopien nizszy —
+   to nie jest ten sam poziom hierarchii co tytul zakladki. */
+.mag-top-kolumna h1,
+.mag-naglowek-zamowienia h1 {
+  font-size: var(--t-karta);
+  font-weight: 700;
+  letter-spacing: -.026em;
+}
+.mag-podtytul { font-size: var(--t-podpis); }
+
 /* Nagłówek karty zamówienia: numer krojem maszynowym, plakietka statusu tuż
    przy nim. `flex-wrap` ratuje najwęższe ekrany — przy 320 px długi numer
    i status „w realizacji" nie zmieszczą się w jednym wierszu i wtedy status
@@ -4073,10 +4108,12 @@ code {
 .mag-top h1 {
   margin: 0;
   font-family: inherit;
-  font-size: 30px;
+  /* 34/700/-.028em/1.1 — wartosci wiazace ze specyfikacji makiety.
+     Poprzednie 30 px i -0.5px byly nasza wlasna skala sprzed handoffu. */
+  font-size: var(--t-ekran);
   font-weight: 700;
-  letter-spacing: -0.5px;
-  line-height: 1.15;
+  letter-spacing: -.028em;
+  line-height: 1.1;
 }
 .mag-top-kolumna {
   display: block;
@@ -4111,6 +4148,16 @@ code {
    Skok kontrastu w prezencie: 13 px zwykłą wagą w kolorze drugorzędnym czyta
    się lepiej niż 11 px wersalikami w jaśniejszej szarości, więc znika też
    powód, dla którego poprzedni komentarz tłumaczył się z 2,58:1. */
+/* Wszystkie liczby w magazynie maja stala szerokosc cyfry. Bez tego stan
+   przeskakuje w poziomie przy kazdej korekcie, a kolumna z iloscia faluje
+   przy przewijaniu listy. Spec wymienia to osobno, bo latwo o tym zapomniec. */
+.mag [class*="odczyt"],
+.mag .mag-korekta-wynik,
+.mag .mag-kafel-liczba,
+.mag .mag-delta,
+.mag .mag-numer,
+.mag .mag-godzina { font-variant-numeric: tabular-nums; }
+
 .mag-sekcja {
   margin: 26px 0 7px;
   padding-inline: calc(var(--mag-gutter) + 4px);
@@ -4185,6 +4232,8 @@ code {
    trzymały się prawej krawędzi niezależnie od długości nazwy. */
 .mag-tresc { flex: 1; min-width: 0; }
 .mag-nazwa {
+  font-size: var(--t-wiersz);
+  letter-spacing: -.02em;
   display: block;
   font-size: 15px;
   line-height: 1.3;
