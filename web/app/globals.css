@@ -156,7 +156,10 @@
      siatkę trzech kart — w Figmie te same trzy karty dostają 942 px na
      tysiącpikselowym ekranie i 24 px rynny między kolumnami. */
   --maxw: 1400px;
-  --gutter: 32px;
+  /* Margines boczny plynny: 16 px na telefonie (tyle daje specyfikacja
+     makiety i tyle ma iOS), 32 px od tabletu w gore. Staly 32 px zjadal
+     na 390 pt jedna szosta szerokosci ekranu na sam odstep. */
+  --gutter: clamp(16px, 4vw, 32px);
   --header-h: 72px;
 
   /* Oddech sekcji — jedna wartość, żeby rytm strony zmieniał się w jednym
@@ -327,8 +330,10 @@ h2 { font-weight: 600; line-height: 1.1; }
    czyta się jako katalog; cztery razy większy — jako marka. Dolna granica
    zostaje nietknięta, bo na telefonie większy szeryf zaczyna się łamać
    w połowie słowa i wrażenie znika razem z czytelnością. */
-h1 { font-size: clamp(2rem, 1.15rem + 3.9vw, 4.25rem); }
-h2 { font-size: clamp(1.4rem, 1.05rem + 1.7vw, 2.4rem); }
+/* Podloga naglowkow zeszla o stopien. Na 390 pt `2rem` lamalo haslo
+   hero na cztery wiersze i spychalo przyciski pod zagiecie. */
+h1 { font-size: clamp(1.75rem, 1.15rem + 3.9vw, 4.25rem); }
+h2 { font-size: clamp(1.25rem, 1.05rem + 1.7vw, 2.4rem); }
 h3 { font-size: 1.05rem; letter-spacing: -.015em; }
 
 /* Nagłówki użytkowe — panele, karty, szuflada — zostają przy grotesku:
@@ -384,11 +389,14 @@ p:last-child { margin-bottom: 0; }
 /* Powietrze między sekcjami jest tu materiałem, nie pustką — to ono oddziela
    „katalog" od „marki". Podniesione wraz ze skalą nagłówków; jedno bez
    drugiego wygląda na pomyłkę w arkuszu stylów. */
-.section { padding-block: clamp(80px, 9vw, var(--oddech)); }
-.section-tight { padding-block: clamp(48px, 5vw, 72px); }
+/* Podloga zeszla z 80 na 44 px. „Oddychajacy uklad" na laptopie to
+   luksus, na 390 pt to przewijanie przez pustke — miedzy sekcjami mijaly
+   dwa ekrany niczego. Sufit bez zmian: na duzym ekranie rytm zostaje. */
+.section { padding-block: clamp(44px, 9vw, var(--oddech)); }
+.section-tight { padding-block: clamp(28px, 5vw, 72px); }
 /* Pasma pełnej szerokości dostają w Figmie 140 px zamiast 120 — szerszy
    blok potrzebuje więcej powietrza, żeby nie wyglądał na wklejony. */
-.section-szerokie { padding-block: clamp(96px, 10vw, var(--oddech-duzy)); }
+.section-szerokie { padding-block: clamp(56px, 10vw, var(--oddech-duzy)); }
 
 .section-head {
   display: flex;
@@ -399,7 +407,7 @@ p:last-child { margin-bottom: 0; }
   /* Figma stawia siatkę wyraźnie niżej niż nagłówek — 36 px kleiło tytuł
      do pierwszego rzędu kart i kasowało efekt oddechu, po który idzie
      całe 120 px na sekcji. */
-  margin-bottom: 56px;
+  margin-bottom: clamp(28px, 4vw, 56px);
 }
 .section-head p { margin: 0; color: var(--ink-soft); }
 
