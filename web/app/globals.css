@@ -3846,18 +3846,173 @@ code {
    Odwrotna kolejność byłaby wygodniejsza w pisaniu (przyrząd jako baza), ale
    kłamałaby o tym, co jest normą: magazyn otwierany z laptopa to zwykła
    podstrona pod nagłówkiem sklepu, a powłoka to przypadek szczególny. */
+/* ---------- Magazyn: paleta Apple ----------
+   Magazyn ma własną paletę i to jest decyzja, nie rozjazd. Sklep jedzie
+   neutralnym KokonutUI, magazyn systemowym iOS — bo to przyrząd obsługiwany
+   na telefonie w rękawicy, a nie podstrona witryny.
+
+   Wartości z projektu „Magazyn v2 Apple" (claude.ai/design). Przemapowanie
+   na nasze nazwy niżej robi całą robotę: dwieście reguł `.mag-*` sięga po
+   `--surface`, `--ink`, `--line` i tak dalej, więc podmiana tokenów w tym
+   jednym miejscu przeskórowuje wszystkie siedem ekranów bez ruszania
+   pojedynczego komponentu. Ten sam chwyt, który opłacił się przy sklepie.
+
+   Sienna wraca świadomie — w magazynie jest akcentem systemowym, a nie
+   pozostałością po starej palecie sklepu. */
 .mag {
+  /* własne nazwy z projektu, żeby dało się je porównać z makietą 1:1 */
+  --tlo: #f2f2f7;
+  --karta: #ffffff;
+  --karta-2: #f2f2f7;
+  --wypelnienie: rgba(118, 118, 128, .12);
+  --etykieta: #000000;
+  --etykieta-2: rgba(60, 60, 67, .6);
+  --etykieta-3: rgba(60, 60, 67, .3);
+  --sep: rgba(60, 60, 67, .29);
+  --tint: #9c6644;
+  --tint-miekki: rgba(156, 102, 68, .12);
+  --zielony: #34c759;
+  --pomaranczowy: #ff9500;
+  --czerwony: #ff3b30;
+
+  /* przemapowanie na nazwy, po które sięgają reguły `.mag-*` */
+  --bg: var(--tlo);
+  --panel: var(--tlo);
+  --surface: var(--karta);
+  --bg-sunken: var(--karta-2);
+  --bg-soft: var(--karta-2);
+  --ink: var(--etykieta);
+  --ink-2: var(--etykieta-2);
+  --ink-3: var(--etykieta-2);
+  --ink-soft: var(--etykieta-2);
+  --ink-faint: var(--etykieta-3);
+  --etykieta-kolor: var(--etykieta-2);
+  --line: var(--sep);
+  --line-strong: var(--sep);
+  --img-line: var(--etykieta-3);
+  --accent: var(--tint);
+  --accent-ink: var(--tint);
+  --accent-soft: var(--tint-miekki);
+  --btn-bg: var(--tint);
+  --btn-ink: #ffffff;
+  --na-akcencie: #ffffff;
+  --ok: var(--zielony);
+  --ok-ink: var(--zielony);
+  --uwaga: var(--pomaranczowy);
+
+  /* Promienie z makiety: kafel 12, karta 14, pigułka. iOS nie ma ostrych
+     narożników i nie ma jednego promienia do wszystkiego. */
+  --radius: 12px;
+  --radius-sm: 9px;
+  --r: 12px;
+  --r-sm: 9px;
+  --r-lg: 14px;
+  --r-pill: 9999px;
+
   --mag-gutter: clamp(12px, 4vw, 24px);
   --mag-maxw: 34rem;
+  --oddech-mag: 26px;
+  --czerwony-miekki: rgba(255, 59, 48, .1);
+
+  /* Skala typograficzna ze specyfikacji makiety — wartosci wiazace.
+     Nazwy mowia o roli, bo ten sam stopien niesie rozne rzeczy: 17 px jest
+     i wierszem listy, i wartoscia liczbowa, tylko waga je rozroznia. */
+  --t-ekran: 34px;      /* tytul ekranu, 700, -.028em, lh 1.1 */
+  --t-karta: 28px;      /* tytul karty i ekranow auth, 700, -.026em */
+  --t-arkusz: 20px;     /* naglowek arkusza skanera, 680, -.024em */
+  --t-wiersz: 17px;     /* wiersz listy, pole, przycisk glowny */
+  --t-pomoc: 15px;      /* tekst pomocniczy, etykieta pola */
+  --t-podpis: 13px;     /* podpis, meta, naglowek sekcji */
+  --t-plakietka: 12px;  /* numer w liscie, plakietki, 590, .02em */
+  --t-chip: 11px;
+  --t-zakladka: 10px;
+  --t-korekta: 60px;    /* liczba w korekcie, 680, -.04em */
+  --t-kafel: 32px;      /* liczba w kaflu „Dzisiaj", 680, -.03em */
+
+  /* Presety sprezyn — jeden zestaw na aplikacje. Trzymane jako zmienne,
+     zeby komponenty Motion siegaly po te same liczby co arkusz. */
+  --sprezyna-snap: 1218 70;
+  --sprezyna-ui: 305 33;
+  --sprezyna-gentle: 110 20;
+  --krzywa-mag: cubic-bezier(.32, .72, 0, 1);
+
   container: magazyn / inline-size;
   padding-inline: 0;
   padding-block: clamp(32px, 5vw, 56px) clamp(48px, 7vw, 88px);
   color: var(--ink);
 }
 
+/* Ciemny wariant magazynu. Czysta czerń tła, nie grafit — iOS trzyma
+   `#000000`, żeby na ekranach OLED piksele tła po prostu nie świeciły.
+   Sienna idzie o stopień jaśniej, bo na czerni gaśnie. */
+.dark .mag {
+  --tlo: #000000;
+  --karta: #1c1c1e;
+  --karta-2: #2c2c2e;
+  --wypelnienie: rgba(118, 118, 128, .24);
+  --etykieta: #ffffff;
+  --etykieta-2: rgba(235, 235, 245, .6);
+  --etykieta-3: rgba(235, 235, 245, .3);
+  --sep: rgba(84, 84, 88, .65);
+  --tint: #cf9a72;
+  --tint-miekki: rgba(207, 154, 114, .18);
+  --zielony: #30d158;
+  --pomaranczowy: #ff9f0a;
+  --czerwony: #ff453a;
+  --btn-ink: #000000;
+  --na-akcencie: #000000;
+}
+
+
 /* Powłoka: przyrząd. Kadr od krawędzi do krawędzi, systemowy krój, własne
    tło i cała wysokość ekranu — tu magazyn nie jest podstroną, tylko całą
    aplikacją. */
+/* Ekran wyłamany z motywu aplikacji musi pomalować własne tło.
+   Pod „Auto" `.mag` zostaje przezroczysty i idzie za stroną — i o to chodzi.
+   Ale gdy magazynier wybierze „Jasny" albo „Ciemny", klasa podmienia tokeny,
+   a bez własnego tła nie ma czego nimi pomalować: obie odmiany pokazywałyby
+   to samo, czyli tło strony pod spodem.
+
+   W powłoce nie było tego widać, bo tam tło maluje `.w-aplikacji .mag` niżej.
+   Wyszło dopiero w przeglądarce — i słusznie, bo to tam magazyn stał się
+   podstroną bez własnego tła. */
+.mag.motyw-jasny,
+.mag.motyw-ciemny { background: var(--tlo); }
+
+/* Wyłamanie z motywu aplikacji musi podmienić tokeny **Apple**, nie tokeny
+   sklepu. Klasy `.motyw-jasny` i `.motyw-ciemny` z góry pliku przestawiają
+   `--panel`, `--bg`, `--ink` — czyli paletę sklepu, o której magazyn nic nie
+   wie, odkąd `--panel` wskazuje tu na `--tlo`.
+
+   Bez tych dwóch bloków przełącznik na ekranie skanera podmieniał tokeny,
+   których magazyn nie używa, i oba warianty malowały ten sam kolor. */
+.mag.motyw-jasny {
+  --tlo: #f2f2f7;
+  --karta: #ffffff;
+  --karta-2: #f2f2f7;
+  --etykieta: #000000;
+  --etykieta-2: rgba(60, 60, 67, .6);
+  --etykieta-3: rgba(60, 60, 67, .3);
+  --sep: rgba(60, 60, 67, .29);
+  --tint: #9c6644;
+  --tint-miekki: rgba(156, 102, 68, .12);
+  --btn-ink: #ffffff;
+  --na-akcencie: #ffffff;
+}
+.mag.motyw-ciemny {
+  --tlo: #000000;
+  --karta: #1c1c1e;
+  --karta-2: #2c2c2e;
+  --etykieta: #ffffff;
+  --etykieta-2: rgba(235, 235, 245, .6);
+  --etykieta-3: rgba(235, 235, 245, .3);
+  --sep: rgba(84, 84, 88, .65);
+  --tint: #cf9a72;
+  --tint-miekki: rgba(207, 154, 114, .18);
+  --btn-ink: #000000;
+  --na-akcencie: #000000;
+}
+
 .w-aplikacji .mag {
   min-height: 100dvh;
   padding-block: max(8px, env(safe-area-inset-top)) 0;
@@ -3928,6 +4083,17 @@ code {
   justify-content: space-between;
   gap: 12px;
 }
+
+/* Ekrany podrzedne (korekta, karta zamowienia) maja tytul o stopien nizszy —
+   to nie jest ten sam poziom hierarchii co tytul zakladki. */
+.mag-top-kolumna h1,
+.mag-naglowek-zamowienia h1 {
+  font-size: var(--t-karta);
+  font-weight: 700;
+  letter-spacing: -.026em;
+}
+.mag-podtytul { font-size: var(--t-podpis); }
+
 /* Nagłówek karty zamówienia: numer krojem maszynowym, plakietka statusu tuż
    przy nim. `flex-wrap` ratuje najwęższe ekrany — przy 320 px długi numer
    i status „w realizacji" nie zmieszczą się w jednym wierszu i wtedy status
@@ -3942,10 +4108,12 @@ code {
 .mag-top h1 {
   margin: 0;
   font-family: inherit;
-  font-size: 30px;
+  /* 34/700/-.028em/1.1 — wartosci wiazace ze specyfikacji makiety.
+     Poprzednie 30 px i -0.5px byly nasza wlasna skala sprzed handoffu. */
+  font-size: var(--t-ekran);
   font-weight: 700;
-  letter-spacing: -0.5px;
-  line-height: 1.15;
+  letter-spacing: -.028em;
+  line-height: 1.1;
 }
 .mag-top-kolumna {
   display: block;
@@ -3969,24 +4137,36 @@ code {
 }
 
 /* Nagłówek sekcji: maszynowy, kapitaliki, ton drugorzędny. */
-.mag-sekcja {
-  margin: 22px 0 7px;
-  padding-inline: calc(var(--mag-gutter) + 4px);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  /* Makiety mają nadtytuły sekcji w jaśniejszej szarości niż resztę tekstu
-     drugorzędnego: #9B9489 wobec #726C63, i to konsekwentnie w trzech plikach
-     (3400–4500 pikseli na plik). To osobna rola, nie ten sam token.
+/* Nagłówek sekcji w idiomie iOS: 13 px, waga zwykła, bez wersalików i bez
+   rozstrzelenia. Tam nadtytuł nie krzyczy — jest cichym podpisem grupy,
+   a hierarchię niesie odstęp nad nim, nie wielkość liter.
 
-     2,58:1 na panelu — poniżej progu. Broni się tym, że to nadtytuł
-     powtarzający nazwę sekcji, którą i tak widać z treści pod spodem
-     („DOSTAWA" nad adresem, „POWÓD" nad listą powodów) — żadna informacja
-     nie jest wyłącznie tutaj. Gdyby nadtytuł miał kiedyś nieść treść,
-     wraca `--ink-3`. */
-  color: var(--etykieta);
+   Poprzednia wersja (11 px, monospace, wersaliki, tracking .1em) pochodziła
+   z poprzedniego kierunku wizualnego. Przy 13 px i zwykłej wadze nadtytuł
+   przestaje też walczyć o uwagę z liczbami w wierszach pod spodem.
+
+   Skok kontrastu w prezencie: 13 px zwykłą wagą w kolorze drugorzędnym czyta
+   się lepiej niż 11 px wersalikami w jaśniejszej szarości, więc znika też
+   powód, dla którego poprzedni komentarz tłumaczył się z 2,58:1. */
+/* Wszystkie liczby w magazynie maja stala szerokosc cyfry. Bez tego stan
+   przeskakuje w poziomie przy kazdej korekcie, a kolumna z iloscia faluje
+   przy przewijaniu listy. Spec wymienia to osobno, bo latwo o tym zapomniec. */
+.mag [class*="odczyt"],
+.mag .mag-korekta-wynik,
+.mag .mag-kafel-liczba,
+.mag .mag-delta,
+.mag .mag-numer,
+.mag .mag-godzina { font-variant-numeric: tabular-nums; }
+
+.mag-sekcja {
+  margin: 26px 0 7px;
+  padding-inline: calc(var(--mag-gutter) + 4px);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--etykieta-2, var(--ink-2));
 }
 
 /* ---------- Lista grupowana ---------- */
@@ -4020,13 +4200,40 @@ code {
   text-align: left;
   cursor: pointer;
 }
-.mag-wiersz + .mag-wiersz { border-top: 1px solid var(--line); }
+/* Separator w idiomie iOS: włos rysowany na `::before` wiersza następnego,
+   nie obramowanie poprzedniego, i **wcięty od lewej**. Kreska zaczyna się za
+   ikoną, nie przy krawędzi karty — dzięki temu lista czyta się jako grupa
+   powiązanych wierszy, a nie jako tabela z ramkami.
+
+   Pół piksela, nie cały: na ekranach o podwójnej gęstości `.5px` daje włos
+   szerokości jednego piksela fizycznego. Na zwykłym ekranie przeglądarka
+   zaokrągli to sama i nic się nie psuje.
+
+   Wcięcie zależy od tego, czy wiersz ma diodę: 38 px gdy ma, 16 px gdy nie.
+   Dioda i jej odstęp zajmują dokładnie tę różnicę. */
+.mag-wiersz + .mag-wiersz { border-top: 0; }
+.mag-wiersz { position: relative; }
+.mag-wiersz + .mag-wiersz::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 16px;
+  height: .5px;
+  background: var(--sep, var(--line));
+}
+/* Wiersz z diodą odsuwa kreskę za nią. `:has()` pyta o zawartość wiersza
+   poprzedzającego — bez tego trzeba by oznaczać wiersze atrybutem w JSX,
+   czyli zmieniać komponenty tam, gdzie wystarczy arkusz. */
+.mag-wiersz:has(.mag-dioda) + .mag-wiersz::before { left: 38px; }
 .mag-wiersz:disabled { cursor: default; }
 
 /* Treść wiersza rozpycha się na resztę szerokości, żeby odczyt i szewron
    trzymały się prawej krawędzi niezależnie od długości nazwy. */
 .mag-tresc { flex: 1; min-width: 0; }
 .mag-nazwa {
+  font-size: var(--t-wiersz);
+  letter-spacing: -.02em;
   display: block;
   font-size: 15px;
   line-height: 1.3;

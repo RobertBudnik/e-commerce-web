@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script type="module">
+  import { animate } from "https://cdn.jsdelivr.net/npm/motion@12.23.12/+esm";
+  window.__ruch = { animate };
+  window.dispatchEvent(new Event("ruch-gotowy"));
+</script>
+<style>
+:root, [data-tokens="jasny"] {
+  --tlo:#f2f2f7; --karta:#ffffff; --karta-2:#f2f2f7; --wypelnienie:rgba(118,118,128,.12);
+  --etykieta:#000000; --etykieta-2:rgba(60,60,67,.6); --etykieta-3:rgba(60,60,67,.3);
+  --sep:rgba(60,60,67,.29); --tint:#9c6644; --tint-miekki:rgba(156,102,68,.12);
+  --zielony:#34c759; --pomaranczowy:#ff9500; --czerwony:#ff3b30;
+  --pasek:rgba(249,249,249,.82); --pasek-linia:rgba(0,0,0,.16); --czerwony-miekki:rgba(255,59,48,.1);
+}
+[data-tokens="ciemny"] {
+  --tlo:#000000; --karta:#1c1c1e; --karta-2:#2c2c2e; --wypelnienie:rgba(118,118,128,.24);
+  --etykieta:#ffffff; --etykieta-2:rgba(235,235,245,.6); --etykieta-3:rgba(235,235,245,.3);
+  --sep:rgba(84,84,88,.65); --tint:#cf9a72; --tint-miekki:rgba(207,154,114,.18);
+  --zielony:#30d158; --pomaranczowy:#ff9f0a; --czerwony:#ff453a;
+  --pasek:rgba(22,22,24,.82); --pasek-linia:rgba(255,255,255,.16); --czerwony-miekki:rgba(255,69,58,.18);
+}
+body { margin:0; background:#c9c9ce; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+a { color:var(--tint); text-decoration:none; }
+a:hover { color:var(--etykieta); }
+button, input, textarea { font:inherit; color:inherit; }
+[data-mag] { font-family:-apple-system,"SF Pro Text","SF Pro Display",system-ui,"Helvetica Neue",sans-serif; letter-spacing:-.01em; }
+[data-mag] input::placeholder, [data-mag] textarea::placeholder { color:var(--etykieta-3); }
+[data-wiersz] { position:relative; }
+[data-wiersz="dot"] + [data-wiersz]::before, [data-wiersz="plain"] + [data-wiersz]::before { content:""; position:absolute; top:0; right:0; height:.5px; background:var(--sep); }
+[data-wiersz="dot"] + [data-wiersz]::before { left:38px; }
+[data-wiersz="plain"] + [data-wiersz]::before { left:16px; }
+[data-dane] + [data-dane]::before { content:""; position:absolute; top:0; left:16px; right:0; height:.5px; background:var(--sep); }
+[data-dane] { position:relative; }
+@keyframes wejscie-a { from { opacity:0; transform:translate3d(0,24px,0) } }
+@keyframes wejscie-b { from { opacity:0; transform:translate3d(0,24px,0) } }
+@keyframes arkusz { from { opacity:0; transform:translate3d(0,50px,0) } }
+@keyframes smuga { from { transform:translateY(0) } to { transform:translateY(calc(100% - 2px)) } }
+@keyframes wiruj { to { transform:rotate(360deg) } }
+@keyframes wejscie-listy { from { opacity:0; transform:translate3d(0,14px,0) } }
+@keyframes toast-w { from { opacity:0; transform:translate3d(0,-14px,0) } }
+@media (prefers-reduced-motion: reduce) {
+  [data-ekran] { animation:none !important }
+  [data-smuga] { display:none }
+  [data-arkusz] { animation:none }
+  [data-plama] { transition:none !important }
+}
+</style>
+</helmet>
+
+<div style="min-height:100vh;padding:26px 26px 44px;display:flex;flex-direction:column;align-items:center;gap:20px;font-family:-apple-system,system-ui,sans-serif">
+
+  <sc-if value="{{ pokazPasek }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:9px 13px;border-radius:14px;background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(180%);box-shadow:0 1px 3px rgba(0,0,0,.09);font-size:11px;font-weight:590;letter-spacing:.02em;color:rgba(60,60,67,.6)">
+      <div style="display:flex;align-items:center;gap:7px">
+        <span>Powłoka</span>
+        <div style="display:flex;gap:2px;padding:2px;border-radius:9px;background:rgba(118,118,128,.12)">
+          <button type="button" onClick="{{ ustawAplikacja }}" style="{{ stylPowlokaA }}">Aplikacja</button>
+          <button type="button" onClick="{{ ustawPrzegladarka }}" style="{{ stylPowlokaB }}">Przeglądarka</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span>Motyw</span>
+        <div style="display:flex;gap:2px;padding:2px;border-radius:9px;background:rgba(118,118,128,.12)">
+          <button type="button" onClick="{{ ustawJasny }}" style="{{ stylMotywA }}">Jasny</button>
+          <button type="button" onClick="{{ ustawCiemny }}" style="{{ stylMotywB }}">Ciemny</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span>Ekran</span>
+        <div style="display:flex;flex-wrap:wrap;gap:2px;padding:2px;border-radius:9px;background:rgba(118,118,128,.12)">
+          <sc-for list="{{ skroty }}" as="s" hint-placeholder-count="7">
+            <button type="button" onClick="{{ s.idz }}" style="{{ s.styl }}">{{ s.etykieta }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <sc-if value="{{ jestAuth }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span>Stan</span>
+          <div style="display:flex;gap:2px;padding:2px;border-radius:9px;background:rgba(118,118,128,.12)">
+            <sc-for list="{{ stanySkrot }}" as="s" hint-placeholder-count="4">
+              <button type="button" onClick="{{ s.ustaw }}" style="{{ s.styl }}">{{ s.etykieta }}</button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <button type="button" onClick="{{ przelaczSiec }}" style="{{ stylSieci }}">Offline</button>
+      <button type="button" onClick="{{ przelaczPuste }}" style="{{ stylPuste }}">Puste listy</button>
+    </div>
+  </sc-if>
+
+  <div data-mag="1" data-tokens="{{ tokens }}" style="{{ stylUrzadzenia }}">
+
+    <sc-if value="{{ wPowloce }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:none;position:relative;z-index:20;height:54px;padding:15px 34px 0;display:flex;align-items:flex-start;justify-content:space-between;background:var(--pasek);backdrop-filter:blur(24px) saturate(180%);color:var(--etykieta)">
+        <span style="font-size:15px;font-weight:640;letter-spacing:0">9:41</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"></rect><rect x="5" y="5.5" width="3" height="6.5" rx="1"></rect><rect x="10" y="3" width="3" height="9" rx="1"></rect><rect x="15" y="0" width="3" height="12" rx="1"></rect></svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1 4.2a10 10 0 0 1 14 0"></path><path d="M3.6 7a6.4 6.4 0 0 1 8.8 0"></path><circle cx="8" cy="10.2" r="1.1" fill="currentColor" stroke="none"></circle></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" stroke-opacity=".4"></rect><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"></rect><path d="M23.5 4v4a2.4 2.4 0 0 0 0-4z" fill="currentColor" fill-opacity=".4"></path></svg>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ wPrzegladarce }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;display:flex;align-items:center;gap:14px;padding:0 14px;height:46px;background:var(--karta-2);border-bottom:.5px solid var(--sep)">
+        <div style="display:flex;gap:8px">
+          <span style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></span>
+          <span style="width:12px;height:12px;border-radius:50%;background:#febc2e"></span>
+          <span style="width:12px;height:12px;border-radius:50%;background:#28c840"></span>
+        </div>
+        <div style="flex:1;max-width:460px;margin-inline:auto;height:28px;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:var(--karta);font-size:12px;white-space:nowrap;color:var(--etykieta-2)">{{ adres }}</div>
+        <span style="width:44px"></span>
+      </div>
+    </sc-if>
+
+    <div style="flex:1;min-height:0;overflow-y:auto;background:var(--tlo);position:relative">
+
+      <sc-if value="{{ pokazNavStrony }}" hint-placeholder-val="{{ false }}">
+        <div style="position:sticky;top:0;z-index:15;height:64px;padding-inline:32px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:36px;background:var(--pasek);backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--sep)">
+          <nav style="display:flex;gap:30px;font-size:13px;font-weight:500;letter-spacing:.02em;color:var(--etykieta-2)">
+            <span>Start</span><span>Sklep</span><span>Pomoc</span>
+          </nav>
+          <span style="font-size:16px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;padding-left:.26em;color:var(--etykieta)">Nordo<span style="display:inline-block;width:4px;height:4px;margin-left:3px;border-radius:50%;background:var(--tint);vertical-align:middle"></span></span>
+          <div style="justify-self:end;display:flex;align-items:center;gap:18px;color:var(--etykieta-2)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6" stroke-linecap="round"></path></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0" stroke-linecap="round"></path></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16l-1.4 11.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8L4 7z"></path><path d="M8.6 7V5.6a3.4 3.4 0 0 1 6.8 0V7" stroke-linecap="round"></path></svg>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ jestPowrot }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ stylPaskaNav }}">
+          <button type="button" onClick="{{ wroc }}" style="display:inline-flex;align-items:center;gap:5px;min-height:44px;padding-inline:12px;border:0;background:none;color:var(--tint);font-size:17px;letter-spacing:-.02em;cursor:pointer">
+            <svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 2.5 10 10 18"></path></svg>{{ etykietaPowrotu }}
+          </button>
+        </div>
+      </sc-if>
+
+      <main data-ekran="{{ klucz }}" ref="{{ ekranRef }}" style="{{ stylKolumny }}">
+
+        <sc-if value="{{ jestPrzeglad }}" hint-placeholder-val="{{ true }}">
+          <header style="padding:6px 16px 2px">
+            <p style="margin:0 0 2px;font-size:15px;font-weight:590;color:var(--etykieta-2);letter-spacing:0">{{ dzis }}</p>
+            <h1 style="margin:0;font-size:34px;font-weight:700;letter-spacing:-.028em;line-height:1.1;color:var(--etykieta)">Przegląd</h1>
+          </header>
+
+          <div style="margin:18px 16px 0;border-radius:12px;background:var(--karta);overflow:hidden">
+            <button data-wiersz="dot" type="button" onClick="{{ doZamowien }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:50px;padding:12px 16px;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--etykieta)" style-active="opacity:.55">
+              <span style="flex:none;width:10px;height:10px;border-radius:50%;background:var(--tint)"></span>
+              <span style="flex:1;min-width:0;font-size:17px;letter-spacing:-.02em">Do wysłania</span>
+              <span style="flex:none;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--etykieta)">{{ liczbaDoWyslania }}</span>
+              <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="var(--etykieta-3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M1.4 1.4 6.6 7l-5.2 5.6"></path></svg>
+            </button>
+            <button data-wiersz="dot" type="button" onClick="{{ doNiskich }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:50px;padding:12px 16px;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--etykieta)" style-active="opacity:.55">
+              <span style="flex:none;width:10px;height:10px;border-radius:50%;background:var(--pomaranczowy)"></span>
+              <span style="flex:1;min-width:0;font-size:17px;letter-spacing:-.02em">Niskie stany</span>
+              <span style="flex:none;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums">{{ liczbaNiskich }}</span>
+              <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="var(--etykieta-3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M1.4 1.4 6.6 7l-5.2 5.6"></path></svg>
+            </button>
+            <button data-wiersz="dot" type="button" onClick="{{ doZwrotow }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:50px;padding:12px 16px;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--etykieta)" style-active="opacity:.55">
+              <span style="flex:none;width:10px;height:10px;border-radius:50%;background:var(--etykieta-3)"></span>
+              <span style="flex:1;min-width:0;font-size:17px;letter-spacing:-.02em">Zwroty do przyjęcia</span>
+              <span style="flex:none;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums">{{ liczbaZwrotow }}</span>
+              <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="var(--etykieta-3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M1.4 1.4 6.6 7l-5.2 5.6"></path></svg>
+            </button>
+          </div>
+
+          <h2 style="margin:26px 16px 7px;font-size:13px;font-weight:400;color:var(--etykieta-2);letter-spacing:0">Dzisiaj</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-inline:16px">
+            <div style="padding:16px;border-radius:12px;background:var(--karta)">
+              <span style="display:block;font-size:32px;font-weight:680;line-height:1.05;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--etykieta)">{{ paczkiDzis }}</span>
+              <span style="display:block;margin-top:4px;font-size:13px;color:var(--etykieta-2)">wysłanych paczek</span>
+            </div>
+            <div style="padding:16px;border-radius:12px;background:var(--karta)">
+              <span style="display:block;font-size:32px;font-weight:680;line-height:1.05;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--etykieta)">{{ sztukiDzis }}</span>
+              <span style="display:block;margin-top:4px;font-size:13px;color:var(--etykieta-2)">przyjętych sztuk</span>
+            </div>
+          </div>
+
+          <h2 style="margin:26px 16px 7px;font-size:13px;font-weight:400;color:var(--etykieta-2);letter-spacing:0">Ostatnie ruchy</h2>
+          <sc-if value="{{ sagRuchy }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-inline:16px;border-radius:12px;background:var(--karta);overflow:hidden">
+              <sc-for list="{{ ruchy }}" as="r" hint-placeholder-count="4">
+                <div data-wiersz="plain" style="display:flex;align-items:center;gap:12px;min-height:50px;padding:11px 16px;color:var(--etykieta)">
+                  <span style="flex:1;min-width:0">
+                    <span style="display:block;font-size:17px;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.produkt }}</span>
+                    <span style="display:block;margin-top:1px;font-size:13px;color:var(--etykieta-2)">{{ r.meta }}</span>
+                  </span>
+                  <span style="{{ r.styl }}">{{ r.delta }}<span style="font-weight:400;font-size:13px;opacity:.75"> szt.</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ brakRuchow }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0 16px;padding:26px 16px;border-radius:12px;background:var(--karta);color:var(--etykieta-2);font-size:15px;text-align:center">Brak ruchów dzisiaj</p>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{ jestStany }}" hint-placeholder-val="{{ false }}">
+          <header style="padding:6px 16px 2px;display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+            <h1 style="margin:0;font-size:34px;font-weight:700;letter-spacing:-.028em;line-height:1.1;color:var(--etykieta)">Magazyn</h1>
+            <p style="margin:0;flex:none;font-size:13px;color:var(--etykieta-2);font-variant-numeric:tabular-nums">{{ ilePozycji }}</p>
+          </header>
+
+          <div style="position:relative;z-index:30;margin:14px 16px 0">
+            <label style="display:flex;align-items:center;gap:7px;height:36px;padding-inline:9px;border-radius:10px;background:var(--wypelnienie)">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--etykieta-2)" stroke-width="1.9" stroke-linecap="round" style="flex:none"><circle cx="7" cy="7" r="4.6"></circle><path d="m10.6 10.6 3.4 3.4"></path></svg>
+              <input type="search" ref="{{ szukajRef }}" placeholder="Szukaj nazwy lub SKU" value="{{ fraza }}" onChange="{{ naFraze }}" onFocus="{{ otworzSzukanie }}" onBlur="{{ zamknijSzukanie }}" onKeyDown="{{ naKlawiszSzukania }}" style="width:100%;border:0;background:none;outline:none;color:var(--etykieta);font-size:17px;letter-spacing:-.02em">
+              <span style="{{ stylSkrotu }}">⌘K</span>
+            </label>
+
+            <sc-if value="{{ panelSzukania }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:44px;left:0;right:0;border-radius:14px;background:var(--karta);box-shadow:0 12px 40px -12px rgba(0,0,0,.35),0 0 0 .5px var(--sep);overflow:hidden;animation:wejscie-listy .26s cubic-bezier(.32,.72,0,1)">
+                <p style="margin:0;padding:11px 14px 5px;font-size:12px;font-weight:590;letter-spacing:.01em;color:var(--etykieta-3)">{{ naglowekWynikow }}</p>
+                <sc-for list="{{ wyniki }}" as="w" hint-placeholder-count="4">
+                  <button type="button" onMouseDown="{{ w.wybierz }}" onMouseEnter="{{ w.najedz }}" style="{{ w.styl }}">
+                    <span style="{{ w.dioda }}"></span>
+                    <span style="flex:1;min-width:0;display:flex;align-items:baseline;gap:7px">
+                      <span style="font-size:15px;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ w.tytul }}</span>
+                      <span style="flex:none;font-size:12px;color:var(--etykieta-3)">{{ w.opis }}</span>
+                    </span>
+                    <span style="{{ w.stylKonca }}">{{ w.koniec }}</span>
+                  </button>
+                </sc-for>
+                <sc-if value="{{ brakWynikow }}" hint-placeholder-val="{{ false }}">
+                  <p style="margin:0;padding:14px;font-size:15px;color:var(--etykieta-2);text-align:center">{{ pustyKomunikat }}</p>
+                </sc-if>
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 14px;border-top:.5px solid var(--sep);font-size:11px;color:var(--etykieta-3)">
+                  <span>↑↓ wybór · Enter otwiera</span>
+                  <span>Esc zamyka</span>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="position:relative;display:grid;grid-template-columns:repeat(3,1fr);margin:14px 16px 0;padding:2px;border-radius:9px;background:var(--wypelnienie)">
+            <span data-plama="1" style="{{ plamaStany }}"></span>
+            <button type="button" onClick="{{ segWszystko }}" style="{{ stylSeg0 }}">Wszystko</button>
+            <button type="button" onClick="{{ segNiskie }}" style="{{ stylSeg1 }}">Niskie<span style="{{ stylLicznikNiskie }}">{{ liczbaNiskich }}</span></button>
+            <button type="button" onClick="{{ segZero }}" style="{{ stylSeg2 }}">Zero</button>
+          </div>
+
+          <sc-if value="{{ saPozycje }}" hint-placeholder-val="{{ true }}">
+            <div style="margin:16px 16px 0;border-radius:12px;background:var(--karta);overflow:hidden">
+              <sc-for list="{{ pozycje }}" as="p" hint-placeholder-count="6">
+                <button data-wiersz="dot" type="button" onClick="{{ p.otworz }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:54px;padding:11px 16px;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--etykieta)" style-active="opacity:.55">
+                  <span style="{{ p.dioda }}"></span>
+                  <span style="flex:1;min-width:0">
+                    <span style="display:block;font-size:17px;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.name }}</span>
+                    <span style="display:block;margin-top:1px;font-size:13px;color:var(--etykieta-2)">{{ p.meta }}</span>
+                  </span>
+                  <span style="{{ p.odczyt }}">{{ p.stock }}</span>
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="var(--etykieta-3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M1.4 1.4 6.6 7l-5.2 5.6"></path></svg>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ brakPozycji }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:16px 16px 0;padding:26px 16px;border-radius:12px;background:var(--karta);color:var(--etykieta-2);font-size:15px;text-align:center">{{ pustyKomunikat }}</p>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{ jestKorekta }}" hint-placeholder-val="{{ false }}">
+          <header style="padding:2px 16px 0">
+            <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-.026em;line-height:1.15;color:var(--etykieta)">{{ produktNazwa }}</h1>
+            <p style="margin:3px 0 0;font-size:13px;color:var(--etykieta-2);font-variant-numeric:tabular-nums">{{ produktMeta }}</p>
+          </header>
+
+          <div style="margin:20px 16px 0;padding:20px 16px;border-radius:16px;background:var(--karta)">
+            <p style="margin:0;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:var(--etykieta-2)">
+              <span style="flex:none;white-space:nowrap">Po zapisie</span>
+              <span style="flex:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap"><span style="{{ stylKropkiProgu }}"></span>{{ opisProgu }}</span>
+            </p>
+
+            <div style="display:grid;grid-template-columns:64px 1fr 64px;align-items:center;gap:12px;margin-top:12px">
+              <button data-tap="1" type="button" aria-label="Zdejmij jedną sztukę" onClick="{{ minus }}" style="width:64px;height:64px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:var(--wypelnienie);color:var(--etykieta);cursor:pointer">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"></path></svg>
+              </button>
+              <span style="text-align:center;font-size:60px;font-weight:680;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--etykieta)">{{ wynik }}</span>
+              <button data-tap="1" type="button" aria-label="Dodaj jedną sztukę" onClick="{{ plus }}" style="width:64px;height:64px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:var(--tint);color:#fff;cursor:pointer">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+              </button>
+            </div>
+
+            <p style="margin:10px 0 0;text-align:center;font-size:13px;color:var(--etykieta-2);font-variant-numeric:tabular-nums">{{ bylo }}<span style="{{ stylDelty }}">{{ deltaOpis }}</span></p>
+
+            <sc-if value="{{ ponizejZera }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:10px 0 0;font-size:13px;color:var(--czerwony);text-align:center">{{ komunikatZera }}</p>
+            </sc-if>
+
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:18px">
+              <sc-for list="{{ skoki }}" as="s" hint-placeholder-count="4">
+                <button data-tap="1" type="button" onClick="{{ s.ustaw }}" style="{{ s.styl }}">{{ s.etykieta }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <button type="button" onClick="{{ przelaczKierunek }}" style="display:block;width:fit-content;margin:12px auto 0;min-height:44px;padding-inline:14px;border:0;background:none;color:var(--tint);font-size:15px;letter-spacing:-.01em;cursor:pointer">{{ etykietaKierunku }}</button>
+
+          <h2 style="margin:18px 16px 7px;font-size:13px;font-weight:400;color:var(--etykieta-2)">Powód</h2>
+          <div style="margin-inline:16px;border-radius:12px;background:var(--karta);overflow:hidden">
+            <sc-for list="{{ powody }}" as="p" hint-placeholder-count="4">
+              <button data-wiersz="plain" type="button" role="radio" aria-checked="{{ p.wybrany }}" onClick="{{ p.wybierz }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:50px;padding:12px 16px;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--etykieta)" style-active="opacity:.55">
+                <span style="{{ p.styl }}">{{ p.nazwa }}</span>
+                <sc-if value="{{ p.wybrany }}" hint-placeholder-val="{{ false }}">
+                  <svg width="17" height="14" viewBox="0 0 17 14" fill="none" stroke="var(--tint)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M1.6 7.4 6 11.8 15.2 2.2"></path></svg>
+                </sc-if>
+              </button>
+            </sc-for>
+          </div>
+
+          <h2 style="margin:26px 16px 7px;font-size:13px;font-weight:400;color:var(--etykieta-2)">Notatka</h2>
+          <div style="margin-inline:16px">
+            <textarea rows="2" placeholder="Nieobowiązkowa — np. numer kartonu" value="{{ notatka }}" onChange="{{ naNotatke }}" style="width:100%;box-sizing:border-box;min-height:50px;padding:13px 16px;border:0;border-radius:12px;background:var(--karta);color:var(--etykieta);font-size:17px;letter-spacing:-.02em;resize:none"></textarea>
+          </div>
+
+          <div style="height:26px"></div>
+          <div style="position:sticky;bottom:0;margin-top:14px;padding:12px 16px 16px;background:var(--pasek);backdrop-filter:blur(24px) saturate(180%);border-top:.5px solid var(--sep);display:grid;gap:9px">
+            <button data-tap="1" type="button" onClick="{{ zapisz }}" disabled="{{ zapisZablokowany }}" style="{{ stylZapisu }}">{{ etykietaZapisu }}</button>
+            <p style="margin:0;font-size:12px;color:var(--etykieta-3);text-align:center">zmiana widoczna w sklepie od razu</p>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ jestZamowienia }}" hint-placeholder-val="{{ false }}">
+          <header style="padding:6px 16px 2px">
+            <h1 style="margin:0;font-size:34px;font-weight:700;letter-spacing:-.028em;line-height:1.1;color:var(--etykieta)">Zamówienia</h1>
+          </header>
+          <div style="position:relative;display:grid;grid-template-columns:repeat(3,1fr);margin:14px 16px 0;padding:2px;border-radius:9px;background:var(--wypelnienie)">
+            <span data-plama="1" style="{{ plamaZam }}"></span>
+            <sc-for list="{{ zakladki }}" as="z" hint-placeholder-count="3">
+              <button type="button" onClick="{{ z.wybierz }}" style="{{ z.styl }}">{{ z.etykieta }}<span style="{{ z.stylLicznika }}">{{ z.licznik }}</span></button>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ saZamowienia }}" hint-placeholder-val="{{ true }}">
+            <div style="margin:16px 16px 0;border-radius:12px;background:var(--karta);overflow:hidden">
+              <sc-for list="{{ zamowienia }}" as="z" hint-placeholder-count="5">
+                <button data-wiersz="dot" type="button" onClick="{{ z.otworz }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:12px 16px;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--etykieta)" style-active="opacity:.55">
+                  <span style="{{ z.dioda }}"></span>
+                  <span style="flex:1;min-width:0">
+                    <span style="display:block;font-size:12px;font-weight:590;letter-spacing:.02em;color:var(--etykieta-2);font-variant-numeric:tabular-nums">{{ z.numer }}</span>
+                    <span style="display:block;font-size:17px;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ z.klient }}</span>
+                    <span style="{{ z.stylMeta }}">{{ z.meta }}</span>
+                  </span>
+                  <span style="text-align:right;flex:none">
+                    <span style="display:block;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums">{{ z.sztuk }}<span style="font-size:13px;font-weight:400;color:var(--etykieta-3)"> szt.</span></span>
+                    <span style="font-size:13px;color:var(--etykieta-2);font-variant-numeric:tabular-nums">{{ z.godzina }}</span>
+                  </span>
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="var(--etykieta-3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M1.4 1.4 6.6 7l-5.2 5.6"></path></svg>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ brakZamowien }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:16px 16px 0;padding:26px 16px;border-radius:12px;background:var(--karta);color:var(--etykieta-2);font-size:15px;text-align:center">Brak zamówień w tej zakładce</p>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{ jestZamowienie }}" hint-placeholder-val="{{ false }}">
+          <header style="padding:2px 16px 0;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px">
+            <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--etykieta)">{{ kartaNumer }}</h1>
+            <span style="display:inline-flex;align-items:center;min-height:24px;padding:0 11px;border-radius:9999px;background:var(--tint-miekki);color:var(--tint);font-size:13px;font-weight:590">{{ kartaStan }}</span>
+          </header>
+
+          <div style="margin:16px 16px 0;display:flex;align-items:center;gap:4px;padding:5px;border-radius:14px;background:var(--karta);width:fit-content">
+            <button type="button" onPointerEnter="{{ akcjaDruk.najedz }}" onPointerLeave="{{ zejdzZAkcji }}" onClick="{{ akcjaDruk.uzyj }}" style="{{ akcjaDruk.styl }}" aria-label="Drukuj etykietę">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="flex:none"><path d="M7 9V3.8h10V9"></path><rect x="3.6" y="9" width="16.8" height="7.4" rx="2.2"></rect><path d="M7 14.6h10v5.6H7z"></path></svg>
+              <span style="{{ akcjaDruk.stylEtykiety }}">Etykieta</span>
+            </button>
+            <button type="button" onPointerEnter="{{ akcjaKopia.najedz }}" onPointerLeave="{{ zejdzZAkcji }}" onClick="{{ akcjaKopia.uzyj }}" style="{{ akcjaKopia.styl }}" aria-label="Kopiuj numer">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="flex:none"><rect x="8.4" y="8.4" width="11.2" height="11.2" rx="2.6"></rect><path d="M15.6 5.6a2.2 2.2 0 0 0-2.2-2.2H6.6a3.2 3.2 0 0 0-3.2 3.2v6.8a2.2 2.2 0 0 0 2.2 2.2"></path></svg>
+              <span style="{{ akcjaKopia.stylEtykiety }}">Numer</span>
+            </button>
+            <button type="button" onPointerEnter="{{ akcjaTel.najedz }}" onPointerLeave="{{ zejdzZAkcji }}" onClick="{{ akcjaTel.uzyj }}" style="{{ akcjaTel.styl }}" aria-label="Zadzwoń do odbiorcy">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="flex:none"><path d="M6.2 3.8h3l1.6 4-2 1.4a11.4 11.4 0 0 0 5.2 5.2l1.4-2 4 1.6v3a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 4.2 6a2 2 0 0 1 2-2.2z"></path></svg>
+              <span style="{{ akcjaTel.stylEtykiety }}">Telefon</span>
+            </button>
+            <button type="button" onPointerEnter="{{ akcjaProblem.najedz }}" onPointerLeave="{{ zejdzZAkcji }}" onClick="{{ akcjaProblem.uzyj }}" style="{{ akcjaProblem.styl }}" aria-label="Zgłoś problem">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" style="flex:none"><path d="M12 4.6 3.6 19h16.8L12 4.6z" stroke-linejoin="round"></path><path d="M12 10v3.6"></path><circle cx="12" cy="16.4" r=".9" fill="currentColor" stroke="none"></circle></svg>
+              <span style="{{ akcjaProblem.stylEtykiety }}">Problem</span>
+            </button>
+          </div>
+
+          <div style="margin:20px 16px 0;border-radius:12px;background:var(--karta);overflow:hidden">
+            <sc-for list="{{ kartaPozycje }}" as="p" hint-placeholder-count="3">
+              <div data-wiersz="dot" style="display:flex;align-items:center;gap:12px;min-height:54px;padding:11px 16px;color:var(--etykieta)">
+                <span style="{{ p.dioda }}"></span>
+                <span style="flex:1;min-width:0">
+                  <span style="display:block;font-size:17px;letter-spacing:-.02em">{{ p.name }}</span>
+                  <span style="{{ p.stylMeta }}">{{ p.meta }}</span>
+                </span>
+                <span style="flex:none;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums">× {{ p.qty }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <h2 style="margin:26px 16px 7px;font-size:13px;font-weight:400;color:var(--etykieta-2)">Dostawa</h2>
+          <div style="margin-inline:16px;border-radius:12px;background:var(--karta);overflow:hidden">
+            <dl style="margin:0">
+              <div data-dane="1" style="display:flex;align-items:baseline;gap:12px;padding:12px 16px">
+                <dt style="flex:none;min-width:92px;font-size:15px;color:var(--etykieta-2)">Odbiorca</dt>
+                <dd style="margin:0;flex:1;font-size:17px;letter-spacing:-.02em;color:var(--etykieta)">{{ kartaKlient }}</dd>
+              </div>
+              <div data-dane="1" style="display:flex;align-items:baseline;gap:12px;padding:12px 16px">
+                <dt style="flex:none;min-width:92px;font-size:15px;color:var(--etykieta-2)">Punkt</dt>
+                <dd style="margin:0;flex:1;font-size:17px;letter-spacing:-.02em;color:var(--etykieta)">{{ kartaPunkt }}<span style="display:block;margin-top:2px;font-size:13px;color:var(--etykieta-2)">{{ kartaAdres }}</span></dd>
+              </div>
+              <div data-dane="1" style="display:flex;align-items:baseline;gap:12px;padding:12px 16px">
+                <dt style="flex:none;min-width:92px;font-size:15px;color:var(--etykieta-2)">Telefon</dt>
+                <dd style="margin:0;flex:1;font-size:17px;font-variant-numeric:tabular-nums;color:var(--etykieta)">{{ kartaTelefon }}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <h2 style="margin:26px 16px 7px;font-size:13px;font-weight:400;color:var(--etykieta-2)">Płatność</h2>
+          <div style="margin-inline:16px;border-radius:12px;background:var(--karta);overflow:hidden">
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;color:var(--etykieta)">
+              <span style="flex:none;width:10px;height:10px;border-radius:50%;background:var(--zielony)"></span>
+              <span style="flex:1;min-width:0;font-size:17px;letter-spacing:-.02em">Opłacone · Przelewy24</span>
+              <span style="flex:none;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums">{{ kartaKwota }}</span>
+            </div>
+          </div>
+
+          <div style="height:26px"></div>
+          <div style="position:sticky;bottom:0;margin-top:14px;padding:12px 16px 16px;background:var(--pasek);backdrop-filter:blur(24px) saturate(180%);border-top:.5px solid var(--sep);display:grid;gap:8px">
+            <button data-tap="1" type="button" onPointerDown="{{ trzymajNadanie }}" onPointerUp="{{ puscTrzymanie }}" onPointerLeave="{{ puscTrzymanie }}" onPointerCancel="{{ puscTrzymanie }}" style="{{ stylNadania }}">
+              <span data-pasek="1" style="position:absolute;left:0;top:0;bottom:0;width:100%;z-index:0;background:rgba(255,255,255,.28);transform:scaleX(0);transform-origin:left"></span>
+              <span style="position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px">{{ etykietaNadania }}</span>
+            </button>
+            <button type="button" style="min-height:44px;display:inline-flex;align-items:center;justify-content:center;width:100%;border:0;border-radius:14px;background:none;color:var(--tint);font-size:17px;letter-spacing:-.02em;cursor:pointer">Oznacz jako spakowane</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ jestSkan }}" hint-placeholder-val="{{ false }}">
+          <div data-tokens="{{ tokensSkanera }}" style="background:var(--tlo);min-height:100%">
+            <header style="padding:6px 16px 2px">
+              <h1 style="margin:0;font-size:34px;font-weight:700;letter-spacing:-.028em;line-height:1.1;color:var(--etykieta)">Skaner</h1>
+            </header>
+            <div style="position:relative;display:grid;grid-template-columns:repeat(3,1fr);margin:14px 16px 0;padding:2px;border-radius:9px;background:var(--wypelnienie)">
+              <span data-plama="1" style="{{ plamaSkan }}"></span>
+              <button type="button" onClick="{{ skanAuto }}" style="{{ stylSkan0 }}">Auto</button>
+              <button type="button" onClick="{{ skanJasny }}" style="{{ stylSkan1 }}">Jasny</button>
+              <button type="button" onClick="{{ skanCiemny }}" style="{{ stylSkan2 }}">Ciemny</button>
+            </div>
+
+            <div style="margin:16px 16px 0">
+              <div style="{{ stylKadru }}">
+                <sc-if value="{{ kadrUspiony }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:12px;padding:24px;text-align:center;color:var(--etykieta-2)">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" style="color:var(--etykieta-3)"><rect x="2.6" y="6.4" width="18.8" height="13.2" rx="3.4"></rect><path d="M8.4 6.4 9.8 4h4.4l1.4 2.4"></path><circle cx="12" cy="13" r="3.6"></circle></svg>
+                    <p style="margin:0;font-size:15px">Tu pojawi się obraz z aparatu</p>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ kadrZywy }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;inset:16%">
+                    <span style="position:absolute;top:0;left:0;width:34px;height:34px;border:2.5px solid rgba(255,255,255,.94);border-right:0;border-bottom:0;border-radius:8px 0 0 0"></span>
+                    <span style="position:absolute;bottom:0;right:0;width:34px;height:34px;border:2.5px solid rgba(255,255,255,.94);border-left:0;border-top:0;border-radius:0 0 8px 0"></span>
+                    <span style="position:absolute;top:0;right:0;width:34px;height:34px;border:2.5px solid rgba(255,255,255,.94);border-left:0;border-bottom:0;border-radius:0 8px 0 0"></span>
+                    <span style="position:absolute;bottom:0;left:0;width:34px;height:34px;border:2.5px solid rgba(255,255,255,.94);border-right:0;border-top:0;border-radius:0 0 0 8px"></span>
+                  </div>
+                  <div data-smuga="1" style="position:absolute;left:16%;right:16%;top:16%;height:68%;border-top:2px solid var(--tint);box-shadow:0 0 18px 2px var(--tint);animation:smuga 2.4s cubic-bezier(.4,0,.6,1) infinite alternate"></div>
+                </sc-if>
+              </div>
+
+              <sc-if value="{{ fazaGotowy }}" hint-placeholder-val="{{ true }}">
+                <button data-tap="1" type="button" onClick="{{ startSkan }}" style="min-height:50px;width:100%;margin-top:16px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:14px;background:var(--tint);color:#fff;font-size:17px;font-weight:600;letter-spacing:-.02em;cursor:pointer">Włącz aparat</button>
+              </sc-if>
+
+              <sc-if value="{{ fazaSkanuje }}" hint-placeholder-val="{{ false }}">
+                <p style="margin:14px 0 0;font-size:13px;color:var(--etykieta-2);text-align:center">ustaw kod EAN w kadrze</p>
+                <div style="margin-top:10px;display:grid;gap:8px">
+                  <button data-tap="1" type="button" onClick="{{ znajdz }}" style="min-height:50px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:14px;background:var(--tint);color:#fff;font-size:17px;font-weight:600;letter-spacing:-.02em;cursor:pointer">Odczytaj kod (podgląd)</button>
+                  <button type="button" onClick="{{ przerwij }}" style="min-height:44px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:14px;background:none;color:var(--tint);font-size:17px;letter-spacing:-.02em;cursor:pointer">Przerwij</button>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ fazaZnaleziony }}" hint-placeholder-val="{{ false }}">
+                <div data-arkusz="1" style="margin-top:16px;padding:8px 18px 18px;border-radius:20px;background:var(--karta);box-shadow:0 -1px 24px rgba(0,0,0,.1);animation:arkusz .34s cubic-bezier(.32,.72,0,1)">
+                  <div style="display:flex;justify-content:center;padding-bottom:12px"><span style="width:36px;height:5px;border-radius:9999px;background:var(--etykieta-3)"></span></div>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="flex:none;width:10px;height:10px;border-radius:50%;background:var(--zielony)"></span>
+                    <h2 style="margin:0;font-size:20px;font-weight:680;letter-spacing:-.024em;color:var(--etykieta)">Słuchawki bezprzewodowe Aura X</h2>
+                  </div>
+                  <p style="margin:6px 0 0;font-size:13px;color:var(--etykieta-2);font-variant-numeric:tabular-nums">5901234123457 · AUR-X-BLK</p>
+                  <p style="margin:14px 0 0;font-size:34px;font-weight:680;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--etykieta)">{{ stanSkanu }}<span style="font-size:17px;font-weight:400;color:var(--etykieta-2)"> szt.</span></p>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+                    <button data-tap="1" type="button" onClick="{{ skanMinus }}" style="min-height:54px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:14px;background:var(--wypelnienie);color:var(--etykieta);font-size:17px;font-weight:600;cursor:pointer">−1</button>
+                    <button data-tap="1" type="button" onClick="{{ skanPlus }}" style="min-height:54px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:14px;background:var(--tint);color:#fff;font-size:17px;font-weight:600;cursor:pointer">+1</button>
+                  </div>
+                  <button type="button" onClick="{{ otworzZeSkanu }}" style="min-height:44px;width:100%;margin-top:8px;border:0;background:none;color:var(--tint);font-size:17px;letter-spacing:-.02em;cursor:pointer">Otwórz kartę produktu</button>
+                  <button type="button" onClick="{{ startSkan }}" style="min-height:44px;width:100%;border:0;background:none;color:var(--tint);font-size:17px;letter-spacing:-.02em;cursor:pointer">Skanuj następny</button>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ jestZwroty }}" hint-placeholder-val="{{ false }}">
+          <header style="padding:2px 16px 0;display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+            <h1 style="margin:0;font-size:34px;font-weight:700;letter-spacing:-.028em;line-height:1.1;color:var(--etykieta)">Zwroty</h1>
+            <p style="margin:0;flex:none;font-size:13px;color:var(--etykieta-2)">{{ ileZwrotow }}</p>
+          </header>
+
+          <sc-if value="{{ saZwroty }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ zwroty }}" as="z" hint-placeholder-count="2">
+              <section style="margin:16px 16px 0;border-radius:12px;background:var(--karta);overflow:hidden">
+                <div data-wiersz="dot" style="display:flex;align-items:center;gap:12px;min-height:60px;padding:12px 16px;color:var(--etykieta)">
+                  <span style="flex:none;width:10px;height:10px;border-radius:50%;background:var(--etykieta-3)"></span>
+                  <span style="flex:1;min-width:0">
+                    <span style="display:block;font-size:12px;font-weight:590;letter-spacing:.02em;color:var(--etykieta-2);font-variant-numeric:tabular-nums">{{ z.numer }}</span>
+                    <span style="display:block;font-size:17px;letter-spacing:-.02em">{{ z.klient }}</span>
+                    <span style="display:block;margin-top:1px;font-size:13px;color:var(--etykieta-2)">{{ z.meta }}</span>
+                  </span>
+                </div>
+                <sc-for list="{{ z.pozycje }}" as="p" hint-placeholder-count="1">
+                  <div data-wiersz="plain" style="display:flex;align-items:center;gap:12px;min-height:50px;padding:12px 16px;color:var(--etykieta)">
+                    <span style="flex:1;min-width:0;font-size:17px;letter-spacing:-.02em">{{ p.name }}</span>
+                    <span style="flex:none;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums">× {{ p.qty }}</span>
+                  </div>
+                </sc-for>
+                <div style="padding:12px 16px 16px">
+                  <button type="button" onPointerDown="{{ z.trzymaj }}" onPointerUp="{{ puscTrzymanie }}" onPointerLeave="{{ puscTrzymanie }}" onPointerCancel="{{ puscTrzymanie }}" style="{{ z.stylAkcji }}">
+                    <span data-pasek="1" style="position:absolute;left:0;top:0;bottom:0;width:100%;z-index:0;background:rgba(255,255,255,.28);transform:scaleX(0);transform-origin:left"></span>
+                    <span style="position:relative;z-index:1">{{ z.akcja }}</span>
+                  </button>
+                </div>
+              </section>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ brakZwrotow }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:16px 16px 0;padding:26px 16px;border-radius:12px;background:var(--karta);color:var(--etykieta-2);font-size:15px;text-align:center">Brak zwrotów do przyjęcia</p>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{ jestLogowanie }}" hint-placeholder-val="{{ false }}">
+          <div style="width:100%;max-width:400px;margin-inline:auto;padding-inline:16px;box-sizing:border-box">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;margin-bottom:26px">
+              <span style="font-size:17px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;padding-left:.26em;color:var(--etykieta)">Nordo<span style="display:inline-block;width:4px;height:4px;margin-left:3px;border-radius:50%;background:var(--tint);vertical-align:middle"></span></span>
+              <h1 style="margin:14px 0 0;font-size:28px;font-weight:700;letter-spacing:-.026em;color:var(--etykieta)">Panel magazynu</h1>
+              <p style="margin:0;font-size:15px;color:var(--etykieta-2)">Zaloguj się kontem pracownika</p>
+            </div>
+
+            <sc-if value="{{ bezSieci }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:11px 14px;border-radius:12px;background:var(--wypelnienie);font-size:13px;color:var(--etykieta-2)">
+                <span style="flex:none;width:8px;height:8px;border-radius:50%;background:var(--etykieta-3)"></span>
+                Brak połączenia. Logowanie wymaga sieci.
+              </div>
+            </sc-if>
+
+            <div style="border-radius:12px;background:var(--karta);overflow:hidden">
+              <div data-dane="1" style="display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 16px">
+                <span style="flex:none;min-width:76px;font-size:17px;letter-spacing:-.02em;color:var(--etykieta)">E-mail</span>
+                <input type="email" autocomplete="username" placeholder="imie@nordo.pl" value="{{ email }}" onChange="{{ naEmail }}" style="flex:1;min-width:0;border:0;background:none;outline:none;color:var(--etykieta);font-size:17px;letter-spacing:-.02em">
+              </div>
+              <div data-dane="1" style="display:flex;align-items:center;gap:10px;min-height:50px;padding:6px 16px">
+                <span style="flex:none;min-width:76px;font-size:17px;letter-spacing:-.02em;color:var(--etykieta)">Hasło</span>
+                <input type="{{ typHasla }}" autocomplete="current-password" placeholder="Wpisz hasło" value="{{ haslo }}" onChange="{{ naHaslo }}" style="flex:1;min-width:0;border:0;background:none;outline:none;color:var(--etykieta);font-size:17px;letter-spacing:-.02em">
+                <button type="button" onClick="{{ przelaczPokaz }}" style="flex:none;min-height:36px;padding-inline:4px;border:0;background:none;color:var(--tint);font-size:15px;cursor:pointer">{{ etykietaPokazu }}</button>
+              </div>
+              <div data-dane="1" style="display:flex;align-items:center;gap:12px;min-height:50px;padding:9px 16px">
+                <span style="flex:1;min-width:0;font-size:17px;letter-spacing:-.02em;color:var(--etykieta)">Face ID przy następnym wejściu</span>
+                <button type="button" role="switch" aria-checked="{{ faceId }}" aria-label="Face ID przy następnym wejściu" onClick="{{ przelaczFaceId }}" style="{{ stylPrzelacznika }}">
+                  <span style="{{ stylGalki }}"></span>
+                </button>
+              </div>
+            </div>
+
+            <sc-if value="{{ jestBlad }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:10px 4px 0;font-size:13px;line-height:1.4;color:var(--czerwony);text-wrap:pretty">{{ komunikatBledu }}</p>
+            </sc-if>
+
+            <sc-if value="{{ jestZablokowane }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:12px;padding:13px 16px;border-radius:12px;background:var(--czerwony-miekki)">
+                <p style="margin:0;display:flex;align-items:center;gap:9px;font-size:15px;font-weight:590;color:var(--czerwony)">
+                  <span style="flex:none;width:8px;height:8px;border-radius:50%;background:var(--czerwony)"></span>Konto zablokowane
+                </p>
+                <p style="margin:5px 0 0;font-size:13px;line-height:1.45;color:var(--etykieta-2);text-wrap:pretty">Trzy nieudane próby. Spróbuj ponownie za 15 minut albo poproś administratora o odblokowanie.</p>
+              </div>
+            </sc-if>
+
+            <button data-tap="1" type="button" onClick="{{ zaloguj }}" disabled="{{ logowanieZablokowane }}" style="{{ stylLogowania }}">
+              <sc-if value="{{ trwaLogowanie }}" hint-placeholder-val="{{ false }}">
+                <span style="flex:none;width:17px;height:17px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:wiruj .7s linear infinite"></span>
+              </sc-if>{{ etykietaLogowania }}
+            </button>
+
+            <button type="button" onClick="{{ doResetu }}" style="display:block;width:fit-content;margin:6px auto 0;min-height:44px;padding-inline:12px;border:0;background:none;color:var(--tint);font-size:15px;letter-spacing:-.01em;cursor:pointer">Nie pamiętam hasła</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ jestReset }}" hint-placeholder-val="{{ false }}">
+          <div style="width:100%;max-width:400px;margin-inline:auto;padding-inline:16px;box-sizing:border-box">
+            <h1 style="margin:2px 0 0;font-size:28px;font-weight:700;letter-spacing:-.026em;line-height:1.15;color:var(--etykieta)">Reset hasła</h1>
+            <p style="margin:8px 0 0;font-size:15px;line-height:1.45;color:var(--etykieta-2);text-wrap:pretty">Wyślemy link do ustawienia nowego hasła na adres przypisany do konta.</p>
+
+            <sc-if value="{{ resetFormularz }}" hint-placeholder-val="{{ true }}">
+              <div style="margin-top:20px;border-radius:12px;background:var(--karta);overflow:hidden">
+                <div style="display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 16px">
+                  <span style="flex:none;min-width:76px;font-size:17px;letter-spacing:-.02em;color:var(--etykieta)">E-mail</span>
+                  <input type="email" placeholder="imie@nordo.pl" value="{{ email }}" onChange="{{ naEmail }}" style="flex:1;min-width:0;border:0;background:none;outline:none;color:var(--etykieta);font-size:17px;letter-spacing:-.02em">
+                </div>
+              </div>
+              <button data-tap="1" type="button" onClick="{{ wyslijReset }}" style="min-height:50px;width:100%;margin-top:16px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:14px;background:var(--tint);color:#fff;font-size:17px;font-weight:600;letter-spacing:-.02em;cursor:pointer">Wyślij link</button>
+            </sc-if>
+
+            <sc-if value="{{ resetWyslany }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:20px;padding:16px;border-radius:12px;background:var(--karta)">
+                <p style="margin:0;display:flex;align-items:center;gap:9px;font-size:17px;font-weight:590;letter-spacing:-.02em;color:var(--etykieta)">
+                  <span style="flex:none;width:10px;height:10px;border-radius:50%;background:var(--zielony)"></span>Link wysłany
+                </p>
+                <p style="margin:7px 0 0;font-size:13px;line-height:1.45;color:var(--etykieta-2);text-wrap:pretty">Sprawdź skrzynkę {{ email }}. Link jest ważny 30 minut.</p>
+              </div>
+              <button type="button" onClick="{{ doLogowania }}" style="display:block;width:fit-content;margin:10px auto 0;min-height:44px;padding-inline:12px;border:0;background:none;color:var(--tint);font-size:17px;letter-spacing:-.02em;cursor:pointer">Wróć do logowania</button>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ jestBlokada }}" hint-placeholder-val="{{ false }}">
+          <div style="width:100%;max-width:400px;margin-inline:auto;padding-inline:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center">
+            <span style="width:88px;height:88px;border-radius:50%;background:var(--wypelnienie);display:grid;place-items:center;color:var(--etykieta-2)">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4.4" y="10.4" width="15.2" height="10.2" rx="3"></rect><path d="M8.2 10.4V7.6a3.8 3.8 0 0 1 7.6 0v2.8"></path></svg>
+            </span>
+            <h1 style="margin:22px 0 0;font-size:28px;font-weight:700;letter-spacing:-.026em;color:var(--etykieta)">Panel zablokowany</h1>
+            <p style="margin:8px 0 0;font-size:15px;line-height:1.45;color:var(--etykieta-2);text-wrap:pretty">Sesja wygasła po 15 minutach bezczynności. Rozpoczęta korekta została zapisana.</p>
+            <p style="margin:14px 0 0;display:inline-flex;align-items:center;min-height:28px;padding:0 12px;border-radius:9999px;background:var(--wypelnienie);font-size:13px;color:var(--etykieta-2)">{{ email }}</p>
+
+            <button data-tap="1" type="button" onClick="{{ odblokuj }}" disabled="{{ trwaLogowanie }}" style="{{ stylOdblokowania }}">
+              <sc-if value="{{ trwaLogowanie }}" hint-placeholder-val="{{ false }}">
+                <span style="flex:none;width:17px;height:17px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:wiruj .7s linear infinite"></span>
+              </sc-if>{{ etykietaOdblokowania }}
+            </button>
+            <button type="button" onClick="{{ doLogowania }}" style="min-height:44px;padding-inline:12px;border:0;background:none;color:var(--tint);font-size:17px;letter-spacing:-.02em;cursor:pointer">Wpisz hasło</button>
+          </div>
+        </sc-if>
+
+        <div style="height:34px"></div>
+      </main>
+
+      <sc-if value="{{ pokazStopke }}" hint-placeholder-val="{{ false }}">
+        <footer style="margin-top:56px;padding:26px 32px;border-top:.5px solid var(--sep);display:flex;justify-content:space-between;font-size:12px;color:var(--etykieta-3)">
+          <span style="letter-spacing:.26em;text-transform:uppercase">Nordo</span>
+          <span>© 2026</span>
+        </footer>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ pokazTaby }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:none;padding-top:6px;background:var(--pasek);backdrop-filter:blur(24px) saturate(180%);border-top:.5px solid var(--pasek-linia)">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr)">
+          <button type="button" onClick="{{ doPrzegladu }}" style="{{ stylTab0 }}">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.4" y="3.4" width="7.2" height="7.2" rx="2.2"></rect><rect x="13.4" y="3.4" width="7.2" height="7.2" rx="2.2"></rect><rect x="3.4" y="13.4" width="7.2" height="7.2" rx="2.2"></rect><rect x="13.4" y="13.4" width="7.2" height="7.2" rx="2.2"></rect></svg>
+            <span style="font-size:10px;font-weight:510;letter-spacing:.005em">Przegląd</span>
+          </button>
+          <button type="button" onClick="{{ doZamowien }}" style="{{ stylTab1 }}">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.8" y="3.6" width="18.4" height="4.2" rx="1.6"></rect><path d="M4.4 8.4v9.8a2 2 0 0 0 2 2h11.2a2 2 0 0 0 2-2V8.4"></path><path d="M9.8 12.2h4.4" stroke-linecap="round"></path></svg>
+            <span style="font-size:10px;font-weight:510;letter-spacing:.005em">Zamówienia</span>
+          </button>
+          <button type="button" onClick="{{ doStanow }}" style="{{ stylTab2 }}">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3.4 10.2 12 3.6l8.6 6.6"></path><path d="M5.6 11.8v6.8a1.8 1.8 0 0 0 1.8 1.8h9.2a1.8 1.8 0 0 0 1.8-1.8v-6.8"></path></svg>
+            <span style="font-size:10px;font-weight:510;letter-spacing:.005em">Magazyn</span>
+          </button>
+          <button type="button" onClick="{{ doSkanu }}" style="{{ stylTab3 }}">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3.4 8.6V5.8a2.4 2.4 0 0 1 2.4-2.4h2.8"></path><path d="M20.6 8.6V5.8a2.4 2.4 0 0 0-2.4-2.4h-2.8"></path><path d="M3.4 15.4v2.8a2.4 2.4 0 0 0 2.4 2.4h2.8"></path><path d="M20.6 15.4v2.8a2.4 2.4 0 0 1-2.4 2.4h-2.8"></path></svg>
+            <span style="font-size:10px;font-weight:510;letter-spacing:.005em">Skaner</span>
+          </button>
+        </div>
+        <div style="height:22px;display:flex;align-items:center;justify-content:center">
+          <span style="width:140px;height:5px;border-radius:9999px;background:var(--etykieta);opacity:.85"></span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ jestToast }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:0;right:0;top:{{ toastGora }};z-index:60;display:flex;justify-content:center;pointer-events:none">
+        <p style="margin:0;display:inline-flex;align-items:center;gap:9px;max-width:88%;padding:11px 18px;border-radius:9999px;background:var(--karta);box-shadow:0 10px 30px -8px rgba(0,0,0,.4),0 0 0 .5px var(--sep);font-size:14px;font-weight:590;letter-spacing:-.01em;color:var(--etykieta);animation:toast-w .3s cubic-bezier(.32,.72,0,1)">
+          <span style="flex:none;width:8px;height:8px;border-radius:50%;background:var(--zielony)"></span>{{ toast }}
+        </p>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:980},&quot;powloka&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;aplikacja&quot;,&quot;przegladarka&quot;],&quot;default&quot;:&quot;aplikacja&quot;,&quot;tsType&quot;:&quot;'aplikacja' | 'przegladarka'&quot;,&quot;section&quot;:&quot;Podgląd&quot;},&quot;motyw&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;jasny&quot;,&quot;ciemny&quot;],&quot;default&quot;:&quot;jasny&quot;,&quot;tsType&quot;:&quot;'jasny' | 'ciemny'&quot;,&quot;section&quot;:&quot;Podgląd&quot;},&quot;ekran&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;logowanie&quot;,&quot;reset&quot;,&quot;blokada&quot;,&quot;przeglad&quot;,&quot;stany&quot;,&quot;korekta&quot;,&quot;zamowienia&quot;,&quot;zamowienie&quot;,&quot;skan&quot;,&quot;zwroty&quot;],&quot;default&quot;:&quot;przeglad&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Podgląd&quot;},&quot;stanLogowania&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;zwykly&quot;,&quot;blad&quot;,&quot;zablokowane&quot;,&quot;ladowanie&quot;],&quot;default&quot;:&quot;zwykly&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stany brzegowe&quot;},&quot;bezSieci&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Stany brzegowe&quot;},&quot;pusteListy&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Stany brzegowe&quot;},&quot;pasekPodgladu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Podgląd&quot;}}">
+const PRODUKTY = [
+  { id: 'p-001', name: 'Słuchawki bezprzewodowe Aura X', sku: 'AUR-X-BLK', kat: 'Audio', stock: 12, prog: 5 },
+  { id: 'p-004', name: 'Głośnik przenośny Boom Mini', sku: 'BOOM-MINI', kat: 'Audio', stock: 40, prog: 10 },
+  { id: 'p-002', name: 'Laptop Nova 14 Pro', sku: 'NOV-14P-16', kat: 'Komputery', stock: 5, prog: 3 },
+  { id: 'p-005', name: 'Monitor Vision 27 4K', sku: 'VIS-27-4K', kat: 'Komputery', stock: 2, prog: 4 },
+  { id: 'p-009', name: 'Ładowarka GaN 65 W', sku: 'GAN-65-BLK', kat: 'Komputery', stock: 4, prog: 6 },
+  { id: 'p-003', name: 'Aparat bezlusterkowy Lumen R7', sku: 'LUM-R7-BODY', kat: 'Foto', stock: 3, prog: 3 },
+  { id: 'p-007', name: 'Obiektyw Lumen 35 mm f/1.8', sku: 'LUM-35-18', kat: 'Foto', stock: 0, prog: 2 },
+  { id: 'p-010', name: 'Kabel USB-C 2 m', sku: '5901234123457', kat: 'Komputery', stock: 0, prog: 8 },
+  { id: 'p-006', name: 'Żarówka smart Glow E27', sku: 'GLW-E27', kat: 'Smart home', stock: 120, prog: 20 },
+  { id: 'p-008', name: 'Zamek smart Lock Pro', sku: 'LCK-PRO', kat: 'Smart home', stock: 15, prog: 5 }
+];
+
+const RUCHY = [
+  { id: 'r1', produkt: 'Słuchawki bezprzewodowe Aura X', powod: 'Przyjęcie dostawy', czas: '11:24', delta: 12 },
+  { id: 'r2', produkt: 'Monitor Vision 27 4K', powod: 'Zwrot od klienta', czas: '10:58', delta: 1 },
+  { id: 'r3', produkt: 'Głośnik przenośny Boom Mini', powod: 'Ubytek lub uszkodzenie', czas: '09:41', delta: -3 },
+  { id: 'r4', produkt: 'Żarówka smart Glow E27', powod: 'Korekta inwentaryzacyjna', czas: '08:15', delta: 24 }
+];
+
+const ZAMOWIENIA = [
+  { numer: 'NOR-2026-0431', klient: 'Marta Kwiatkowska', stan: 'nowe', pozycji: 3, sztuk: 5, godzina: '11:02', dostawa: 'Paczkomat WAW-1234' },
+  { numer: 'NOR-2026-0430', klient: 'Paweł Nowak', stan: 'nowe', pozycji: 1, sztuk: 2, godzina: '10:41', dostawa: 'Kurier, Gdynia', brakuje: 1, brakujacy: 'Obiektyw Lumen 35 mm' },
+  { numer: 'NOR-2026-0429', klient: 'Anna Zielińska', stan: 'nowe', pozycji: 2, sztuk: 3, godzina: '10:12', dostawa: 'Paczkomat KRA-0087' },
+  { numer: 'NOR-2026-0428', klient: 'Tomasz Wróbel', stan: 'nowe', pozycji: 1, sztuk: 1, godzina: '09:55', dostawa: 'Kurier, Wrocław' },
+  { numer: 'NOR-2026-0427', klient: 'Robert Kowalski', stan: 'nowe', pozycji: 4, sztuk: 6, godzina: '09:20', dostawa: 'Paczkomat WAW-0021' },
+  { numer: 'NOR-2026-0425', klient: 'Katarzyna Lis', stan: 'spakowane', pozycji: 2, sztuk: 2, godzina: '09:02', dostawa: 'Paczkomat GDA-0311' },
+  { numer: 'NOR-2026-0424', klient: 'Michał Dąbrowski', stan: 'spakowane', pozycji: 1, sztuk: 4, godzina: '08:47', dostawa: 'Kurier, Poznań' },
+  { numer: 'NOR-2026-0422', klient: 'Ewa Sikora', stan: 'wysłane', pozycji: 1, sztuk: 1, godzina: '08:30', dostawa: 'Paczkomat WAW-0455' },
+  { numer: 'NOR-2026-0421', klient: 'Jakub Mazur', stan: 'wysłane', pozycji: 3, sztuk: 3, godzina: '08:12', dostawa: 'Kurier, Łódź' },
+  { numer: 'NOR-2026-0419', klient: 'Alicja Górska', stan: 'wysłane', pozycji: 2, sztuk: 2, godzina: '07:58', dostawa: 'Paczkomat KAT-0092' }
+];
+
+const POWODY = ['Przyjęcie dostawy', 'Zwrot od klienta', 'Ubytek lub uszkodzenie', 'Korekta inwentaryzacyjna'];
+const SKOKI = [1, 5, 10, 50];
+
+const ZWROTY = [
+  { id: 'z1', numer: 'NOR-2026-0418', klient: 'Robert Kowalski', zgloszony: '12.08', powod: 'produkt niezgodny z opisem', pozycje: [{ name: 'Słuchawki bezprzewodowe Aura X', qty: 1 }], sztuk: 1 },
+  { id: 'z2', numer: 'NOR-2025-1187', klient: 'Paweł Nowak', zgloszony: '11.08', powod: 'uszkodzenie w transporcie', pozycje: [{ name: 'Głośnik przenośny Boom Mini', qty: 2 }], sztuk: 2 }
+];
+
+/* Presety ruchu z motion.dev — jeden zestaw sprężyn na całą makietę,
+   dokładnie tak jak motion.theme.ts trzyma je w jednym pliku. */
+const SPREZYNY = {
+  snap: { type: 'spring', stiffness: 1218, damping: 70 },
+  ui: { type: 'spring', stiffness: 305, damping: 33 },
+  gentle: { type: 'spring', stiffness: 110, damping: 20 }
+};
+const DYSTANS = { hover: 4, enter: 24 };
+const KRZYWA = 'cubic-bezier(.32,.72,0,1)';
+
+const CHIP = 'min-height:26px;padding:0 10px;border:0;border-radius:7px;font-family:inherit;font-size:11px;font-weight:590;letter-spacing:.01em;cursor:pointer;transition:background-color .18s ease,color .18s ease;';
+
+function ile(n, jeden, kilka, wiele) {
+  if (n === 1) return '1 ' + jeden;
+  const d = n % 10, s = n % 100;
+  return n + ' ' + (d >= 2 && d <= 4 && (s < 12 || s > 14) ? kilka : wiele);
+}
+
+function zeZnakiem(n) { return n > 0 ? '+' + n : '−' + Math.abs(n); }
+
+class Component extends DCLogic {
+  state = { stany: {}, przyjete: [], obrot: 0, proby: 0, szukanie: false, aktywnyWynik: -1, trzymam: null, nadane: false, najechane: null, toast: null };
+  ekranRef = React.createRef();
+  szukajRef = React.createRef();
+
+  bezRuchu() {
+    return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  componentDidMount() {
+    this.naRuch = () => this.forceUpdate();
+    window.addEventListener('ruch-gotowy', this.naRuch);
+    this.naKlawiature = (e) => {
+      if ((e.metaKey || e.ctrlKey) && String(e.key).toLowerCase() === 'k') {
+        e.preventDefault();
+        this.setState({ ekran: 'stany', szukanie: true, aktywnyWynik: -1, obrot: this.state.obrot + 1 });
+        setTimeout(() => this.szukajRef.current && this.szukajRef.current.focus(), 60);
+      } else if (e.key === 'Escape' && this.state.szukanie) {
+        this.setState({ szukanie: false, aktywnyWynik: -1 });
+      }
+    };
+    window.addEventListener('keydown', this.naKlawiature);
+    this.podepnijDotyk();
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('ruch-gotowy', this.naRuch);
+    window.removeEventListener('keydown', this.naKlawiature);
+    clearTimeout(this.zegar);
+    clearTimeout(this.trzym);
+    clearTimeout(this.toastZegar);
+    this.znacznik = null;
+  }
+
+  componentDidUpdate(poprzednie) {
+    ['ekran', 'powloka', 'motyw'].forEach((k) => {
+      if (poprzednie[k] !== this.props[k] && this.props[k] !== undefined) this.setState({ [k]: this.props[k] });
+    });
+    this.podepnijDotyk();
+  }
+
+  /* whileTap z motion.dev: 0,92 na presecie „snap". Jedyny sygnał
+     „dotknięcie weszło", który nie wymaga czytania liczby. */
+  podepnijDotyk() {
+    const ruch = window.__ruch;
+    if (!ruch || this.bezRuchu()) return;
+    const cele = this.ekranRef.current
+      ? this.ekranRef.current.parentElement.querySelectorAll('[data-tap]:not([data-tap-gotowy])')
+      : [];
+    cele.forEach((el) => {
+      el.setAttribute('data-tap-gotowy', '1');
+      const wcisk = () => ruch.animate(el, { scale: 0.92 }, SPREZYNY.snap);
+      const puszcz = () => ruch.animate(el, { scale: 1 }, SPREZYNY.ui);
+      el.addEventListener('pointerdown', wcisk);
+      el.addEventListener('pointerup', puszcz);
+      el.addEventListener('pointerleave', puszcz);
+      el.addEventListener('pointercancel', puszcz);
+    });
+  }
+
+  wart(k, d) {
+    if (this.state[k] !== undefined) return this.state[k];
+    if (this.props[k] !== undefined && this.props[k] !== null) return this.props[k];
+    return d;
+  }
+
+  stan(id) {
+    const p = PRODUKTY.find((x) => x.id === id);
+    if (!p) return 0;
+    return this.state.stany[id] !== undefined ? this.state.stany[id] : p.stock;
+  }
+
+  idz(ekran) {
+    return () => this.setState({ ekran, obrot: this.state.obrot + 1 });
+  }
+
+  segment(aktywny, dodatek) {
+    return 'position:relative;z-index:1;min-height:32px;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding-inline:8px;border:0;border-radius:7px;background:none;font-size:13px;cursor:pointer;transition:color .2s ease;'
+      + (aktywny ? 'color:var(--etykieta);font-weight:590;' : 'color:var(--etykieta-2);font-weight:510;') + (dodatek || '');
+  }
+
+  plama(indeks, ile) {
+    return 'position:absolute;z-index:0;top:2px;bottom:2px;left:2px;width:calc((100% - 4px) / ' + ile + ');border-radius:7px;background:var(--karta);box-shadow:0 3px 8px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04);transform:translateX(' + (indeks * 100) + '%);transition:transform .42s ' + KRZYWA + ';';
+  }
+
+  chip(aktywny) {
+    return CHIP + (aktywny ? 'background:#fff;color:#000;box-shadow:0 1px 3px rgba(0,0,0,.14);' : 'background:transparent;color:rgba(60,60,67,.6);');
+  }
+
+  /* Wzorce z Kokonut UI (MIT) przełożone na język tej makiety:
+     action-search-bar — panel wyników z obsługą klawiatury,
+     hold-button — przytrzymanie zamiast kliknięcia przy akcji nieodwracalnej,
+     toolbar — ikona rozwijająca etykietę plus ulotny komunikat. */
+  pokazToast(tekst) {
+    clearTimeout(this.toastZegar);
+    this.setState({ toast: tekst });
+    this.toastZegar = setTimeout(() => this.setState({ toast: null }), 2200);
+  }
+
+  /* Pasek postępu i akcja chodzą z jednego zegara motion.dev — .finished
+     zamiast osobnego setTimeout, żeby nie rozjechały się przy re-renderze. */
+  trzymaj(id, akcja) {
+    return (e) => {
+      const el = e && e.currentTarget;
+      if (!el) return;
+      if (el.setPointerCapture && e.pointerId !== undefined) {
+        try { el.setPointerCapture(e.pointerId); } catch (_) { }
+      }
+      this.przerwij();
+      const znacznik = {};
+      this.znacznik = znacznik;
+      const dokoncz = () => {
+        if (this.znacznik !== znacznik) return;
+        this.znacznik = null;
+        this.setState({ trzymam: null });
+        akcja();
+      };
+      const pasek = el.querySelector('[data-pasek]');
+      const ruch = window.__ruch;
+      if (pasek && ruch && !this.bezRuchu()) {
+        this.pasek = pasek;
+        this.anim = ruch.animate(pasek, { scaleX: [0, 1] }, { duration: 0.9, ease: 'linear' });
+        if (this.anim.finished) this.anim.finished.then(dokoncz).catch(() => { });
+      } else {
+        this.trzym = setTimeout(dokoncz, 900);
+      }
+      this.setState({ trzymam: id });
+    };
+  }
+
+  przerwij() {
+    this.znacznik = null;
+    clearTimeout(this.trzym);
+    if (this.anim && this.anim.stop) { try { this.anim.stop(); } catch (_) { } }
+    this.anim = null;
+    if (this.pasek) {
+      const ruch = window.__ruch;
+      if (ruch && !this.bezRuchu()) ruch.animate(this.pasek, { scaleX: 0 }, { duration: 0.16, ease: 'easeOut' });
+      else this.pasek.style.transform = 'scaleX(0)';
+      this.pasek = null;
+    }
+  }
+
+  przyciskTrzymania(gotowe) {
+    return 'position:relative;overflow:hidden;touch-action:none;user-select:none;min-height:50px;display:inline-flex;align-items:center;justify-content:center;width:100%;border:0;border-radius:14px;background:'
+      + (gotowe ? 'var(--zielony)' : 'var(--tint)') + ';color:#fff;font-size:17px;font-weight:600;letter-spacing:-.02em;cursor:'
+      + (gotowe ? 'default' : 'pointer') + ';transition:background-color .3s ease;';
+  }
+
+  akcjaPaska(id, uzyj) {
+    const aktywna = this.state.najechane === id;
+    return {
+      styl: 'position:relative;display:inline-flex;align-items:center;justify-content:center;gap:' + (aktywna ? '7px' : '0px')
+        + ';min-height:44px;padding-inline:' + (aktywna ? '13px' : '11px')
+        + ';border:0;border-radius:11px;background:' + (aktywna ? 'var(--tint)' : 'transparent')
+        + ';color:' + (aktywna ? '#fff' : 'var(--etykieta-2)')
+        + ';font-size:15px;font-weight:590;letter-spacing:-.01em;cursor:pointer;transition:background-color .28s ' + KRZYWA + ',color .28s ' + KRZYWA + ',gap .3s ' + KRZYWA + ',padding .3s ' + KRZYWA + ';',
+      stylEtykiety: 'display:inline-block;overflow:hidden;white-space:nowrap;max-width:' + (aktywna ? '120px' : '0px')
+        + ';opacity:' + (aktywna ? '1' : '0') + ';transition:max-width .3s ' + KRZYWA + ',opacity .24s ease;',
+      najedz: () => this.setState({ najechane: id }),
+      uzyj
+    };
+  }
+
+  renderVals() {
+    const ekran = this.wart('ekran', 'przeglad');
+    const powloka = this.wart('powloka', 'aplikacja');
+    const motyw = this.wart('motyw', 'jasny');
+    const puste = this.wart('pusteListy', false) === true;
+    const wPowloce = powloka === 'aplikacja';
+    const tokens = motyw === 'ciemny' ? 'ciemny' : 'jasny';
+
+    const segStany = this.wart('segStany', 'wszystko');
+    const fraza = this.wart('fraza', '');
+    const segZam = this.wart('segZam', 'nowe');
+    const produktId = this.wart('produktId', 'p-005');
+    const delta = this.wart('delta', 0);
+    const wDol = this.wart('wDol', false) === true;
+    const powod = this.wart('powod', null);
+    const faza = this.wart('faza', 'gotowy');
+    const skanMotyw = this.wart('skanMotyw', 'system');
+
+    const jestAuth = ekran === 'logowanie' || ekran === 'reset' || ekran === 'blokada';
+    const bezSieci = this.wart('bezSieci', false) === true;
+    const email = this.wart('email', 'magazyn@nordo.pl');
+    const haslo = this.wart('haslo', '');
+    const pokazHaslo = this.wart('pokazHaslo', false) === true;
+    const faceId = this.wart('faceId', true) === true;
+    const stanLog = this.wart('stanLogowania', 'zwykly');
+    const zablokowane = stanLog === 'zablokowane';
+    const trwa = stanLog === 'ladowanie';
+    const zostalo = Math.max(1, 3 - this.state.proby);
+    const komunikatBledu = bezSieci ? 'Brak połączenia z serwerem. Sprawdź sieć i spróbuj ponownie.'
+      : haslo.trim().length === 0 ? 'Wpisz hasło do konta.'
+        : 'Nieprawidłowe hasło. ' + (zostalo === 1 ? 'Została ostatnia próba.' : 'Zostały ' + zostalo + ' próby.');
+    const wpuscDoSrodka = () => {
+      clearTimeout(this.zegar);
+      this.setState({ stanLogowania: 'ladowanie' });
+      this.zegar = setTimeout(() => this.setState({
+        ekran: 'przeglad', stanLogowania: 'zwykly', proby: 0, haslo: '', obrot: this.state.obrot + 1
+      }), 1100);
+    };
+    const zaloguj = () => {
+      if (zablokowane || trwa) return;
+      if (bezSieci) return this.setState({ stanLogowania: 'blad' });
+      if (haslo.trim().length < 4) {
+        const p = this.state.proby + 1;
+        return this.setState({ proby: p, stanLogowania: p >= 3 ? 'zablokowane' : 'blad' });
+      }
+      wpuscDoSrodka();
+    };
+
+    const wszystkie = puste ? [] : PRODUKTY.map((p) => {
+      const stock = this.stan(p.id);
+      return { ...p, stock, zero: stock === 0, przyProgu: stock > 0 && p.prog > 0 && stock <= p.prog };
+    });
+    const niskieN = wszystkie.filter((p) => p.przyProgu).length;
+
+    let widoczne = wszystkie;
+    if (segStany === 'niskie') widoczne = widoczne.filter((p) => p.przyProgu);
+    if (segStany === 'zero') widoczne = widoczne.filter((p) => p.zero);
+    const f = fraza.trim().toLowerCase();
+    if (f) widoczne = widoczne.filter((p) => (p.name + ' ' + p.sku).toLowerCase().includes(f));
+
+    const pustyKomunikat = segStany === 'niskie' ? 'Brak pozycji poniżej progu'
+      : segStany === 'zero' ? 'Wszystko ma pokrycie w magazynie'
+        : f ? 'Nic nie pasuje do „' + fraza.trim() + '”'
+          : 'Magazyn jest pusty';
+
+    const produkt = PRODUKTY.find((p) => p.id === produktId) || PRODUKTY[3];
+    const stanProduktu = this.stan(produkt.id);
+    const wynik = stanProduktu + delta;
+    const ponizejZera = wynik < 0;
+    const kierunek = wDol ? -1 : 1;
+    const mozeZapisac = delta !== 0 && powod !== null && !ponizejZera;
+
+    const zamWidoczne = puste ? [] : ZAMOWIENIA.filter((z) => z.stan === segZam);
+    const liczniki = {
+      nowe: puste ? 0 : ZAMOWIENIA.filter((z) => z.stan === 'nowe').length,
+      spakowane: puste ? 0 : ZAMOWIENIA.filter((z) => z.stan === 'spakowane').length,
+      'wysłane': puste ? 0 : ZAMOWIENIA.filter((z) => z.stan === 'wysłane').length
+    };
+    const indeksZam = segZam === 'nowe' ? 0 : segZam === 'spakowane' ? 1 : 2;
+    const indeksStany = segStany === 'wszystko' ? 0 : segStany === 'niskie' ? 1 : 2;
+    const indeksSkan = skanMotyw === 'system' ? 0 : skanMotyw === 'jasny' ? 1 : 2;
+
+    const zwrotyWidoczne = puste ? [] : ZWROTY.filter((z) => !this.state.przyjete.includes(z.id));
+
+    const tabAktywny = ekran === 'zamowienia' || ekran === 'zamowienie' ? 1
+      : ekran === 'stany' || ekran === 'korekta' ? 2
+        : ekran === 'skan' ? 3 : 0;
+    const tabStyl = (i) => 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:49px;padding:4px 0;border:0;background:none;cursor:pointer;transition:color .2s ease;color:'
+      + (i === tabAktywny ? 'var(--tint)' : 'var(--etykieta-3)') + ';';
+
+    const jestPowrot = ekran === 'korekta' || ekran === 'zamowienie' || ekran === 'zwroty' || ekran === 'reset';
+    const dot = 'flex:none;width:10px;height:10px;border-radius:50%;';
+    const odczyt = 'flex:none;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;';
+
+    const otworzKorekte = (id) => () => this.setState({ ekran: 'korekta', produktId: id, delta: 0, powod: null, wDol: false, szukanie: false, obrot: this.state.obrot + 1 });
+    const szukanieOtwarte = this.state.szukanie === true;
+    const surowe = f
+      ? wszystkie.filter((p) => (p.name + ' ' + p.sku).toLowerCase().includes(f)).slice(0, 5).map((p) => ({
+        tytul: p.name, opis: p.sku, koniec: p.stock + ' szt.',
+        kolor: p.zero ? 'var(--czerwony)' : p.przyProgu ? 'var(--pomaranczowy)' : 'var(--zielony)',
+        pusty: p.zero, wybierz: otworzKorekte(p.id)
+      }))
+      : [
+        { tytul: 'Skanuj kod EAN', opis: 'aparat', koniec: 'Akcja', kolor: 'var(--tint)', wybierz: this.idz('skan') },
+        { tytul: 'Pokaż niskie stany', opis: 'filtr', koniec: niskieN + ' poz.', kolor: 'var(--pomaranczowy)', wybierz: () => this.setState({ segStany: 'niskie', szukanie: false }) },
+        { tytul: 'Do wysłania', opis: 'zamówienia', koniec: (puste ? 0 : ZAMOWIENIA.filter((z) => z.stan === 'nowe').length) + ' szt.', kolor: 'var(--tint)', wybierz: this.idz('zamowienia') },
+        { tytul: 'Zwroty do przyjęcia', opis: 'magazyn', koniec: 'Ekran', kolor: 'var(--etykieta-3)', wybierz: this.idz('zwroty') }
+      ];
+    const aktywnyWynik = this.state.aktywnyWynik;
+    const naKlawiszSzukania = (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); this.setState({ aktywnyWynik: (aktywnyWynik + 1) % Math.max(surowe.length, 1) }); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); this.setState({ aktywnyWynik: aktywnyWynik <= 0 ? surowe.length - 1 : aktywnyWynik - 1 }); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (surowe[aktywnyWynik]) surowe[aktywnyWynik].wybierz(); }
+      else if (e.key === 'Escape') { this.setState({ szukanie: false, aktywnyWynik: -1 }); }
+    };
+
+
+    return {
+      pokazPasek: this.wart('pasekPodgladu', true) !== false,
+      tokens, wPowloce, wPrzegladarce: !wPowloce,
+      pokazTaby: wPowloce && !jestAuth,
+      pokazNavStrony: !wPowloce && !jestAuth,
+      pokazStopke: !wPowloce && !jestAuth,
+      jestAuth, jestLogowanie: ekran === 'logowanie', jestReset: ekran === 'reset', jestBlokada: ekran === 'blokada',
+      bezSieci, email, haslo, faceId,
+      naEmail: (e) => this.setState({ email: e.target.value }),
+      naHaslo: (e) => this.setState({ haslo: e.target.value, stanLogowania: zablokowane ? 'zablokowane' : 'zwykly' }),
+      typHasla: pokazHaslo ? 'text' : 'password',
+      etykietaPokazu: pokazHaslo ? 'Ukryj' : 'Pokaż',
+      przelaczPokaz: () => this.setState({ pokazHaslo: !pokazHaslo }),
+      stylPrzelacznika: 'flex:none;width:51px;height:31px;padding:2px;border:0;border-radius:9999px;display:inline-flex;align-items:center;cursor:pointer;transition:background-color .25s ' + KRZYWA + ';background:' + (faceId ? 'var(--tint)' : 'var(--wypelnienie)') + ';',
+      stylGalki: 'width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.2);transition:transform .25s ' + KRZYWA + ';transform:translateX(' + (faceId ? '20px' : '0px') + ');',
+      przelaczFaceId: () => this.setState({ faceId: !faceId }),
+      jestBlad: stanLog === 'blad', jestZablokowane: zablokowane, trwaLogowanie: trwa,
+      komunikatBledu,
+      etykietaLogowania: trwa ? 'Logowanie…' : 'Zaloguj się',
+      logowanieZablokowane: zablokowane || trwa,
+      stylLogowania: 'min-height:50px;width:100%;margin-top:16px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:14px;background:var(--tint);color:#fff;font-size:17px;font-weight:600;letter-spacing:-.02em;transition:opacity .2s ease;'
+        + (zablokowane || trwa ? 'opacity:.35;cursor:default;' : 'opacity:1;cursor:pointer;'),
+      zaloguj,
+      etykietaOdblokowania: trwa ? 'Rozpoznawanie…' : 'Odblokuj przez Face ID',
+      stylOdblokowania: 'min-height:50px;width:100%;margin-top:26px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:14px;background:var(--tint);color:#fff;font-size:17px;font-weight:600;letter-spacing:-.02em;transition:opacity .2s ease;'
+        + (trwa ? 'opacity:.35;cursor:default;' : 'opacity:1;cursor:pointer;'),
+      odblokuj: () => { if (!trwa) wpuscDoSrodka(); },
+      resetWyslany: this.wart('resetWyslany', false) === true,
+      resetFormularz: this.wart('resetWyslany', false) !== true,
+      wyslijReset: () => this.setState({ resetWyslany: true }),
+      doResetu: () => this.setState({ ekran: 'reset', resetWyslany: false, obrot: this.state.obrot + 1 }),
+      doLogowania: () => this.setState({ ekran: 'logowanie', stanLogowania: 'zwykly', proby: 0, resetWyslany: false, obrot: this.state.obrot + 1 }),
+      stanySkrot: [['zwykly', 'Zwykły'], ['blad', 'Błąd'], ['zablokowane', 'Blokada'], ['ladowanie', 'Ładowanie']].map(([k, e]) => ({
+        etykieta: e, styl: this.chip(stanLog === k),
+        ustaw: () => { clearTimeout(this.zegar); this.setState({ stanLogowania: k, proby: k === 'zablokowane' ? 3 : 0 }); }
+      })),
+      przelaczSiec: () => this.setState({ bezSieci: !bezSieci }),
+      stylSieci: CHIP + (bezSieci ? 'background:#9c6644;color:#fff;' : 'background:rgba(118,118,128,.12);color:rgba(60,60,67,.6);'),
+      tokensSkanera: skanMotyw === 'system' ? tokens : (skanMotyw === 'ciemny' ? 'ciemny' : 'jasny'),
+      adres: 'nordo.pl/magazyn' + (ekran === 'stany' ? '/stany' : ekran === 'korekta' ? '/stany/' + produkt.id
+        : ekran === 'zamowienia' ? '/zamowienia' : ekran === 'zamowienie' ? '/zamowienia/NOR-2026-0431'
+          : ekran === 'skan' ? '/skan' : ekran === 'zwroty' ? '/zwroty'
+            : ekran === 'logowanie' ? '/logowanie' : ekran === 'reset' ? '/reset-hasla' : ekran === 'blokada' ? '/blokada' : ''),
+
+      stylUrzadzenia: wPowloce
+        ? 'position:relative;width:393px;height:852px;display:flex;flex-direction:column;overflow:hidden;border-radius:52px;background:var(--tlo);box-shadow:0 0 0 11px #1c1c1e, 0 0 0 12.5px #48484a, 0 40px 80px -30px rgba(0,0,0,.6);color:var(--etykieta)'
+        : 'position:relative;width:min(1180px,100%);height:780px;display:flex;flex-direction:column;overflow:hidden;border-radius:12px;background:var(--tlo);box-shadow:0 28px 64px -32px rgba(0,0,0,.5);color:var(--etykieta)',
+      stylKolumny: (ekran === 'logowanie' || ekran === 'blokada'
+        ? 'display:flex;flex-direction:column;justify-content:center;min-height:100%;box-sizing:border-box;padding-block:32px;color:var(--etykieta);'
+        : 'display:block;max-width:'
+        + (wPowloce ? '100%' : jestAuth ? '100%' : '580px')
+        + ';margin-inline:auto;padding-block:'
+        + (wPowloce ? (jestPowrot ? '4px' : '10px') : '34px') + ' 0;color:var(--etykieta);')
+        + (this.bezRuchu() ? '' : 'animation:' + (this.state.obrot % 2 === 0 ? 'wejscie-a' : 'wejscie-b') + ' .42s ' + KRZYWA + ';'),
+      klucz: ekran + '-' + this.state.obrot,
+      stylPaskaNav: wPowloce
+        ? 'position:sticky;top:0;z-index:10;display:flex;align-items:center;min-height:44px;background:var(--pasek);backdrop-filter:blur(24px) saturate(180%);border-bottom:.5px solid var(--sep);'
+        : 'display:flex;align-items:center;min-height:44px;max-width:580px;margin:22px auto -8px;padding-inline:4px;',
+      jestPowrot,
+      etykietaPowrotu: ekran === 'korekta' ? 'Magazyn' : ekran === 'zamowienie' ? 'Zamówienia' : ekran === 'reset' ? 'Logowanie' : 'Przegląd',
+      wroc: ekran === 'korekta' ? this.idz('stany') : ekran === 'zamowienie' ? this.idz('zamowienia')
+        : ekran === 'reset' ? this.idz('logowanie') : this.idz('przeglad'),
+
+      jestPrzeglad: ekran === 'przeglad', jestStany: ekran === 'stany', jestKorekta: ekran === 'korekta',
+      jestZamowienia: ekran === 'zamowienia', jestZamowienie: ekran === 'zamowienie',
+      jestSkan: ekran === 'skan', jestZwroty: ekran === 'zwroty',
+
+      dzis: 'Niedziela, 16 sierpnia',
+      liczbaDoWyslania: liczniki.nowe,
+      liczbaNiskich: niskieN,
+      liczbaZwrotow: zwrotyWidoczne.length,
+      paczkiDzis: puste ? 0 : 14,
+      sztukiDzis: puste ? 0 : 63,
+      sagRuchy: !puste, brakRuchow: puste,
+      ruchy: (puste ? [] : RUCHY).map((r) => ({
+        ...r,
+        meta: r.powod + ' · ' + r.czas,
+        delta: zeZnakiem(r.delta),
+        styl: 'flex:none;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;color:' + (r.delta > 0 ? 'var(--zielony)' : 'var(--czerwony)') + ';'
+      })),
+
+      ilePozycji: ile(wszystkie.length, 'pozycja', 'pozycje', 'pozycji'),
+      fraza,
+      pozycje: widoczne.map((p) => ({
+        name: p.name, stock: p.stock,
+        meta: p.sku + ' · ' + p.kat + (p.przyProgu ? ' · próg ' + p.prog : p.zero ? ' · brak na stanie' : ''),
+        dioda: p.zero ? 'flex:none;width:10px;height:10px;border-radius:50%;background:transparent;border:2.5px solid var(--czerwony);box-sizing:border-box;'
+          : dot + 'background:' + (p.przyProgu ? 'var(--pomaranczowy)' : 'var(--zielony)') + ';',
+        odczyt: odczyt + 'color:' + (p.zero ? 'var(--czerwony)' : p.przyProgu ? 'var(--pomaranczowy)' : 'var(--etykieta)') + ';',
+        otworz: () => this.setState({ ekran: 'korekta', produktId: p.id, delta: 0, powod: null, wDol: false, obrot: this.state.obrot + 1 })
+      })),
+      saPozycje: widoczne.length > 0, brakPozycji: widoczne.length === 0, pustyKomunikat,
+      szukajRef: this.szukajRef,
+      panelSzukania: szukanieOtwarte,
+      stylSkrotu: 'flex:none;font-size:11px;font-weight:590;letter-spacing:.04em;color:var(--etykieta-3);transition:opacity .2s ease;opacity:' + (szukanieOtwarte ? '0' : '1') + ';',
+      naglowekWynikow: f ? 'Pozycje' : 'Szybkie akcje',
+      brakWynikow: surowe.length === 0,
+      wyniki: surowe.map((w, i) => ({
+        tytul: w.tytul, opis: w.opis, koniec: w.koniec,
+        dioda: 'flex:none;width:8px;height:8px;border-radius:50%;' + (w.pusty ? 'background:transparent;border:2px solid ' + w.kolor + ';box-sizing:border-box;' : 'background:' + w.kolor + ';'),
+        styl: 'display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:8px 14px;border:0;text-align:left;cursor:pointer;color:var(--etykieta);transition:background-color .16s ease;animation:wejscie-listy .3s both cubic-bezier(.32,.72,0,1);animation-delay:' + (i * 35) + 'ms;background:' + (i === aktywnyWynik ? 'var(--wypelnienie)' : 'transparent') + ';',
+        stylKonca: 'flex:none;font-size:12px;font-variant-numeric:tabular-nums;color:var(--etykieta-3);',
+        najedz: () => this.setState({ aktywnyWynik: i }),
+        wybierz: w.wybierz
+      })),
+      otworzSzukanie: () => this.setState({ szukanie: true, aktywnyWynik: -1 }),
+      zamknijSzukanie: () => setTimeout(() => this.setState({ szukanie: false, aktywnyWynik: -1 }), 180),
+      naKlawiszSzukania,
+      plamaStany: this.plama(indeksStany, 3),
+      stylSeg0: this.segment(segStany === 'wszystko'),
+      stylSeg1: this.segment(segStany === 'niskie'),
+      stylSeg2: this.segment(segStany === 'zero'),
+      stylLicznikNiskie: 'font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--pomaranczowy);',
+      segWszystko: () => this.setState({ segStany: 'wszystko' }),
+      segNiskie: () => this.setState({ segStany: 'niskie' }),
+      segZero: () => this.setState({ segStany: 'zero' }),
+      naFraze: (e) => this.setState({ fraza: e.target.value }),
+
+      produktNazwa: produkt.name,
+      produktMeta: produkt.sku + ' · ' + produkt.kat,
+      opisProgu: produkt.prog > 0 ? 'próg ' + produkt.prog : 'bez progu',
+      stylKropkiProgu: produkt.prog > 0 ? 'width:7px;height:7px;border-radius:50%;background:var(--pomaranczowy);' : 'display:none;',
+      wynik: Math.max(wynik, 0),
+      bylo: 'było ' + stanProduktu,
+      deltaOpis: delta === 0 ? '' : ' · ' + zeZnakiem(delta),
+      stylDelty: 'font-weight:600;color:' + (delta > 0 ? 'var(--zielony)' : 'var(--czerwony)') + ';',
+      ponizejZera,
+      komunikatZera: 'Na stanie jest ' + stanProduktu + ' szt., nie można zdjąć ' + Math.abs(delta),
+      minus: () => this.setState({ delta: delta - 1 }),
+      plus: () => this.setState({ delta: delta + 1 }),
+      skoki: SKOKI.map((k) => {
+        const wybrany = delta === k * kierunek;
+        return {
+          etykieta: (kierunek > 0 ? '+' : '−') + k,
+          styl: 'min-height:44px;border:0;border-radius:12px;font-size:15px;font-weight:590;font-variant-numeric:tabular-nums;cursor:pointer;transition:background-color .2s ease,color .2s ease;'
+            + (wybrany ? 'background:var(--tint);color:#fff;' : 'background:var(--wypelnienie);color:var(--etykieta);'),
+          ustaw: () => this.setState({ delta: k * kierunek })
+        };
+      }),
+      etykietaKierunku: wDol ? 'przełącz na dodawanie' : 'przełącz na odejmowanie',
+      przelaczKierunek: () => this.setState({ wDol: !wDol, delta: 0 }),
+      powody: POWODY.map((p) => ({
+        nazwa: p, wybrany: powod === p,
+        styl: 'flex:1;min-width:0;font-size:17px;letter-spacing:-.02em;' + (powod === p ? 'font-weight:590;' : ''),
+        wybierz: () => this.setState({ powod: p })
+      })),
+      notatka: this.wart('notatka', ''),
+      naNotatke: (e) => this.setState({ notatka: e.target.value }),
+      zapisZablokowany: !mozeZapisac,
+      etykietaZapisu: delta === 0 ? 'Zapisz zmianę' : 'Zapisz zmianę · ' + zeZnakiem(delta) + ' szt.',
+      stylZapisu: 'min-height:50px;display:inline-flex;align-items:center;justify-content:center;width:100%;padding-inline:16px;border:0;border-radius:14px;background:var(--tint);color:#fff;font-size:17px;font-weight:600;letter-spacing:-.02em;transition:opacity .2s ease;'
+        + (mozeZapisac ? 'opacity:1;cursor:pointer;' : 'opacity:.35;cursor:default;'),
+      zapisz: () => {
+        if (!mozeZapisac) return;
+        this.setState({ stany: { ...this.state.stany, [produkt.id]: wynik }, delta: 0, powod: null, notatka: '' });
+        this.pokazToast('Zapisano · ' + zeZnakiem(delta) + ' szt.');
+      },
+
+      jestToast: this.state.toast !== null && this.state.toast !== undefined,
+      toast: this.state.toast,
+      toastGora: wPowloce ? '68px' : '62px',
+      etykietaNadania: this.state.nadane ? 'Nadane · etykieta gotowa' : this.state.trzymam === 'nadanie' ? 'Trzymaj…' : 'Przytrzymaj, aby nadać',
+      stylNadania: this.przyciskTrzymania(this.state.nadane),
+      trzymajNadanie: this.state.nadane ? () => { } : this.trzymaj('nadanie', () => {
+        this.setState({ nadane: true });
+        this.pokazToast('Przesyłka nadana · NOR-2026-0431');
+      }),
+      puscTrzymanie: () => { this.przerwij(); if (this.state.trzymam) this.setState({ trzymam: null }); },
+      zejdzZAkcji: () => this.setState({ najechane: null }),
+      akcjaDruk: this.akcjaPaska('druk', () => this.pokazToast('Etykieta wysłana do drukarki')),
+      akcjaKopia: this.akcjaPaska('kopia', () => this.pokazToast('Numer skopiowany')),
+      akcjaTel: this.akcjaPaska('telefon', () => this.pokazToast('Dzwonię · +48 601 300 400')),
+      akcjaProblem: this.akcjaPaska('problem', () => this.pokazToast('Problem zgłoszony do obsługi')),
+
+      plamaZam: this.plama(indeksZam, 3),
+      zakladki: [
+        { klucz: 'nowe', etykieta: 'Nowe' },
+        { klucz: 'spakowane', etykieta: 'Spakowane' },
+        { klucz: 'wysłane', etykieta: 'Wysłane' }
+      ].map((z) => ({
+        etykieta: z.etykieta, licznik: liczniki[z.klucz],
+        styl: this.segment(segZam === z.klucz),
+        stylLicznika: 'font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--tint);',
+        wybierz: () => this.setState({ segZam: z.klucz })
+      })),
+      zamowienia: zamWidoczne.map((z) => ({
+        numer: z.numer, klient: z.klient, sztuk: z.sztuk, godzina: z.godzina,
+        meta: z.brakuje ? 'brak ' + z.brakuje + ' szt. ' + z.brakujacy + ' w magazynie'
+          : ile(z.pozycji, 'pozycja', 'pozycje', 'pozycji') + ' · ' + z.dostawa,
+        stylMeta: 'display:block;margin-top:1px;font-size:13px;color:' + (z.brakuje ? 'var(--pomaranczowy)' : 'var(--etykieta-2)') + ';',
+        dioda: dot + 'background:' + (z.brakuje ? 'var(--pomaranczowy)' : z.stan === 'wysłane' ? 'var(--etykieta-3)' : 'var(--tint)') + ';',
+        otworz: () => this.setState({ ekran: 'zamowienie', nadane: false, obrot: this.state.obrot + 1 })
+      })),
+      saZamowienia: zamWidoczne.length > 0, brakZamowien: zamWidoczne.length === 0,
+
+      kartaNumer: 'NOR-2026-0431', kartaStan: 'nowe', kartaKlient: 'Marta Kwiatkowska',
+      kartaPunkt: 'Paczkomat WAW-1234', kartaAdres: 'Krucza 12, 00-001 Warszawa',
+      kartaTelefon: '+48 601 300 400', kartaKwota: '1 015,00 zł',
+      kartaPozycje: [
+        { name: 'Słuchawki bezprzewodowe Aura X', qty: 1, meta: 'SKU AUR-X-BLK · stan ' + this.stan('p-001') + ' szt.', brak: false },
+        { name: 'Żarówka smart Glow E27', qty: 3, meta: 'SKU GLW-E27 · stan ' + this.stan('p-006') + ' szt.', brak: false },
+        { name: 'Kabel USB-C 2 m', qty: 1, meta: 'stan 0 szt. · brakuje 1', brak: true }
+      ].map((p) => ({
+        ...p,
+        dioda: dot + 'background:' + (p.brak ? 'var(--pomaranczowy)' : 'var(--zielony)') + ';',
+        stylMeta: 'display:block;margin-top:1px;font-size:13px;color:' + (p.brak ? 'var(--pomaranczowy)' : 'var(--etykieta-2)') + ';'
+      })),
+
+      ileZwrotow: zwrotyWidoczne.length === 0 ? 'nic nie czeka' : ile(zwrotyWidoczne.length, 'zwrot', 'zwroty', 'zwrotów') + ' do przyjęcia',
+      zwroty: zwrotyWidoczne.map((z) => ({
+        numer: z.numer, klient: z.klient, pozycje: z.pozycje,
+        meta: 'zgłoszony ' + z.zgloszony + ' · ' + z.powod,
+        akcja: this.state.trzymam === z.id ? 'Trzymaj…' : 'Przytrzymaj, aby przyjąć · ' + z.sztuk + ' szt.',
+        stylAkcji: this.przyciskTrzymania(false),
+        trzymaj: this.trzymaj(z.id, () => {
+          this.setState({ przyjete: this.state.przyjete.concat(z.id) });
+          this.pokazToast('Zwrot przyjęty · ' + z.sztuk + ' szt. na stan');
+        })
+      })),
+      saZwroty: zwrotyWidoczne.length > 0, brakZwrotow: zwrotyWidoczne.length === 0,
+
+      kadrUspiony: faza === 'gotowy',
+      kadrZywy: faza === 'skanuje',
+      stylKadru: 'position:relative;aspect-ratio:1 / 1;border-radius:20px;overflow:hidden;background:' + (faza === 'gotowy' ? 'var(--karta)' : '#000') + ';',
+      fazaGotowy: faza === 'gotowy', fazaSkanuje: faza === 'skanuje', fazaZnaleziony: faza === 'znaleziony',
+      stanSkanu: this.stan('p-001'),
+      startSkan: () => this.setState({ faza: 'skanuje' }),
+      przerwij: () => this.setState({ faza: 'gotowy' }),
+      znajdz: () => this.setState({ faza: 'znaleziony' }),
+      skanPlus: () => this.setState({ stany: { ...this.state.stany, 'p-001': this.stan('p-001') + 1 } }),
+      skanMinus: () => this.setState({ stany: { ...this.state.stany, 'p-001': Math.max(0, this.stan('p-001') - 1) } }),
+      otworzZeSkanu: () => this.setState({ ekran: 'korekta', produktId: 'p-001', delta: 0, powod: null, obrot: this.state.obrot + 1 }),
+      plamaSkan: this.plama(indeksSkan, 3),
+      stylSkan0: this.segment(skanMotyw === 'system'),
+      stylSkan1: this.segment(skanMotyw === 'jasny'),
+      stylSkan2: this.segment(skanMotyw === 'ciemny'),
+      skanAuto: () => this.setState({ skanMotyw: 'system' }),
+      skanJasny: () => this.setState({ skanMotyw: 'jasny' }),
+      skanCiemny: () => this.setState({ skanMotyw: 'ciemny' }),
+
+      ustawJasny: () => this.setState({ motyw: 'jasny' }),
+      ustawCiemny: () => this.setState({ motyw: 'ciemny' }),
+      ustawAplikacja: () => this.setState({ powloka: 'aplikacja' }),
+      ustawPrzegladarka: () => this.setState({ powloka: 'przegladarka' }),
+      przelaczPuste: () => this.setState({ pusteListy: !puste }),
+      stylPowlokaA: this.chip(wPowloce), stylPowlokaB: this.chip(!wPowloce),
+      stylMotywA: this.chip(motyw !== 'ciemny'), stylMotywB: this.chip(motyw === 'ciemny'),
+      stylPuste: CHIP + (puste ? 'background:#9c6644;color:#fff;' : 'background:rgba(118,118,128,.12);color:rgba(60,60,67,.6);'),
+      skroty: [
+        ['logowanie', 'Logowanie'], ['reset', 'Reset'], ['blokada', 'Blokada'],
+        ['przeglad', 'Przegląd'], ['stany', 'Stany'], ['korekta', 'Korekta'], ['zamowienia', 'Zamówienia'],
+        ['zamowienie', 'Zamówienie'], ['skan', 'Skan'], ['zwroty', 'Zwroty']
+      ].map(([k, e]) => ({ etykieta: e, styl: this.chip(ekran === k), idz: this.idz(k) })),
+
+      doZamowien: this.idz('zamowienia'),
+      doNiskich: () => this.setState({ ekran: 'stany', segStany: 'niskie', fraza: '', obrot: this.state.obrot + 1 }),
+      doZwrotow: this.idz('zwroty'),
+      doStanow: this.idz('stany'),
+      doPrzegladu: this.idz('przeglad'),
+      doSkanu: this.idz('skan'),
+      stylTab0: tabStyl(0), stylTab1: tabStyl(1), stylTab2: tabStyl(2), stylTab3: tabStyl(3),
+      ekranRef: this.ekranRef
+    };
+  }
+}
+
+</script>
+</body>
+</html>
