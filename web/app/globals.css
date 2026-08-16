@@ -3953,7 +3953,41 @@ code {
    Wyszło dopiero w przeglądarce — i słusznie, bo to tam magazyn stał się
    podstroną bez własnego tła. */
 .mag.motyw-jasny,
-.mag.motyw-ciemny { background: var(--panel); }
+.mag.motyw-ciemny { background: var(--tlo); }
+
+/* Wyłamanie z motywu aplikacji musi podmienić tokeny **Apple**, nie tokeny
+   sklepu. Klasy `.motyw-jasny` i `.motyw-ciemny` z góry pliku przestawiają
+   `--panel`, `--bg`, `--ink` — czyli paletę sklepu, o której magazyn nic nie
+   wie, odkąd `--panel` wskazuje tu na `--tlo`.
+
+   Bez tych dwóch bloków przełącznik na ekranie skanera podmieniał tokeny,
+   których magazyn nie używa, i oba warianty malowały ten sam kolor. */
+.mag.motyw-jasny {
+  --tlo: #f2f2f7;
+  --karta: #ffffff;
+  --karta-2: #f2f2f7;
+  --etykieta: #000000;
+  --etykieta-2: rgba(60, 60, 67, .6);
+  --etykieta-3: rgba(60, 60, 67, .3);
+  --sep: rgba(60, 60, 67, .29);
+  --tint: #9c6644;
+  --tint-miekki: rgba(156, 102, 68, .12);
+  --btn-ink: #ffffff;
+  --na-akcencie: #ffffff;
+}
+.mag.motyw-ciemny {
+  --tlo: #000000;
+  --karta: #1c1c1e;
+  --karta-2: #2c2c2e;
+  --etykieta: #ffffff;
+  --etykieta-2: rgba(235, 235, 245, .6);
+  --etykieta-3: rgba(235, 235, 245, .3);
+  --sep: rgba(84, 84, 88, .65);
+  --tint: #cf9a72;
+  --tint-miekki: rgba(207, 154, 114, .18);
+  --btn-ink: #000000;
+  --na-akcencie: #000000;
+}
 
 .w-aplikacji .mag {
   min-height: 100dvh;
