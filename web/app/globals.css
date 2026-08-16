@@ -4066,24 +4066,26 @@ code {
 }
 
 /* Nagłówek sekcji: maszynowy, kapitaliki, ton drugorzędny. */
-.mag-sekcja {
-  margin: 22px 0 7px;
-  padding-inline: calc(var(--mag-gutter) + 4px);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  /* Makiety mają nadtytuły sekcji w jaśniejszej szarości niż resztę tekstu
-     drugorzędnego: #9B9489 wobec #726C63, i to konsekwentnie w trzech plikach
-     (3400–4500 pikseli na plik). To osobna rola, nie ten sam token.
+/* Nagłówek sekcji w idiomie iOS: 13 px, waga zwykła, bez wersalików i bez
+   rozstrzelenia. Tam nadtytuł nie krzyczy — jest cichym podpisem grupy,
+   a hierarchię niesie odstęp nad nim, nie wielkość liter.
 
-     2,58:1 na panelu — poniżej progu. Broni się tym, że to nadtytuł
-     powtarzający nazwę sekcji, którą i tak widać z treści pod spodem
-     („DOSTAWA" nad adresem, „POWÓD" nad listą powodów) — żadna informacja
-     nie jest wyłącznie tutaj. Gdyby nadtytuł miał kiedyś nieść treść,
-     wraca `--ink-3`. */
-  color: var(--etykieta);
+   Poprzednia wersja (11 px, monospace, wersaliki, tracking .1em) pochodziła
+   z poprzedniego kierunku wizualnego. Przy 13 px i zwykłej wadze nadtytuł
+   przestaje też walczyć o uwagę z liczbami w wierszach pod spodem.
+
+   Skok kontrastu w prezencie: 13 px zwykłą wagą w kolorze drugorzędnym czyta
+   się lepiej niż 11 px wersalikami w jaśniejszej szarości, więc znika też
+   powód, dla którego poprzedni komentarz tłumaczył się z 2,58:1. */
+.mag-sekcja {
+  margin: 26px 0 7px;
+  padding-inline: calc(var(--mag-gutter) + 4px);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--etykieta-2, var(--ink-2));
 }
 
 /* ---------- Lista grupowana ---------- */
@@ -4117,7 +4119,32 @@ code {
   text-align: left;
   cursor: pointer;
 }
-.mag-wiersz + .mag-wiersz { border-top: 1px solid var(--line); }
+/* Separator w idiomie iOS: włos rysowany na `::before` wiersza następnego,
+   nie obramowanie poprzedniego, i **wcięty od lewej**. Kreska zaczyna się za
+   ikoną, nie przy krawędzi karty — dzięki temu lista czyta się jako grupa
+   powiązanych wierszy, a nie jako tabela z ramkami.
+
+   Pół piksela, nie cały: na ekranach o podwójnej gęstości `.5px` daje włos
+   szerokości jednego piksela fizycznego. Na zwykłym ekranie przeglądarka
+   zaokrągli to sama i nic się nie psuje.
+
+   Wcięcie zależy od tego, czy wiersz ma diodę: 38 px gdy ma, 16 px gdy nie.
+   Dioda i jej odstęp zajmują dokładnie tę różnicę. */
+.mag-wiersz + .mag-wiersz { border-top: 0; }
+.mag-wiersz { position: relative; }
+.mag-wiersz + .mag-wiersz::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 16px;
+  height: .5px;
+  background: var(--sep, var(--line));
+}
+/* Wiersz z diodą odsuwa kreskę za nią. `:has()` pyta o zawartość wiersza
+   poprzedzającego — bez tego trzeba by oznaczać wiersze atrybutem w JSX,
+   czyli zmieniać komponenty tam, gdzie wystarczy arkusz. */
+.mag-wiersz:has(.mag-dioda) + .mag-wiersz::before { left: 38px; }
 .mag-wiersz:disabled { cursor: default; }
 
 /* Treść wiersza rozpycha się na resztę szerokości, żeby odczyt i szewron
