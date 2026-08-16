@@ -110,25 +110,25 @@ function kontrast(nazwaPrzod, nazwaTlo) {
 const PARY = [
   ['ink', 'bg', 4.5, 'treść na tle strony'],
   ['ink', 'surface', 4.5, 'treść na bieli'],
-  ['ink', 'panel', 4.5, 'treść na beżu'],
+  ['ink', 'panel', 4.5, 'treść na panelu'],
   ['ink-2', 'bg', 4.5, 'opis na tle strony'],
   ['ink-2', 'surface', 4.5, 'opis na bieli'],
-  ['ink-2', 'panel', 4.5, 'opis na beżu'],
+  ['ink-2', 'panel', 4.5, 'opis na panelu'],
   ['ink-3', 'bg', 4.5, 'etykieta na tle strony'],
   ['ink-3', 'surface', 4.5, 'etykieta na bieli'],
-  ['ink-3', 'panel', 4.5, 'etykieta na beżu'],
-  // Jasne złoto nie nosi już liter — po zmianie kontrastu tekst bierze
-  // `--accent-ink`, a `--accent` został przy wypełnieniach, obwódkach,
-  // gwiazdkach oceny i ikonach. Stąd próg 3:1 z SC 1.4.11, nie 4,5:1.
+  ['ink-3', 'panel', 4.5, 'etykieta na panelu'],
+  // `--accent` nie nosi liter — tekst bierze `--accent-ink`, a akcent
+  // został przy wypełnieniach, obwódkach, gwiazdkach oceny i ikonach.
+  // Stąd próg 3:1 z SC 1.4.11, nie 4,5:1.
   //
   // Gwiazdki i serce nie dobijają nawet do 3:1 i to jest świadome:
   // ocena stoi obok liczby („4,8 · 412 opinii"), a serce ma `aria-pressed`
   // i podpis, więc kolor nie jest tam jedynym nośnikiem informacji —
   // wypełnienie kształtu niesie ją tak samo. Oznaczone jako wyjątek, żeby
   // nie znikło z widoku i nie udawało, że przechodzi.
-  ['accent', 'bg', 3, 'złoto ikon na tle strony', 'wyjątek: kształt niesie treść'],
-  ['accent', 'surface', 3, 'złoto ikon na bieli', 'wyjątek: kształt niesie treść'],
-  ['accent', 'panel', 3, 'złoto ikon na beżu', 'wyjątek: kształt niesie treść'],
+  ['accent', 'bg', 3, 'ikony na tle strony', 'wyjątek: kształt niesie treść'],
+  ['accent', 'surface', 3, 'ikony na bieli', 'wyjątek: kształt niesie treść'],
+  ['accent', 'panel', 3, 'ikony na panelu', 'wyjątek: kształt niesie treść'],
   ['accent-ink', 'bg', 4.5, 'drobny napis akcentem'],
   ['accent-ink', 'accent-soft', 4.5, 'napis na znaczniku przeceny'],
   ['ok-ink', 'ok-soft', 4.5, 'napis „opłacone" na zielonym'],
@@ -139,9 +139,9 @@ const PARY = [
   ['na-akcencie', 'accent', 4.5, 'napis na wypełnieniu akcentem'],
   ['line-pole', 'bg', 3, 'obwódka pola na tle strony'],
   ['line-pole', 'surface', 3, 'obwódka pola na bieli'],
-  ['line-pole', 'panel', 3, 'obwódka pola na beżu'],
-  ['line-pole', 'panel', 3, 'obrys przycisku ghost na beżu'],
-  ['etykieta', 'panel', 4.5, 'nadtytuł na beżu'],
+  ['line-pole', 'panel', 3, 'obwódka pola na panelu'],
+  ['line-pole', 'panel', 3, 'obrys przycisku ghost na panelu'],
+  ['etykieta', 'panel', 4.5, 'nadtytuł na panelu'],
 ];
 
 let upadlo = 0;
