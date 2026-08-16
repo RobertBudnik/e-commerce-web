@@ -142,8 +142,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   //     Tam magazyn jest całą aplikacją, więc nawigacja sklepu tylko
   //     zabierałaby miejsce.
   //
-  // Rozróżnia je wyłącznie `wAplikacji`, nie ścieżka.
+  // Rozróżnia je `wAplikacji` **i** ścieżka — bo powłoka niesie teraz cały
+  // sklep, nie sam magazyn. Klient w aplikacji dostaje nawigację, koszyk
+  // i konto; magazynier, wchodząc w `/magazyn`, dostaje przyrząd bez nich.
   const naglowki = await headers();
+  const sciezka = naglowki.get('x-nordo-path') ?? '';
+  const magazyn = sciezka.startsWith('/magazyn');
 
   // Treść jedzie do natywnej powłoki? Wtedy pasek zakładek jest już na dole
   // ekranu, narysowany przez system — powtarzanie go w HTML-u byłoby dublem.
@@ -173,17 +177,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 podstronie przez cały nagłówek — logo, cztery pozycje menu,
                 motyw, konto i koszyk — zanim dotrze do tego, po co ktoś
                 przyszedł. Widoczny dopiero na fokusie, więc mysz go nie widzi. */}
-            {!wAplikacji && (
+            {!(wAplikacji && magazyn) && (
               <a className="skip-link" href="#tresc">
                 Przejdź do treści
               </a>
             )}
-            {!wAplikacji && <SiteHeader user={user} />}
+            {!(wAplikacji && magazyn) && <SiteHeader user={user} />}
             <div id="tresc" tabIndex={-1}>
               {children}
             </div>
-            {!wAplikacji && <SiteFooter />}
-            {!wAplikacji && <OdsloniecieStopki />}
+            {!(wAplikacji && magazyn) && <SiteFooter />}
+            {!(wAplikacji && magazyn) && <OdsloniecieStopki />}
             <MiniCart />
             <QuickViewHost />
             <ToastHost />
