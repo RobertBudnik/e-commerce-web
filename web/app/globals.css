@@ -4158,6 +4158,51 @@ code {
 .mag .mag-numer,
 .mag .mag-godzina { font-variant-numeric: tabular-nums; }
 
+/* ---------- Przycisk przytrzymania ----------
+   Wymiary i kolory ze specyfikacji makiety: radius 14, min 50 px, tło akcentu.
+   `touch-action: none` jest konieczne — bez niego przeglądarka na telefonie
+   uzna przytrzymanie za początek przewijania i zabierze zdarzenia wskaźnika
+   w połowie biegu. `overflow: hidden` przycina pasek do zaokrąglenia. */
+.mag-trzymaj {
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  display: block;
+  width: 100%;
+  min-height: 50px;
+  padding-inline: 18px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--tint, var(--accent));
+  color: #ffffff;
+  font-size: var(--t-wiersz);
+  font-weight: 600;
+  letter-spacing: -.02em;
+  cursor: pointer;
+}
+.mag-trzymaj:disabled { cursor: default; }
+
+/* Warstwa postępu. Rośnie od lewej, więc `transform-origin` musi być
+   jawne — domyślny środek dawałby pasek rozchodzący się na boki. */
+.mag-trzymaj-pasek {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, .28);
+  transform: scaleX(0);
+  transform-origin: left;
+  pointer-events: none;
+}
+.mag-trzymaj-tresc { position: relative; z-index: 1; }
+
+/* Po sukcesie przycisk przestaje być przyciskiem: zielone tło, kursor
+   domyślny, żadnego zaproszenia do drugiego dotknięcia. */
+.mag-trzymaj[data-zrobione] {
+  background: var(--zielony, var(--ok));
+  cursor: default;
+}
+
 .mag-sekcja {
   margin: 26px 0 7px;
   padding-inline: calc(var(--mag-gutter) + 4px);
