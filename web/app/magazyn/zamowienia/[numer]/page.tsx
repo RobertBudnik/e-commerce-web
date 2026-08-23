@@ -8,7 +8,6 @@ import { money } from '@/lib/format';
 
 export const metadata: Metadata = {
   title: 'Zamówienie',
-  robots: { index: false, follow: false },
 };
 
 export const dynamic = 'force-dynamic';

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { ProductMedia } from './ProductMedia';
 import { money, stars } from '@/lib/format';
+import { ile, OPINIE } from '@/lib/odmiana';
 import { useCart } from '@/components/cart/CartProvider';
 import { useOknoModalne } from '@/lib/okno-modalne';
 import { useWishlist } from './WishlistProvider';
@@ -89,7 +90,7 @@ export function QuickViewHost() {
                 <span className="stars" aria-hidden="true">
                   {stars(product.rating)}
                 </span>{' '}
-                {product.reviews} opinii
+                {ile(product.reviews, OPINIE)}
               </p>
               <p className="lede" style={{ marginTop: 12 }}>
                 {product.short}

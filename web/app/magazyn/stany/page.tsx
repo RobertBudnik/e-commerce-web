@@ -10,7 +10,6 @@ import { ile, POZYCJE } from '@/lib/odmiana';
 export const metadata: Metadata = {
   title: 'Magazyn',
   description: 'Stany magazynowe.',
-  robots: { index: false, follow: false },
 };
 
 export const dynamic = 'force-dynamic';

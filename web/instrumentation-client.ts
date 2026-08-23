@@ -36,6 +36,22 @@ if (dsn) {
 
     sendDefaultPii: false,
 
+    // Ten sam filtr co na serwerze i na brzegu. `sendDefaultPii: false` opiera
+    // się na tym, co SDK zdąży rozpoznać jako dane osobowe — a integracje
+    // przeglądarkowe dokładają do zdarzenia własny opis żądania, więc adres
+    // klienta z formularza zamówienia i tak potrafi się tam znaleźć.
+    beforeSend(zdarzenie) {
+      if (zdarzenie.request) {
+        delete zdarzenie.request.cookies;
+        delete zdarzenie.request.data;
+        if (zdarzenie.request.headers) {
+          delete zdarzenie.request.headers.authorization;
+          delete zdarzenie.request.headers.cookie;
+        }
+      }
+      return zdarzenie;
+    },
+
     // Rozszerzenia przeglądarki i skrypty zewnętrzne potrafią zasypać projekt
     // szumem, który nie ma nic wspólnego ze sklepem.
     ignoreErrors: [

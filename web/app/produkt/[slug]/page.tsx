@@ -9,6 +9,7 @@ import { TrustBlock } from '@/components/product/TrustBlock';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { Opinie } from '@/components/product/Opinie';
 import { money, stars } from '@/lib/format';
+import { ile, OPINIE } from '@/lib/odmiana';
 import {
   czyMogeOceniac,
   getCategories,
@@ -95,7 +96,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               {stars(product.rating)}
             </span>{' '}
             {product.rating}
-            <span className="muted"> · {product.reviews} opinii</span>
+            <span className="muted"> · {ile(product.reviews, OPINIE)}</span>
           </p>
           <p className="lede">{product.short}</p>
           <div className="price-row">

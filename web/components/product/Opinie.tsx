@@ -1,10 +1,7 @@
 import { FormularzOpinii } from './FormularzOpinii';
 import { formatDate, stars } from '@/lib/format';
-import { ile, odmien, type Formy } from '@/lib/odmiana';
+import { ile, odmien, OPINIE } from '@/lib/odmiana';
 import type { Opinia } from '@/lib/queries';
-
-/** „1 opinia", „2 opinie", „5 opinii" — orzeczenie idzie za podmiotem. */
-const OPINIE: Formy = ['opinia', 'opinie', 'opinii'];
 
 /**
  * Sekcja opinii pod specyfikacją produktu.

@@ -35,3 +35,4 @@ export const SZTUKI: Formy = ['sztuka', 'sztuki', 'sztuk'];
 export const PRODUKTY: Formy = ['produkt', 'produkty', 'produktów'];
 export const ZWROTY: Formy = ['zwrot', 'zwroty', 'zwrotów'];
 export const ZAMOWIENIA: Formy = ['zamówienie', 'zamówienia', 'zamówień'];
+export const OPINIE: Formy = ['opinia', 'opinie', 'opinii'];

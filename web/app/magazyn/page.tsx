@@ -8,7 +8,6 @@ import { MotywAplikacji } from '@/components/magazyn/MotywAplikacji';
 export const metadata: Metadata = {
   title: 'Przegląd',
   description: 'Stan magazynu i kolejka wysyłek.',
-  robots: { index: false, follow: false },
 };
 
 /** Liczby zmieniają się przy każdym zamówieniu — nic tu nie może iść z cache. */

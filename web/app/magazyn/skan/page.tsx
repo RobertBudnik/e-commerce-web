@@ -5,7 +5,6 @@ import { wymagajZaplecza } from '@/lib/magazyn-dostep';
 export const metadata: Metadata = {
   title: 'Skaner',
   description: 'Odczyt kodu kreskowego i korekta stanu.',
-  robots: { index: false, follow: false },
 };
 
 export const dynamic = 'force-dynamic';

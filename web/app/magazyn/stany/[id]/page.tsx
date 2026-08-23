@@ -7,7 +7,6 @@ import { getProduktPoId } from '@/lib/queries';
 
 export const metadata: Metadata = {
   title: 'Korekta stanu',
-  robots: { index: false, follow: false },
 };
 
 export const dynamic = 'force-dynamic';

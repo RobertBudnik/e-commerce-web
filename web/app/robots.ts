@@ -3,7 +3,8 @@ import { siteUrl } from '@/lib/site';
 
 /**
  * Konto, koszyk, panel i potwierdzenia zamówień nie mają czego szukać
- * w wynikach — to strony jednego użytkownika, nie treść sklepu.
+ * w wynikach — to strony jednego użytkownika, nie treść sklepu. Magazyn jest
+ * tu z tego samego powodu co panel: to zaplecze firmy, nie witryna.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -11,7 +12,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/konto', '/panel', '/koszyk', '/zamowienie', '/logowanie'],
+        disallow: ['/konto', '/panel', '/magazyn', '/koszyk', '/zamowienie', '/logowanie'],
       },
     ],
     sitemap: `${siteUrl()}/sitemap.xml`,

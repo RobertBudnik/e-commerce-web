@@ -6,7 +6,6 @@ import { ile, POZYCJE } from '@/lib/odmiana';
 export const metadata: Metadata = {
   title: 'Zamówienia',
   description: 'Kolejka wysyłek.',
-  robots: { index: false, follow: false },
 };
 
 export const dynamic = 'force-dynamic';

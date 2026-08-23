@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { ProductMedia } from './ProductMedia';
 import { money, stars } from '@/lib/format';
+import { ile, OPINIE } from '@/lib/odmiana';
 import { OdometrCeny } from '@/components/ruch/OdometrCeny';
 import { PrzyciskDoKoszyka } from '@/components/ruch/PrzyciskDoKoszyka';
 import { useCart } from '@/components/cart/CartProvider';
@@ -71,7 +72,8 @@ export function ProductCard({
             <span className="stars" aria-hidden="true">
               {stars(product.rating)}
             </span>
-            <span className="sr-only">Ocena {product.rating} na 5.</span> {product.reviews} opinii
+            <span className="sr-only">Ocena {product.rating} na 5.</span>{' '}
+            {ile(product.reviews, OPINIE)}
           </span>
           {product.oldPrice && <span className="price-old">{money(product.oldPrice)}</span>}
         </div>

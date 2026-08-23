@@ -7,7 +7,6 @@ import { MARKA } from '@/lib/dane-sklepu';
 
 export const metadata: Metadata = {
   title: 'Brak dostępu',
-  robots: { index: false, follow: false },
 };
 
 /**

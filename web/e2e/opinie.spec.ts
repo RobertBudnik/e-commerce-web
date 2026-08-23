@@ -82,6 +82,7 @@ test.describe('Opinie', () => {
     // produktów" niżej na stronie.
     await page.reload();
     await expect(page.locator('.product-info .rating')).toContainText('4');
-    await expect(page.locator('.product-info .rating')).toContainText('1 opinii');
+    // „1 opinia", nie „1 opinii" — liczebnik odmienia `ile()` z lib/odmiana.
+    await expect(page.locator('.product-info .rating')).toContainText('1 opinia');
   });
 });

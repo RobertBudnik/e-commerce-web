@@ -8,7 +8,6 @@ import { ile, ZWROTY } from '@/lib/odmiana';
 export const metadata: Metadata = {
   title: 'Zwroty',
   description: 'Zwroty czekające na przyjęcie.',
-  robots: { index: false, follow: false },
 };
 
 export const dynamic = 'force-dynamic';
