@@ -6,13 +6,20 @@
        Tu plik jest pisany ręcznie, więc muszą być wprost — bez nich
        devicectl odrzuca paczkę jako nieprawidłową. -->
   <key>CFBundleDevelopmentRegion</key><string>pl</string>
-  <!-- Adres magazynu; podmieniany flagą NORDO_URL przy budowaniu -->
+  <!-- Adres startowy wariantu; podmieniany flagą NORDO_URL przy budowaniu -->
   <key>NordoURL</key><string>$(NORDO_URL)</string>
+  <!-- „sklep" albo „magazyn". Decyduje o zakładkach, tle i barwie akcentu —
+       patrz `Wariant` w MagazynView.swift. Ustawia to `zbuduj.sh`. -->
+  <key>NordoWariant</key><string>$(NORDO_WARIANT)</string>
   <key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
   <key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>$(PRODUCT_NAME)</string>
-  <key>CFBundleDisplayName</key><string>Nordo</string>
+  <!-- Nazwa pod ikoną. Musi iść z PRODUCT_NAME, nie na sztywno:
+       `CFBundleDisplayName` bije `CFBundleName`, więc wpisana tu stała
+       podpisywała obie aplikacje tak samo i na ekranie początkowym stały
+       dwie kafelki „Nordo". -->
+  <key>CFBundleDisplayName</key><string>$(PRODUCT_NAME)</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
   <key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>

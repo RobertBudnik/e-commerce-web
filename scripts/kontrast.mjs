@@ -13,6 +13,7 @@
  *
  * Użycie:
  *   node scripts/kontrast.mjs
+ *   node scripts/kontrast.mjs --paleta magazyn
  *   node scripts/kontrast.mjs --motyw ciemny
  */
 import { readFileSync } from 'node:fs';
@@ -20,22 +21,34 @@ import { readFileSync } from 'node:fs';
 const plik = readFileSync(new URL('../web/app/globals.css', import.meta.url), 'utf8');
 
 const argumenty = process.argv.slice(2);
-const motyw = argumenty.includes('--motyw') ? argumenty[argumenty.indexOf('--motyw') + 1] : 'jasny';
+const wartoscFlagi = (nazwa, domyslna) =>
+  argumenty.includes(nazwa) ? argumenty[argumenty.indexOf(nazwa) + 1] : domyslna;
+
+const motyw = wartoscFlagi('--motyw', 'jasny');
 if (!['jasny', 'ciemny'].includes(motyw)) {
   console.error(`Nieznany motyw: ${motyw}. Dozwolone: jasny, ciemny.`);
   process.exit(2);
 }
 
+const paleta = wartoscFlagi('--paleta', 'sklep');
+if (!['sklep', 'magazyn'].includes(paleta)) {
+  console.error(`Nieznana paleta: ${paleta}. Dozwolone: sklep, magazyn.`);
+  process.exit(2);
+}
+
+/** Deklaracje `--x: y;` z jednego bloku, licząc od podanego selektora. */
+function zBloku(selektor) {
+  const od = plik.indexOf(selektor);
+  if (od < 0) throw new Error(`Nie znaleziono bloku: ${selektor}`);
+  const blok = plik.slice(od, plik.indexOf('}', od));
+  return [...blok.matchAll(/--([\w-]+):\s*([^;]+);/g)].map(([, n, w]) => [n, w.trim()]);
+}
+
 /** Blok tokenów danego motywu plus deklaracje jednolinijkowe (`:root { --x: y; }`). */
 function tokeny(nazwaMotywu) {
-  const selektor = nazwaMotywu === 'jasny' ? ':root,\n.motyw-jasny {' : '.dark,\n.motyw-ciemny {';
-  const od = plik.indexOf(selektor);
-  const blok = plik.slice(od, plik.indexOf('}', od));
-
-  const mapa = new Map();
-  for (const [, nazwa, wartosc] of blok.matchAll(/--([\w-]+):\s*([^;]+);/g)) {
-    mapa.set(nazwa, wartosc.trim());
-  }
+  const mapa = new Map(
+    zBloku(nazwaMotywu === 'jasny' ? ':root,\n.motyw-jasny {' : '.dark,\n.motyw-ciemny {')
+  );
 
   // Tokeny dopisane poza głównym blokiem — `:root { --line-pole: #8a8377; }`
   const prefiks = nazwaMotywu === 'jasny' ? ':root' : '.dark';
@@ -43,6 +56,15 @@ function tokeny(nazwaMotywu) {
     /(:root|\.dark)\s*\{\s*--([\w-]+):\s*([^;]+);\s*\}/g
   )) {
     if (sel === prefiks) mapa.set(nazwa, wartosc.trim());
+  }
+
+  // Magazyn stoi na palecie Apple, nie na palecie sklepu, ale nie podmienia
+  // wszystkiego — `.mag` przykrywa część tokenów, a reszta zostaje odziedziczona
+  // po stronie. Dlatego nakładamy jego blok na komplet sklepowy zamiast czytać
+  // go osobno: inaczej wynik mierzyłby kolory, których na tym ekranie nie ma.
+  if (paleta === 'magazyn') {
+    for (const [n, w] of zBloku('\n.mag {')) mapa.set(n, w);
+    if (nazwaMotywu === 'ciemny') for (const [n, w] of zBloku('.dark .mag {')) mapa.set(n, w);
   }
 
   return mapa;
@@ -106,29 +128,53 @@ function kontrast(nazwaPrzod, nazwaTlo) {
   return (a + 0.05) / (b + 0.05);
 }
 
+/** Co z czym się spotyka w magazynie. Inna paleta, inne powierzchnie:
+ *  treść leży tam na białej karcie (`--surface`) albo na tle listy (`--bg`),
+ *  a nie na trzech powierzchniach sklepu. */
+const PARY_MAGAZYN = [
+  ['ink', 'surface', 4.5, 'etykieta na karcie'],
+  ['ink', 'bg', 4.5, 'etykieta na tle listy'],
+  ['ink-2', 'surface', 4.5, 'podpis na karcie'],
+  ['ink-2', 'bg', 4.5, 'podpis na tle listy'],
+  // Trzeci stopień tuszu niesie placeholdery i ikony w polu szukania — nigdy
+  // treść, którą trzeba przeczytać, żeby wiedzieć, co robić. Apple trzyma go
+  // na 30% i to jest wartość z systemu, nie nasza pomyłka.
+  ['ink-faint', 'surface', 4.5, 'placeholder na karcie', 'wyjątek: nie niesie treści'],
+  ['accent-ink', 'surface', 4.5, 'sienna na karcie'],
+  ['accent-ink', 'bg', 4.5, 'sienna na tle listy'],
+  ['na-akcencie', 'accent', 4.5, 'napis na przycisku siennym'],
+  ['ok-ink', 'surface', 4.5, 'korekta dodatnia'],
+  ['blad', 'surface', 4.5, 'komunikat błędu na karcie'],
+  ['blad', 'bg', 4.5, 'komunikat błędu na tle listy'],
+  ['uwaga', 'surface', 4.5, 'stan przy progu', 'wyjątek: dioda ma podpis słowny'],
+  // Separator w liście grupowanej rozdziela wiersze, ale nie niesie treści —
+  // wiersz czyta się bez niego. SC 1.4.11 go nie obejmuje.
+  ['line', 'surface', 3, 'separator w liście', 'wyjątek: rozdziela, nie informuje'],
+];
+
 /** Co z czym się spotyka w interfejsie i jakiego progu wymaga. */
-const PARY = [
+const PARY_SKLEP = [
   ['ink', 'bg', 4.5, 'treść na tle strony'],
   ['ink', 'surface', 4.5, 'treść na bieli'],
-  ['ink', 'panel', 4.5, 'treść na beżu'],
+  ['ink', 'panel', 4.5, 'treść na panelu'],
   ['ink-2', 'bg', 4.5, 'opis na tle strony'],
   ['ink-2', 'surface', 4.5, 'opis na bieli'],
-  ['ink-2', 'panel', 4.5, 'opis na beżu'],
+  ['ink-2', 'panel', 4.5, 'opis na panelu'],
   ['ink-3', 'bg', 4.5, 'etykieta na tle strony'],
   ['ink-3', 'surface', 4.5, 'etykieta na bieli'],
-  ['ink-3', 'panel', 4.5, 'etykieta na beżu'],
-  // Jasne złoto nie nosi już liter — po zmianie kontrastu tekst bierze
-  // `--accent-ink`, a `--accent` został przy wypełnieniach, obwódkach,
-  // gwiazdkach oceny i ikonach. Stąd próg 3:1 z SC 1.4.11, nie 4,5:1.
+  ['ink-3', 'panel', 4.5, 'etykieta na panelu'],
+  // `--accent` nie nosi liter — tekst bierze `--accent-ink`, a akcent
+  // został przy wypełnieniach, obwódkach, gwiazdkach oceny i ikonach.
+  // Stąd próg 3:1 z SC 1.4.11, nie 4,5:1.
   //
   // Gwiazdki i serce nie dobijają nawet do 3:1 i to jest świadome:
   // ocena stoi obok liczby („4,8 · 412 opinii"), a serce ma `aria-pressed`
   // i podpis, więc kolor nie jest tam jedynym nośnikiem informacji —
   // wypełnienie kształtu niesie ją tak samo. Oznaczone jako wyjątek, żeby
   // nie znikło z widoku i nie udawało, że przechodzi.
-  ['accent', 'bg', 3, 'złoto ikon na tle strony', 'wyjątek: kształt niesie treść'],
-  ['accent', 'surface', 3, 'złoto ikon na bieli', 'wyjątek: kształt niesie treść'],
-  ['accent', 'panel', 3, 'złoto ikon na beżu', 'wyjątek: kształt niesie treść'],
+  ['accent', 'bg', 3, 'ikony na tle strony', 'wyjątek: kształt niesie treść'],
+  ['accent', 'surface', 3, 'ikony na bieli', 'wyjątek: kształt niesie treść'],
+  ['accent', 'panel', 3, 'ikony na panelu', 'wyjątek: kształt niesie treść'],
   ['accent-ink', 'bg', 4.5, 'drobny napis akcentem'],
   ['accent-ink', 'accent-soft', 4.5, 'napis na znaczniku przeceny'],
   ['ok-ink', 'ok-soft', 4.5, 'napis „opłacone" na zielonym'],
@@ -139,13 +185,15 @@ const PARY = [
   ['na-akcencie', 'accent', 4.5, 'napis na wypełnieniu akcentem'],
   ['line-pole', 'bg', 3, 'obwódka pola na tle strony'],
   ['line-pole', 'surface', 3, 'obwódka pola na bieli'],
-  ['line-pole', 'panel', 3, 'obwódka pola na beżu'],
-  ['line-pole', 'panel', 3, 'obrys przycisku ghost na beżu'],
-  ['etykieta', 'panel', 4.5, 'nadtytuł na beżu'],
+  ['line-pole', 'panel', 3, 'obwódka pola na panelu'],
+  ['line-pole', 'panel', 3, 'obrys przycisku ghost na panelu'],
+  ['etykieta', 'panel', 4.5, 'nadtytuł na panelu'],
 ];
 
+const PARY = paleta === 'magazyn' ? PARY_MAGAZYN : PARY_SKLEP;
+
 let upadlo = 0;
-console.log(`\n  motyw: ${motyw}\n`);
+console.log(`\n  paleta: ${paleta} · motyw: ${motyw}\n`);
 
 for (const [przod, tlo, prog, opis, wyjatek] of PARY) {
   const wynik = kontrast(przod, tlo);

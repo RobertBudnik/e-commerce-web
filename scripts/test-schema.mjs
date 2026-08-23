@@ -248,7 +248,7 @@ const { rows: [bulb] } = await db.query(
 
 await asUser(customer.id);
 const orderRes = await db.query(
-  `select * from public.create_order($1::jsonb, $2, $3, null, null)`,
+  `select * from public.create_order($1::jsonb, $2, $3, null, null, '2026-08-23')`,
   [JSON.stringify([{ product_id: headphones.id, qty: 2 }, { product_id: bulb.id, qty: 3 }]), 'klient@example.com', '+48600100200']
 );
 const order = orderRes.rows[0];
@@ -271,7 +271,7 @@ check('ruchy magazynowe zapisane', Number(movements.rows[0].n) === 2, `${movemen
 // Tania pozycja poniżej progu — dostawa płatna
 await asUser(customer.id);
 const smallOrder = (
-  await db.query(`select * from public.create_order($1::jsonb, $2, null, null, null)`, [
+  await db.query(`select * from public.create_order($1::jsonb, $2, null, null, null, '2026-08-23')`, [
     JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
     'klient@example.com',
   ])
@@ -281,7 +281,7 @@ check('razem z dostawą', smallOrder.total_cents === bulb.price_cents + 1999);
 
 // Kupon
 const couponOrder = (
-  await db.query(`select * from public.create_order($1::jsonb, $2, null, null, $3)`, [
+  await db.query(`select * from public.create_order($1::jsonb, $2, null, null, $3, '2026-08-23')`, [
     JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
     'klient@example.com',
     'nowy10',
@@ -293,7 +293,7 @@ check('kod znormalizowany do wersalików', couponOrder.coupon_code === 'NOWY10')
 await throws(
   'zły kupon odrzucony',
   () =>
-    db.query(`select * from public.create_order($1::jsonb, $2, null, null, $3)`, [
+    db.query(`select * from public.create_order($1::jsonb, $2, null, null, $3, '2026-08-23')`, [
       JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
       'klient@example.com',
       'FALSZYWY',
@@ -304,7 +304,7 @@ await throws(
 await throws(
   'zły e-mail odrzucony',
   () =>
-    db.query(`select * from public.create_order($1::jsonb, $2, null, null, null)`, [
+    db.query(`select * from public.create_order($1::jsonb, $2, null, null, null, '2026-08-23')`, [
       JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
       'to-nie-jest-email',
     ]),
@@ -369,8 +369,20 @@ await throws(
 );
 await throws(
   'zamówienie odrzuca koszyk ponad limit',
-  () => db.query(`select * from public.create_order($1::jsonb, $2, null, null, null)`, [hugeCart, 'klient@example.com']),
+  () => db.query(`select * from public.create_order($1::jsonb, $2, null, null, null, '2026-08-23')`, [hugeCart, 'klient@example.com']),
   'Za dużo pozycji'
+);
+
+// Zgoda na regulamin jest warunkiem zawarcia umowy, więc funkcja odmawia bez
+// niej niezależnie od tego, co pokazał formularz. Sprawdzane tutaj, bo
+// `create_order` jest wywoływalne wprost przez /rest/v1/rpc.
+await throws(
+  'zamówienie bez zgody na regulamin',
+  () => db.query(`select * from public.create_order($1::jsonb, $2, null, null, null, null)`, [
+    JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
+    'klient@example.com',
+  ]),
+  'Brak zgody'
 );
 
 // Kupony zostają zamknięte — wycena oddaje wynik, nie listę kodów
@@ -411,7 +423,7 @@ for (const [nazwa, sygnatura] of [
 
 // Wystawione świadomie — mają własne sprawdzenie uprawnień w środku
 for (const [nazwa, sygnatura] of [
-  ['create_order', 'public.create_order(jsonb, text, text, jsonb, text)'],
+  ['create_order', 'public.create_order(jsonb, text, text, jsonb, text, text)'],
   ['quote_order', 'public.quote_order(jsonb, text)'],
 ]) {
   const { rows } = await db.query(
@@ -445,7 +457,7 @@ await asUser(customer.id);
 await throws(
   'zamówienie ponad stan odrzucone',
   () =>
-    db.query(`select * from public.create_order($1::jsonb, $2, null, null, null)`, [
+    db.query(`select * from public.create_order($1::jsonb, $2, null, null, null, '2026-08-23')`, [
       JSON.stringify([{ product_id: camera.id, qty: camera.stock + 1 }]),
       'klient@example.com',
     ]),
@@ -682,7 +694,7 @@ await asService();
 await db.query(`update public.products set stock = 20 where id = $1`, [bulb.id]);
 await asUser(customer.id);
 const doZwrotu = (
-  await db.query(`select * from public.create_order($1::jsonb, $2, null, null, null)`, [
+  await db.query(`select * from public.create_order($1::jsonb, $2, null, null, null, '2026-08-23')`, [
     JSON.stringify([{ product_id: bulb.id, qty: 2 }]),
     'klient@example.com',
   ])
@@ -729,7 +741,7 @@ await db.query(
 await db.query(`update public.products set stock = 20 where id = $1`, [bulb.id]);
 
 await asUser(customer.id);
-await db.query(`select * from public.create_order($1::jsonb, $2, null, null, $3)`, [
+await db.query(`select * from public.create_order($1::jsonb, $2, null, null, $3, '2026-08-23')`, [
   JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
   'klient@example.com',
   'JEDNORAZ',
@@ -737,7 +749,7 @@ await db.query(`select * from public.create_order($1::jsonb, $2, null, null, $3)
 await throws(
   'kupon nie przekracza limitu użyć',
   () =>
-    db.query(`select * from public.create_order($1::jsonb, $2, null, null, $3)`, [
+    db.query(`select * from public.create_order($1::jsonb, $2, null, null, $3, '2026-08-23')`, [
       JSON.stringify([{ product_id: bulb.id, qty: 1 }]),
       'klient@example.com',
       'JEDNORAZ',

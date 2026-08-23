@@ -16,6 +16,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: strona.tytul, description: strona.wstep };
 }
 
+/**
+ * Czy pokazać listę braków. Praca lokalna — tak; wdrożenie — tylko na wyraźne
+ * życzenie, przez zmienną środowiskową. Sprawdzenie siedzi tutaj, a nie
+ * w JSX, żeby dało się je znaleźć jednym grepem.
+ */
+const pokazBraki =
+  process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_POKAZ_BRAKI === '1';
+
 export default async function StronaInformacyjna({ params }: Props) {
   const { temat } = await params;
   const strona = STRONY_INFO[temat];
@@ -41,10 +49,16 @@ export default async function StronaInformacyjna({ params }: Props) {
         </section>
       ))}
 
-      {/* Widoczne dla właściciela sklepu, nie dla klienta — ale świadomie
-          zostawione na stronie, żeby nie dało się o tym zapomnieć przed
-          wpuszczeniem prawdziwego ruchu. */}
-      {strona.doUzupelnienia.length > 0 && (
+      {/* Lista braków jest narzędziem roboczym i tak ma zostać — ale nie na
+          oczach klienta. Stała na wdrożeniu, więc polityka prywatności
+          ogłaszała wprost „Ścieżka usunięcia konta — dziś nie ma jej w kodzie",
+          a regulamin przyznawał, że jego sekcje są instrukcją, nie
+          postanowieniem.
+
+          Domyślnie znika wszędzie poza pracą lokalną. Na wdrożeniu podglądowym
+          można ją przywrócić, ustawiając NEXT_PUBLIC_POKAZ_BRAKI=1 — nigdy na
+          produkcji. */}
+      {pokazBraki && strona.doUzupelnienia.length > 0 && (
         <aside className="doc-todo">
           <p className="label">Do uzupełnienia przed startem sprzedaży</p>
           <ul>

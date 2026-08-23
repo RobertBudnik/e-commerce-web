@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { AuthTabs } from '@/components/auth/AuthTabs';
 import { Icon } from '@/components/Icon';
 import { getSessionUser } from '@/lib/queries';
+import { sciezkaPowrotu } from '@/lib/sciezka-powrotu';
 
 export const metadata: Metadata = {
   title: 'Logowanie',
@@ -15,10 +16,14 @@ export default async function LoginPage({
   searchParams: Promise<{ powrot?: string; tryb?: string }>;
 }) {
   const { powrot, tryb } = await searchParams;
+  // To samo sprawdzenie co w akcji logowania. Tu jest nawet ważniejsze:
+  // przekierowanie niżej dzieje się na zwykłym GET, więc wystarczy, że
+  // zalogowany kliknie link — nie musi niczego wysyłać.
+  const dokad = sciezkaPowrotu(powrot);
 
   // Zalogowany nie ma po co oglądać formularza
   const user = await getSessionUser();
-  if (user) redirect(powrot ?? '/konto');
+  if (user) redirect(dokad);
 
   return (
     <main className="auth">
@@ -32,7 +37,7 @@ export default async function LoginPage({
           </p>
           <AuthTabs
             defaultTab={tryb === 'rejestracja' ? 'register' : 'login'}
-            back={powrot ?? '/konto'}
+            back={dokad}
           />
         </div>
       </section>

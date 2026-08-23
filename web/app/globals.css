@@ -131,17 +131,12 @@
    a różnice nazw znikną przy okazji kolejnych zmian w komponentach.
 
    Uwaga na jedno przesunięcie znaczeń: dawny `--accent` był grafitem tła
-   przycisków, dziś to `--btn-bg`. Kolor akcentu przejął rolę dawnego
-   `--sale`, czyli przecen i wyróżnień. */
+   przycisków, dziś to `--btn-bg`. */
 :root,
 .dark {
   --bg-soft: var(--panel);
-  --beige: var(--panel);
   --ink-soft: var(--ink-2);
   --ink-faint: var(--ink-3);
-  --accent-hover: var(--ink);
-  --on-accent: var(--btn-ink);
-  --sale: var(--accent);
 
   --r-sm: var(--radius-sm);
   --r: var(--radius);
@@ -163,9 +158,8 @@
   --header-h: 72px;
 
   /* Oddech sekcji — jedna wartość, żeby rytm strony zmieniał się w jednym
-     miejscu. `--oddech-duzy` niosą pasma pełnej szerokości. */
+     miejscu. */
   --oddech: 120px;
-  --oddech-duzy: 140px;
 
   /* Ruch — czasy i krzywe zdjęte z inspektora trzech referencji, nie dobrane
      z głowy. Każda wartość niżej ma adres, pod którym ją zmierzono:
@@ -205,17 +199,11 @@
   --ruch-tlo: .25s;
   --ruch-kadr: .4s;
   --ruch-odsloniecie: .8s;
-  /* Opóźnienie kaskady — formuła z Figmy, nie dobrana z oka. */
-  --ruch-stagger: 60ms;
 
   /* easeOutExpo — Cuberto, w klasie ease-out z Figmy. Wszystko, co wchodzi. */
   --krzywa: cubic-bezier(.16, 1, .3, 1);
   /* easeOutQuart — B&O. Detal i odzew na kursor. */
   --krzywa-detal: cubic-bezier(.165, .84, .44, 1);
-  /* ease-in z Figmy — wyłącznie wyjścia (element znika). */
-  --krzywa-wyjscie: cubic-bezier(.4, 0, 1, 1);
-  /* ease-in-out z Figmy — transformacja w miejscu. */
-  --krzywa-obie: cubic-bezier(.4, 0, .2, 1);
 
   /* Warstwy elementów unoszących się nad treścią. Trzymane w jednym
      miejscu, żeby pasek zakupu nie wylądował nad modalem. */
@@ -259,10 +247,10 @@
 /* Nadtytuł sekcji — jaśniejszy niż tekst drugorzędny, zdjęty z makiet.
    W ciemnym motywie makiet nie ma, więc trzyma tam dotychczasową rolę
    `--ink-3`, która czyta się poprawnie. */
-/* Nadtytuł sekcji. Paleta przewiduje tu `--ink-3` (#9b9187), ale ten odcień
-   daje 2,53:1 na beżu — a nadtytuł niesie treść („ORGANIZACJA", „AUDIO"),
-   nie jest ozdobą. Bierze więc stopień ciemniejszy; `--ink-3` zostaje przy
-   placeholderach i wyciszonych metadanych. */
+/* Nadtytuł sekcji. Naturalnym wyborem byłby `--ink-3`, ale ten daje na
+   panelu 4,2:1 — pod progiem AA, a nadtytuł niesie treść („ORGANIZACJA",
+   „AUDIO"), nie jest ozdobą. Bierze więc `--accent-ink`, czyli najciemniejszy
+   stopień; `--ink-3` zostaje przy placeholderach i wyciszonych metadanych. */
 :root { --etykieta: var(--accent-ink); }
 .dark { --etykieta: var(--accent-ink); }
 
@@ -276,8 +264,8 @@
    nie nadaje się pod tekst, a jako element nietekstowy nie dobija do 3:1
    z SC 1.4.11. Dioda ma obok siebie podpis słowny („Niskie stany", „próg 5"),
    więc kolor nie jest jedynym nośnikiem informacji i to ratuje sytuację. */
-:root { --uwaga: #dd7400; --uwaga-soft: oklch(0.93 0.05 85); }
-.dark { --uwaga: oklch(0.80 0.12 92); --uwaga-soft: oklch(0.31 0.05 92); }
+:root { --uwaga: #dd7400; }
+.dark { --uwaga: #d9bb5c; }
 
 /* ---------- Reset / base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
@@ -328,7 +316,7 @@ h1 { font-weight: 600; line-height: 1; }
 h2 { font-weight: 600; line-height: 1.1; }
 /* Rozstrzał skali robi tu wrażenie ceny. Nagłówek dwa razy większy od treści
    czyta się jako katalog; cztery razy większy — jako marka. Dolna granica
-   zostaje nietknięta, bo na telefonie większy szeryf zaczyna się łamać
+   zostaje nietknięta, bo na telefonie większy stopień zaczyna się łamać
    w połowie słowa i wrażenie znika razem z czytelnością. */
 /* Podloga naglowkow zeszla o stopien. Na 390 pt `2rem` lamalo haslo
    hero na cztery wiersze i spychalo przyciski pod zagiecie. */
@@ -336,8 +324,10 @@ h1 { font-size: clamp(1.75rem, 1.15rem + 3.9vw, 4.25rem); }
 h2 { font-size: clamp(1.25rem, 1.05rem + 1.7vw, 2.4rem); }
 h3 { font-size: 1.05rem; letter-spacing: -.015em; }
 
-/* Nagłówki użytkowe — panele, karty, szuflada — zostają przy grotesku:
-   w tych rozmiarach serif tylko szumi. */
+/* Nagłówki użytkowe — panele, karty, szuflada — jadą `--sans`, nie
+   `--display`. Dziś oba wskazują na Geista, więc różnicy nie widać;
+   rozdział zostaje, bo to on utrzyma hierarchię, gdyby `--display` kiedyś
+   znowu wskazał na inny krój. */
 .panel h2, .summary h2, .drawer-head h2, .card-box h3, .quick h2 {
   font-family: var(--sans);
   font-weight: 500;
@@ -362,9 +352,9 @@ p:last-child { margin-bottom: 0; }
 /* Etykieta techniczna: nadtytuł sekcji, kategoria na karcie, nagłówek kolumny
    w stopce. Krój maszynowy odróżnia ją od treści bez sięgania po kolor. */
 /* Mikroetykieta. W tym języku to ona niesie „drogo": dziewięć pikseli, waga
-   600 i ćwierć firetu rozstrzelenia. Kolor złoty, bo etykieta jest tu
-   ozdobą tak samo jak podpisem — stąd wyjątek od reguły, że złoto zostaje
-   dla danych. */
+   600 i ćwierć firetu rozstrzelenia. Barwy tu nie ma i nie było czego dzielić
+   między ozdobę a dane — w tej palecie odróżnia stopień i rozstrzelenie, nie
+   kolor. */
 .label {
   font-family: var(--sans);
   font-size: .5625rem;
@@ -393,10 +383,8 @@ p:last-child { margin-bottom: 0; }
    luksus, na 390 pt to przewijanie przez pustke — miedzy sekcjami mijaly
    dwa ekrany niczego. Sufit bez zmian: na duzym ekranie rytm zostaje. */
 .section { padding-block: clamp(44px, 9vw, var(--oddech)); }
-.section-tight { padding-block: clamp(28px, 5vw, 72px); }
 /* Pasma pełnej szerokości dostają w Figmie 140 px zamiast 120 — szerszy
    blok potrzebuje więcej powietrza, żeby nie wyglądał na wklejony. */
-.section-szerokie { padding-block: clamp(56px, 10vw, var(--oddech-duzy)); }
 
 .section-head {
   display: flex;
@@ -439,8 +427,9 @@ p:last-child { margin-bottom: 0; }
   white-space: nowrap;
   transition: background var(--ruch-tlo) ease, border-color var(--ruch-tlo) ease, color var(--ruch-kolor) ease, opacity var(--ruch-kolor) ease;
 }
-/* Złoto ciemnieje pod kursorem zamiast przechodzić w czerń: przejście
-   w `--ink` gasiło jedyny kolor w tym interfejsie. */
+/* Pod kursorem tło schodzi do `--accent-ink`, nie do `--ink`: różnica jest
+   drobna i o to chodzi, bo w palecie bez barwy hover ma potwierdzić cel,
+   a nie przemalować przycisk. */
 .btn:hover { --b-bg: var(--accent-ink); --b-bd: var(--accent-ink); }
 .btn:disabled { opacity: .35; cursor: not-allowed; }
 
@@ -722,7 +711,7 @@ p:last-child { margin-bottom: 0; }
   .shop-tools { width: 100%; margin-left: 0; }
   .shop-tools .search { flex: 1 1 100%; }
 
-  /* W wąskiej kolumnie nazwa szeryfem łamie się na kilka wierszy i wjeżdża
+  /* W wąskiej kolumnie dłuższa nazwa łamie się na kilka wierszy i wjeżdża
      na cenę. Rozdzielamy je na dwa wiersze — cena pod nazwą, do lewej,
      bo prawa krawędź jest tu za blisko. */
   .card-naglowek { flex-direction: column; align-items: flex-start; gap: 2px; }
@@ -761,8 +750,8 @@ p:last-child { margin-bottom: 0; }
   max-width: min(var(--maxw), 100%);
 }
 /* Hasło ma się łamać jak w Figmie — na własnej szerokości, nie na całej
-   stronie. Powyżej tej miary wiersz robi się za długi na szeryfa w tym
-   stopniu i oko gubi początek następnego. */
+   stronie. Powyżej tej miary wiersz robi się za długi w tym stopniu i oko
+   gubi początek następnego. */
 .hero-inner > div:first-child { max-width: 62ch; }
 .hero h1 { margin-bottom: .35em; text-wrap: balance; }
 .hero .label { display: block; margin-bottom: 20px; }
@@ -871,9 +860,9 @@ p:last-child { margin-bottom: 0; }
    promienia, nazwa oparta o dolną krawędź. Obwódka i cień odpadły razem —
    w tym systemie plamę od plamy oddziela sam kadr, a nie kreska wokół niego.
 
-   Figma trzyma tam zdjęcia i kładzie na nich kremowy szeryf. Dopóki zdjęć nie
-   ma, litery zostają czarne na jasnym kadrze — krem na beżu dawałby 1,2:1.
-   Wraca do kremu w chwili, gdy pod spodem stanie fotografia. */
+   Figma kładzie na tych kadrach jasne litery na zdjęciu. Dopóki zdjęć nie ma,
+   litery zostają ciemne na jasnym kadrze — jasne na jasnym dałyby 1,2:1.
+   Rozjaśniamy je w chwili, gdy pod spodem stanie fotografia. */
 .category {
   position: relative;
   display: flex;
@@ -963,17 +952,6 @@ p:last-child { margin-bottom: 0; }
 .chip-tekst { position: relative; z-index: 1; }
 .chip[aria-pressed="true"] { color: var(--na-akcencie); border-color: transparent; }
 
-.select-wrap { margin-left: auto; position: relative; display: inline-flex; align-items: center; }
-.select-wrap::after {
-  content: "";
-  position: absolute;
-  right: 14px;
-  width: 6px; height: 6px;
-  border-right: 1.2px solid var(--ink-faint);
-  border-bottom: 1.2px solid var(--ink-faint);
-  transform: translateY(-2px) rotate(45deg);
-  pointer-events: none;
-}
 select {
   appearance: none;
   -webkit-appearance: none;
@@ -1076,7 +1054,7 @@ select:hover { border-color: var(--line-strong); }
 
 .card-body { padding-top: 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
 /* Nazwa z lewej, cena z prawej, wyrównane do linii pisma — nie do środka
-   wiersza, bo szeryf i cyfry mają różną wysokość x. */
+   wiersza, bo litery i cyfry mają różną wysokość x. */
 .card-naglowek { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
 .card-naglowek .price { flex: none; }
 .card-podpis { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -1084,12 +1062,14 @@ select:hover { border-color: var(--line-strong); }
    się w jednym wierszu, czy w dwóch. Bez tego rząd kafli rozjeżdża się przy
    pierwszej dłuższej nazwie, a w siatce widać to od razu. */
 .card-body > .btn:last-child { margin-top: auto; }
-/* Nadtytuł kategorii idzie złotem — w Figmie to jedyne miejsce na karcie,
-   gdzie akcent dotyka liter. 4,76:1 na tle strony, więc mieści się w AA
-   mimo dziewięciu pikseli stopnia. */
+/* Nadtytuł kategorii idzie akcentem — w Figmie to jedyne miejsce na karcie,
+   gdzie akcent dotyka liter. W tej palecie akcent jest najciemniejszą
+   czernią, więc 16,4:1 na tle strony: dziewięć pikseli stopnia nie ma tu
+   już czym zaszkodzić. */
 .card-cat { font-size: .5625rem; font-weight: 600; letter-spacing: .25em; text-transform: uppercase; color: var(--accent-ink); }
-/* Nazwa produktu idzie szeryfem — w makiecie to ona, nie cena, jest
-   najmocniejszym elementem kafla. Grotesk zostaje przy liczbach. */
+/* Nazwa produktu idzie `--display` — w makiecie to ona, nie cena, jest
+   najmocniejszym elementem kafla. Niesie to stopień i waga, nie zmiana
+   pisma: cały serwis jedzie jednym krojem. */
 .card-title {
   font-family: var(--display);
   font-size: 1.25rem;
@@ -1171,7 +1151,6 @@ select:hover { border-color: var(--line-strong); }
   border-radius: 50%;
   background: var(--ok);
 }
-.stock.out::before { background: var(--sale); }
 
 .qty {
   display: inline-flex;
@@ -1328,7 +1307,7 @@ select:hover { border-color: var(--line-strong); }
   width: 52px; height: 52px;
   margin-bottom: 18px;
   border-radius: var(--r-pill);
-  background: var(--beige);
+  background: var(--panel);
   color: var(--ink);
 }
 .order-done-mark svg { width: 22px; height: 22px; }
@@ -1346,7 +1325,7 @@ select:hover { border-color: var(--line-strong); }
 }
 
 /* ---------- Newsletter ---------- */
-.newsletter { background: var(--beige); border-block: 1px solid var(--line); }
+.newsletter { background: var(--panel); border-block: 1px solid var(--line); }
 .newsletter-inner {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -1529,10 +1508,10 @@ select:hover { border-color: var(--line-strong); }
    Konto: menu w nagłówku, logowanie, panel klienta
    ========================================================================== */
 
-/* ---------- Pas beżowy ---------- */
-.band { background: var(--beige); border-block: 1px solid var(--line); }
+/* ---------- Pas na tle panelu ---------- */
+.band { background: var(--panel); border-block: 1px solid var(--line); }
 .band .features { background: var(--line); }
-.band .feature { background: var(--beige); }
+.band .feature { background: var(--panel); }
 
 /* ---------- Przycisk i menu konta ---------- */
 .account-menu { position: relative; }
@@ -1587,14 +1566,6 @@ select:hover { border-color: var(--line-strong); }
   z-index: 60;
 }
 .menu[data-open="true"] { opacity: 1; visibility: visible; transform: translateY(0); }
-
-.menu-head {
-  padding: 10px 12px 12px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 6px;
-}
-.menu-head strong { display: block; font-weight: 500; letter-spacing: -.012em; }
-.menu-head span { font-size: .8125rem; color: var(--ink-faint); }
 
 .menu a, .menu button {
   display: flex;
@@ -1734,11 +1705,8 @@ select {
 .tab-tekst { position: relative; z-index: 1; }
 .tab[aria-selected="true"] { color: var(--na-akcencie); }
 
-.auth-actions { margin-top: 26px; display: grid; gap: 14px; }
-.auth-alt { text-align: center; font-size: .875rem; color: var(--ink-faint); }
-
 .auth-aside {
-  background: var(--beige);
+  background: var(--panel);
   border-left: 1px solid var(--line);
   padding: clamp(40px, 6vw, 88px) var(--gutter);
   display: flex;
@@ -1885,16 +1853,6 @@ select {
    Panel produktów (organizacja)
    ========================================================================== */
 .admin-toolbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-
-.admin-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
-  gap: 48px;
-  align-items: start;
-  margin-top: 32px;
-}
-.admin-layout h2 { font-size: 1.125rem; margin-bottom: 16px; }
-.admin-layout > section:first-child { position: sticky; top: calc(var(--header-h) + 24px); }
 
 .admin-row {
   display: grid;
@@ -2202,7 +2160,6 @@ code {
   70%  { transform: scale(.94); }
   100% { transform: scale(1); }
 }
-.wish-btn.is-added svg { animation: wish-pop .42s cubic-bezier(.2, .7, .3, 1); }
 
 /* ---------- Licznik koszyka: skok przy zmianie ---------- */
 @keyframes count-bump {
@@ -2308,7 +2265,7 @@ code {
   transform-origin: left center;
   transition: width .5s cubic-bezier(.2, .7, .3, 1);
 }
-.ship-bar.is-free .ship-bar-fill { background: var(--sale); }
+.ship-bar.is-free .ship-bar-fill { background: var(--accent); }
 
 /* ---------- Szybki podgląd ---------- */
 .quick {
@@ -2389,7 +2346,7 @@ code {
 
 /* ---------- Zdjęcia produktów ----------
  * Kafle mediów mają swoje proporcje i tło; zdjęcie wypełnia je bez zniekształceń.
- * Póki plik się nie wczyta, widać beżowy prostokąt, więc nic nie skacze.
+ * Póki plik się nie wczyta, widać prostokąt w kolorze kadru, więc nic nie skacze.
  */
 .media-img {
   width: 100%;
@@ -2419,47 +2376,6 @@ code {
 /* Powiększenie pod kursorem działa tak samo na zdjęciu jak na ikonie */
 .card-media-link .media-img { transition: scale .4s cubic-bezier(.2, .7, .3, 1); }
 .card:hover .card-media-link .media-img { scale: 1.04; }
-
-/* ---------- Wgrywanie zdjęcia w panelu ---------- */
-.uploader {
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  gap: 16px;
-  align-items: center;
-}
-.uploader-preview {
-  width: 96px;
-  aspect-ratio: 4 / 5;
-  display: grid;
-  place-items: center;
-  border-radius: var(--r-sm);
-  background: var(--bg-soft);
-  overflow: hidden;
-}
-.uploader-empty svg { width: 28px; height: 28px; color: var(--line-strong); }
-.uploader-body { display: grid; gap: 8px; min-width: 0; }
-.uploader input[type="file"] {
-  width: 100%;
-  font-size: .8125rem;
-  color: var(--ink-soft);
-}
-.uploader input[type="file"]::file-selector-button {
-  margin-right: 12px;
-  height: 34px;
-  padding-inline: 14px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-pill);
-  background: var(--bg);
-  color: var(--ink);
-  font: inherit;
-  font-size: .8125rem;
-  cursor: pointer;
-  transition: background .18s ease, border-color .18s ease;
-}
-.uploader input[type="file"]::file-selector-button:hover {
-  background: var(--bg-soft);
-  border-color: var(--ink);
-}
 
 /* ---------- Sortowanie: wysuwany stos opcji ----------
  * Zamiast natywnego <select>, którego nie da się animować. Panel rozwija się
@@ -2661,8 +2577,7 @@ code {
 .product-media,
 .cart-item-media,
 .drawer-item-media,
-.admin-thumb,
-.uploader-preview { position: relative; }
+.admin-thumb { position: relative; }
 
 /* Obraz z next/image dostaje własne style inline — te dokładają kadrowanie */
 .media-img { object-fit: cover; }
@@ -3131,7 +3046,6 @@ code {
   background: var(--ok);
   flex: none;
 }
-.stock.out::before { background: var(--ink-3); }
 
 /* ---------- Cele dotykowe i wąskie ekrany ----------
    Wymóg 44×44 px dotyczy wszystkiego, co się klika. Przyciski miały 38 px
@@ -3198,390 +3112,17 @@ code {
   white-space: nowrap;
 }
 
-/* ---------- Magazyn ----------
-   Widok pod kciuk: jedna kolumna, duże cele, wszystko czytelne przy
-   wyciągniętej ręce nad kartonem. Na biurku ta sama lista, szersza. */
-.magazyn { padding-block: 28px 96px; max-width: 720px; }
-.magazyn-top { margin-bottom: 22px; }
-.magazyn-top h1 { margin: 6px 0 4px; font-size: clamp(28px, 6vw, 40px); }
-.magazyn-licznik { color: var(--ink-2); font-size: .9375rem; }
-.magazyn-pusto {
-  padding: 40px 24px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: var(--panel);
-  color: var(--ink-2);
-  text-align: center;
-}
-.magazyn-lista { display: grid; gap: 14px; }
-
-.pack {
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: var(--surface);
-  overflow: hidden;
-}
-.pack-done { opacity: .55; }
-
-.pack-head {
-  width: 100%;
-  min-height: 64px;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-.pack-head-main { display: grid; gap: 3px; min-width: 0; }
-.pack-nr { font-size: .8125rem; color: var(--ink-3); }
-.pack-customer {
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pack-head-side { display: grid; gap: 5px; justify-items: end; flex: none; }
-
-.pack-status {
-  padding: 3px 9px;
-  border-radius: var(--r-pill);
-  font-size: .6875rem;
-  font-family: var(--mono);
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  background: var(--panel);
-  color: var(--ink-2);
-}
-.pack-status-nowe { background: var(--accent-soft); color: var(--accent-ink); }
-.pack-status-wysłane { background: var(--ok-soft); color: var(--ok-ink); }
-
-.pack-warn {
-  margin: 0;
-  padding: 9px 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--accent-soft);
-  color: var(--accent-ink);
-  font-size: .875rem;
-}
-.pack-warn svg { width: 15px; height: 15px; flex: none; }
-
-.pack-body { padding: 4px 16px 14px; border-top: 1px solid var(--line); }
-.pack-items { list-style: none; margin: 0 0 14px; padding: 0; }
-.pack-items li {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--line);
-  font-size: .9375rem;
-}
-.pack-qty { color: var(--ink-3); flex: none; min-width: 2.5ch; }
-.pack-item-name { flex: 1; min-width: 0; }
-
-.pack-meta { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: .875rem; }
-.pack-meta dt { color: var(--ink-3); font-family: var(--mono); font-size: .6875rem; text-transform: uppercase; letter-spacing: .1em; padding-top: 3px; }
-.pack-meta dd { margin: 0; overflow-wrap: anywhere; }
-.pack-meta a { text-decoration: underline; text-decoration-color: var(--line-strong); }
-
-.pack-error { margin: 0; padding: 10px 16px; color: var(--accent-ink); font-size: .875rem; }
-.pack-cta { border-radius: 0; height: 52px; }
-
-/* ---------- Podpowiedź instalacji na iPhonie ---------- */
-.install-hint {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  margin-bottom: 18px;
-  padding: 14px 12px 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: var(--panel);
-}
-.install-hint-text { flex: 1; min-width: 0; }
-.install-hint p:last-child { margin: 6px 0 0; font-size: .875rem; color: var(--ink-2); }
-.install-hint strong { color: var(--ink); font-weight: 500; }
-
-/* ---------- Magazyn: przełącznik widoków ---------- */
-.mag-nav {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin-bottom: 18px;
-  padding: 4px;
-  border-radius: var(--r-pill);
-  background: var(--panel);
-}
-.mag-nav a {
-  min-height: 44px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--r-pill);
-  font-size: .9375rem;
-  color: var(--ink-2);
-  transition: background-color .16s ease, color .16s ease;
-}
-.mag-nav a[aria-current="page"] {
-  background: var(--surface);
-  color: var(--ink);
-  font-weight: 500;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
-}
-
-/* ---------- Magazyn: stany ---------- */
-.stock-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-
-.stock-row {
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: var(--surface);
-  overflow: hidden;
-}
-/* Brak i niski stan wyróżnione paskiem z boku, nie tłem — lista zostaje
-   czytelna, a wzrok i tak trafia w krawędź przy przewijaniu kciukiem. */
-.stock-brak { border-left: 3px solid var(--accent); }
-.stock-niski { border-left: 3px solid var(--ink-3); }
-
-.stock-head {
-  width: 100%;
-  min-height: 56px;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-.stock-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.stock-count { font-size: 1.25rem; font-weight: 600; flex: none; }
-.stock-brak .stock-count { color: var(--accent-ink); }
-
-.stock-flag {
-  margin: 0;
-  padding: 8px 16px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  background: var(--accent-soft);
-  color: var(--accent-ink);
-  font-size: .8125rem;
-}
-.stock-flag svg { width: 14px; height: 14px; flex: none; }
-
-.stock-edit { padding: 14px 16px 16px; border-top: 1px solid var(--line); display: grid; gap: 14px; }
-
-.stock-delta {
-  display: grid;
-  grid-template-columns: 56px 1fr 56px;
-  align-items: center;
-  gap: 10px;
-}
-.stock-delta button {
-  height: 56px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-pill);
-  background: var(--surface);
-  color: var(--ink);
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-}
-.stock-delta button:active { background: var(--bg-soft); }
-.stock-delta-val { text-align: center; font-size: 1.5rem; font-weight: 600; color: var(--ink-3); }
-.stock-delta-val.plus { color: var(--ok); }
-.stock-delta-val.minus { color: var(--accent-ink); }
-
-.stock-powod { display: grid; gap: 6px; }
-.stock-powod select {
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-sm);
-  background: var(--surface);
-  color: var(--ink);
-  font: inherit;
-}
-.stock-podglad { margin: 0; text-align: center; color: var(--ink-2); }
-.stock-podglad strong { color: var(--ink); font-size: 1.125rem; }
-.stock-error { margin: 0; color: var(--accent-ink); font-size: .875rem; }
-
-/* ---------- Magazyn: skaner ---------- */
-.skan { display: grid; gap: 14px; }
-
-.skan-okno {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  border-radius: var(--r);
-  overflow: hidden;
-  background: var(--img);
-  border: 1px solid var(--line);
-}
-.skan-okno video { width: 100%; height: 100%; object-fit: cover; }
-
-.skan-zaslona { position: absolute; inset: 0; display: grid; place-items: center; color: var(--img-line); }
-.skan-zaslona svg { width: 22%; height: auto; }
-
-/* Ramka celownika. Kod trafia w kadr łatwiej, gdy widać, gdzie go przyłożyć. */
-.skan-celownik {
-  position: absolute;
-  inset: 22% 10%;
-  border: 2px solid var(--accent);
-  border-radius: var(--r-sm);
-  box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--ink) 34%, transparent);
-}
-
-.skan-info { margin: 0; color: var(--ink-2); font-size: .9375rem; text-align: center; }
-.skan-cta { height: 56px; }
-
-.skan-wynik {
-  display: grid;
-  gap: 10px;
-  padding: 18px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: var(--surface);
-  text-align: center;
-}
-.skan-wynik-brak { border-color: var(--accent); }
-.skan-nazwa { margin: 0; font-size: 1.25rem; }
-.skan-kod { margin: 0; font-family: var(--mono); font-size: .8125rem; color: var(--ink-3); letter-spacing: .06em; }
-.skan-stan { margin: 4px 0; color: var(--ink-2); }
-.skan-stan strong { font-size: 1.75rem; color: var(--ink); }
-
-/* Dwa duże cele — przy skanowaniu obsługa idzie jednym kciukiem. */
-.skan-korekta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.skan-korekta button {
-  height: 60px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-pill);
-  background: var(--surface);
-  color: var(--ink);
-  font-size: 1.25rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.skan-korekta button:active { background: var(--bg-soft); }
-
 /* ---------- Widok wewnątrz natywnej powłoki ----------
    Aplikacja rysuje własny pasek zakładek na dole, więc ten z HTML-u znika.
    Reszta reguł ścina zachowania, po których widać przeglądarkę: zaznaczanie
    tekstu przy przytrzymaniu, menu kontekstowe na linkach, podświetlenie
    tapnięcia i sprężynowanie przy krawędzi. */
-.w-aplikacji .mag-nav { display: none; }
-
-.w-aplikacji body,
-.w-aplikacji .magazyn {
+.w-aplikacji body {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: contain;
-}
-
-/* Numery zamówień i kody trzeba dać się skopiować — to jedyne miejsca,
-   gdzie zaznaczanie ma sens. */
-.w-aplikacji .pack-nr,
-.w-aplikacji .skan-kod,
-.w-aplikacji .pack-meta dd {
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-/* Nagłówek widoku bliżej góry: pasek stanu telefonu daje już oddech, a
-   każdy piksel wysokości to jedna pozycja więcej na liście. */
-.w-aplikacji .magazyn { padding-block: 12px 24px; }
-.w-aplikacji .magazyn-top h1 { font-size: 30px; }
-
-/* ---------- Treść w powłoce: konwencje iOS ----------
-   Poza paskiem zakładek o „stronie" zdradzały trzy rzeczy: szeryfowy
-   nagłówek, karty pływające na tle z marginesem dookoła oraz nadtytuł
-   powtarzający to, co i tak pisze na zakładce. */
-
-/* Krój systemowy. San Francisco na iOS wygląda jak wszystko inne na tym
-   telefonie — a to jest cała różnica między aplikacją a witryną. */
-.w-aplikacji .magazyn,
-.w-aplikacji .magazyn h1,
-.w-aplikacji .magazyn h2 {
-  font-family: -apple-system, BlinkMacSystemFont, var(--sans);
-}
-.w-aplikacji .magazyn h1 {
-  font-size: 34px;
-  font-weight: 700;
-  letter-spacing: -.022em;
-  line-height: 1.1;
-}
-
-/* Nadtytuł „MAGAZYN" znika: zakładka na dole mówi to samo, tylko czytelniej. */
-.w-aplikacji .magazyn-top .label { display: none; }
-.w-aplikacji .magazyn-top { margin-bottom: 16px; }
-.w-aplikacji .magazyn-licznik { margin-top: 2px; font-size: .9375rem; }
-
-/* Lista grupowana zamiast kart z odstępami: rzędy stykają się, rozdziela je
-   hairline, a zaokrąglenie zostaje tylko na krawędziach grupy. Tak wyglądają
-   listy w Ustawieniach i w każdej aplikacji trzymającej się konwencji. */
-.w-aplikacji .magazyn { padding-inline: 0; }
-.w-aplikacji .magazyn-top,
-.w-aplikacji .magazyn-pusto { margin-inline: var(--gutter); }
-
-.w-aplikacji .stock-lista,
-.w-aplikacji .magazyn-lista {
-  gap: 0;
-  border-block: 1px solid var(--line);
-  background: var(--surface);
-}
-.w-aplikacji .stock-row,
-.w-aplikacji .pack {
-  border: 0;
-  border-radius: 0;
-  border-bottom: 1px solid var(--line);
-  background: transparent;
-}
-.w-aplikacji .stock-row:last-child,
-.w-aplikacji .pack:last-child { border-bottom: 0; }
-
-.w-aplikacji .stock-head,
-.w-aplikacji .pack-head { padding-inline: var(--gutter); }
-.w-aplikacji .stock-edit,
-.w-aplikacji .pack-body,
-.w-aplikacji .pack-warn,
-.w-aplikacji .stock-flag { padding-inline: var(--gutter); }
-
-/* Pasek zakładek zasłaniałby ostatni wiersz. Bez tego zapasu ostatnia paczka
-   w kolejce jest zawsze tą, do której nie da się dosięgnąć. */
-.w-aplikacji .magazyn { padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
-
-/* Skaner dostaje pełną szerokość kadru — obraz z kamery na marginesie
-   wygląda jak osadzony film, a ma wyglądać jak celownik. */
-.w-aplikacji .skan { padding-inline: var(--gutter); }
-.w-aplikacji .skan-okno { margin-inline: calc(var(--gutter) * -1); border-radius: 0; border-inline: 0; }
-
-/* Oznaczenie braków przetrwało w liście grupowanej: pasek wraca przy lewej
-   krawędzi rzędu. Bez niego widok stanów traci to, po co się go otwiera. */
-.w-aplikacji .stock-brak { border-left: 3px solid var(--accent); }
-.w-aplikacji .stock-niski { border-left: 3px solid var(--ink-3); }
-.w-aplikacji .stock-brak .stock-head,
-.w-aplikacji .stock-niski .stock-head { padding-left: calc(var(--gutter) - 3px); }
-
-/* Podpowiedź instalacji dotyczy skrótu w Safari. W natywnej powłoce jest
-   bezsensowna — użytkownik już jest w aplikacji. */
-.w-aplikacji .install-hint { display: none; }
-
-/* Przycisk akcji w liście grupowanej: wcięty, z zaokrągleniem, zamiast pasa
-   na całą szerokość. Pas rozcinał listę na kawałki i przy przewijaniu
-   wyglądał jak koniec sekcji, a nie jak akcja dla jednego zamówienia. */
-.w-aplikacji .pack-cta {
-  height: 48px;
-  margin: 0 var(--gutter) 14px;
-  width: calc(100% - var(--gutter) * 2);
-  border-radius: var(--r-pill);
 }
 
 /* Krój systemowy obowiązuje w całej powłoce, nie tylko w magazynie —
@@ -3616,206 +3157,6 @@ code {
    przed wejściem — nie ma czego rozróżniać. */
 .w-aplikacji .auth .label { display: none; }
 
-/* ==========================================================================
-   Powłoka: charakter przyrządu
-
-   Magazyn to narzędzie pracy, nie witryna — ma się czytać jak wyświetlacz
-   skanera, a nie jak karta produktu. Charakter budujemy trzema rzeczami,
-   wszystkie już są w systemie: krojem maszynowym na każdej zmiennej
-   wartości, wpuszczonymi polami odczytu zamiast płaskiego tekstu oraz
-   kontrolkami stanu zamiast opisów słownych.
-
-   Czego tu nie ma i nie będzie: gradientów, neonów i kolorowych cieni.
-   „Gadżeciarsko" robi się typografią i światłem, nie świeceniem — a paleta
-   zostaje ta sama co w sklepie, więc obie skóry pozostają jedną rodziną.
-   ========================================================================== */
-
-/* ---------- Odczyty: wszystko, co się zmienia, jedzie maszynowym ---------- */
-.w-aplikacji .stock-count,
-.w-aplikacji .pack-nr,
-.w-aplikacji .skan-kod,
-.w-aplikacji .stock-delta-val,
-.w-aplikacji .stock-podglad,
-.w-aplikacji .magazyn-licznik,
-.w-aplikacji .skan-stan strong {
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: .02em;
-}
-
-/* Stan na wyświetlaczu: liczba wpuszczona w pole, nie postawiona na tle.
-   Wcięcie robi z niej wskazanie przyrządu — wzrok trafia w nie od razu
-   przy przewijaniu listy kciukiem. */
-.w-aplikacji .stock-count {
-  min-width: 52px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-sunken);
-  border: 1px solid var(--line);
-  text-align: center;
-  font-size: 1.0625rem;
-  font-weight: 600;
-}
-.w-aplikacji .stock-brak .stock-count {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-
-/* ---------- Kontrolka stanu zamiast paska przy krawędzi ----------
-   Pasek z boku ginął w liście grupowanej, bo rzędy stykają się bokami.
-   Dioda przy nazwie czyta się jak lampka na urządzeniu i nie zabiera
-   szerokości wierszowi. */
-.w-aplikacji .stock-brak,
-.w-aplikacji .stock-niski { border-left: 0; }
-.w-aplikacji .stock-brak .stock-head,
-.w-aplikacji .stock-niski .stock-head { padding-left: var(--gutter); }
-
-/* Dioda dokłada trzecie dziecko do rzędu, a ten rozdzielał miejsce równo
-   między wszystkie — nazwa lądowała na środku. Niech zabiera resztę
-   szerokości, wtedy odczyt zostaje przy prawej krawędzi. */
-.w-aplikacji .stock-name { flex: 1; }
-
-.w-aplikacji .stock-row .stock-head::before {
-  content: "";
-  flex: none;
-  width: 7px;
-  height: 7px;
-  margin-right: 2px;
-  border-radius: 50%;
-  background: var(--ok);
-  /* Otoczka w kolorze diody, nie cień — cień kolorowy jest poza paletą,
-     a pierścień daje ten sam efekt lampki pod szkłem. */
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent);
-}
-.w-aplikacji .stock-niski .stock-head::before {
-  background: var(--ink-3);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink-3) 22%, transparent);
-}
-.w-aplikacji .stock-brak .stock-head::before {
-  background: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 26%, transparent);
-}
-
-/* ---------- Kadr skanera: celownik z narożników ----------
-   Pełna ramka zamykała obraz jak zdjęcie w passe-partout. Cztery narożniki
-   zostawiają kadr otwarty i wyglądają jak podgląd z czytnika. */
-.w-aplikacji .skan-okno {
-  aspect-ratio: 1 / 1;
-  background: var(--bg-sunken);
-}
-.w-aplikacji .skan-celownik {
-  inset: 18% 12%;
-  border: 0;
-  border-radius: 0;
-  /* Przyciemnienie pola poza kadrem zostaje — bez niego celownik gubi się
-     na jasnym obrazie z kamery. */
-  box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--ink) 38%, transparent);
-}
-/* Klamry u góry i u dołu, boki otwarte. Kod kreskowy jest szerszy niż
-   wyższy, więc to te dwie krawędzie mówią, gdzie go przyłożyć — pełna
-   ramka tylko zamykałaby obraz. */
-.w-aplikacji .skan-celownik::before,
-.w-aplikacji .skan-celownik::after {
-  content: "";
-  position: absolute;
-  left: -2px; right: -2px;
-  height: 26px;
-  border: 2px solid var(--accent);
-}
-.w-aplikacji .skan-celownik::before {
-  top: -2px;
-  border-bottom: 0;
-  border-radius: 6px 6px 0 0;
-}
-.w-aplikacji .skan-celownik::after {
-  bottom: -2px;
-  border-top: 0;
-  border-radius: 0 0 6px 6px;
-}
-
-/* Smuga odczytu — jedyny ruch w tym widoku; mówi wprost, że urządzenie
-   pracuje. Element ma wysokość całego kadru, a widoczna jest wyłącznie
-   jego górna krawędź: dzięki temu `translate` w procentach przesuwa
-   kreskę przez cały kadr, a nie o własne dwa piksele. Ruch idzie na
-   `translate`, więc nie rusza układu. */
-@keyframes skan-smuga {
-  from { translate: 0 0; }
-  to   { translate: 0 calc(100% - 2px); }
-}
-.w-aplikacji .skan-okno:has(.skan-celownik)::after {
-  content: "";
-  position: absolute;
-  left: 12%; right: 12%;
-  top: 18%;
-  height: 64%;
-  border-top: 2px solid var(--accent);
-  opacity: .8;
-  animation: skan-smuga 2.4s cubic-bezier(.4, 0, .6, 1) infinite alternate;
-}
-@media (prefers-reduced-motion: reduce) {
-  /* Nieruchoma smuga jest tylko kreską w poprzek kadru — bez ruchu nic
-     nie wnosi, więc znika w całości zamiast zastygać w losowym miejscu. */
-  .w-aplikacji .skan-okno:has(.skan-celownik)::after { display: none; }
-}
-
-/* ---------- Wynik odczytu jako wyświetlacz ----------
-   Panel wpuszczony w tło, wyrównany do lewej: tak wygląda odczyt na
-   urządzeniu. Wyśrodkowanie zostawiamy komunikatom, nie danym. */
-.w-aplikacji .skan-wynik {
-  text-align: left;
-  padding: 16px;
-  background: var(--bg-sunken);
-  border-radius: var(--radius);
-}
-.w-aplikacji .skan-wynik .label { display: block; }
-.w-aplikacji .skan-nazwa { font-size: 1.0625rem; font-weight: 600; letter-spacing: -.01em; }
-.w-aplikacji .skan-kod {
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  justify-self: start;
-  color: var(--ink-2);
-}
-/* Stan po odczycie to główna liczba na ekranie — dostaje wielkość
-   wskazania, nie akapitu. */
-.w-aplikacji .skan-stan {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin: 6px 0 2px;
-}
-.w-aplikacji .skan-stan strong { font-size: 2.25rem; line-height: 1; font-weight: 600; }
-.w-aplikacji .skan-wynik-brak { background: var(--accent-soft); }
-.w-aplikacji .skan-wynik-brak .skan-info { text-align: left; }
-
-/* ---------- Numer zamówienia jak etykieta na paczce ---------- */
-.w-aplikacji .pack-nr {
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: var(--bg-sunken);
-  border: 1px solid var(--line);
-  font-size: .8125rem;
-}
-
-/* Podgląd korekty: to wskazanie, a nie zdanie — dostaje wpuszczone pole
-   na całą szerokość, żeby dało się je odczytać bez czytania. */
-.w-aplikacji .stock-podglad {
-  padding: 10px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-sunken);
-  border: 1px solid var(--line);
-}
-
-/* Najsłabszy stopień tuszu jest liczony pod tło strony, nie pod wpuszczone
-   pole — na `--bg-sunken` schodzi do 4.2:1 w obu motywach. Wszystko, co
-   wylądowało na wpuszczonym tle, dostaje stopień wyżej. Dotyczy to samych
-   etykiet i numerów, więc różnicy w hierarchii nie widać. */
-.w-aplikacji .pack-nr,
-.w-aplikacji .stock-podglad,
-.w-aplikacji .skan-wynik .label {
-  color: var(--ink-2);
-}
 
 /* ==========================================================================
    Magazyn — aplikacja
@@ -3875,13 +3216,42 @@ code {
   --wypelnienie: rgba(118, 118, 128, .12);
   --etykieta: #000000;
   --etykieta-2: rgba(60, 60, 67, .6);
+  /* Czwarty stopień, którego w systemie Apple nie ma, i to jest świadome
+     odstępstwo. `secondaryLabel` na 60% daje na karcie 3,44:1 i na tle listy
+     3,29:1 — u Apple niesie podpisy, u nas trafiał też na opisy pozycji
+     i meta zamówienia, czyli na treść, którą magazynier czyta, żeby wiedzieć,
+     co spakować. W rękawicy, przy regale, pod magazynową lampą.
+
+     73% daje 4,85:1 i 4,60:1. Bierze to `--ink-2` i `--ink-soft`, czyli
+     wszystko, co się czyta; `--ink-3` zostaje przy sześćdziesięciu procentach
+     razem z podpisami, jednostkami i placeholderami, gdzie wartość systemowa
+     jest na miejscu. */
+  --etykieta-2-mocna: rgba(60, 60, 67, .73);
   --etykieta-3: rgba(60, 60, 67, .3);
   --sep: rgba(60, 60, 67, .29);
-  --tint: #9c6644;
+  /* Sienna z makiety to #9c6644 i tyle zostaje w charakterze — ale na tle
+     listy dawała 4,28:1, czyli tuż pod progiem, a to na nim leży odsyłacz
+     „Przejdź do sklepu" i podpisy pod przyciskami. Trzy procent ciemniej
+     wystarczy: 4,50:1 na tle listy, 5,02:1 na karcie i tyle samo dla bieli
+     na wypełnieniu. Różnicy nie widać na oko, widać ją w pomiarze. */
+  --tint: #976342;
   --tint-miekki: rgba(156, 102, 68, .12);
   --zielony: #34c759;
   --pomaranczowy: #ff9500;
   --czerwony: #ff3b30;
+  /* systemRed daje jako litery 3,55:1 — ten sam zabieg co przy zieleni. */
+  --czerwony-tekst: #d13027;
+
+  /* Zieleń systemowa świeci i to jest w niej dobre — na diodzie i na
+     wypełnieniu widać ją z drugiego końca stołu pakowego. Jako litery daje
+     2,22:1 na karcie, więc dodatnia korekta stanu była nieczytelna.
+     Ten sam odcień przyciemniony do 4,56:1 nosi tekst; `--zielony` zostaje
+     przy kształtach, gdzie próg 3:1 dotyczy tylko elementów niosących
+     treść samodzielnie.
+
+     Sklep przeszedł to samo rundę wcześniej — tam `--ok` to #00c758,
+     a `--ok-ink` #007138. */
+  --zielony-tekst: #23873d;
 
   /* przemapowanie na nazwy, po które sięgają reguły `.mag-*` */
   --bg: var(--tlo);
@@ -3890,11 +3260,10 @@ code {
   --bg-sunken: var(--karta-2);
   --bg-soft: var(--karta-2);
   --ink: var(--etykieta);
-  --ink-2: var(--etykieta-2);
+  --ink-2: var(--etykieta-2-mocna);
   --ink-3: var(--etykieta-2);
-  --ink-soft: var(--etykieta-2);
+  --ink-soft: var(--etykieta-2-mocna);
   --ink-faint: var(--etykieta-3);
-  --etykieta-kolor: var(--etykieta-2);
   --line: var(--sep);
   --line-strong: var(--sep);
   --img-line: var(--etykieta-3);
@@ -3905,8 +3274,9 @@ code {
   --btn-ink: #ffffff;
   --na-akcencie: #ffffff;
   --ok: var(--zielony);
-  --ok-ink: var(--zielony);
+  --ok-ink: var(--zielony-tekst);
   --uwaga: var(--pomaranczowy);
+  --blad: var(--czerwony-tekst);
 
   /* Promienie z makiety: kafel 12, karta 14, pigułka. iOS nie ma ostrych
      narożników i nie ma jednego promienia do wszystkiego. */
@@ -3919,30 +3289,22 @@ code {
 
   --mag-gutter: clamp(12px, 4vw, 24px);
   --mag-maxw: 34rem;
-  --oddech-mag: 26px;
-  --czerwony-miekki: rgba(255, 59, 48, .1);
 
-  /* Skala typograficzna ze specyfikacji makiety — wartosci wiazace.
-     Nazwy mowia o roli, bo ten sam stopien niesie rozne rzeczy: 17 px jest
-     i wierszem listy, i wartoscia liczbowa, tylko waga je rozroznia. */
+  /* Skala typograficzna magazynu — tylko te stopnie, po ktore arkusz
+     naprawde siega. Nazwy mowia o roli, bo ten sam stopien niesie rozne
+     rzeczy: 17 px jest i wierszem listy, i wartoscia liczbowa, tylko waga
+     je rozroznia.
+
+     Pelna skala z makiety stoi w docs/makieta-magazyn/specyfikacja.md.
+     Wykonanie w kilku miejscach od niej odeszlo — kafel „Dzisiaj" ma 26 px
+     zamiast 32, korekta 44 zamiast 60 — i trzymanie tamtych liczb tutaj
+     jako martwych zmiennych mowiloby, ze arkusz ich pilnuje. Nie pilnuje. */
   --t-ekran: 34px;      /* tytul ekranu, 700, -.028em, lh 1.1 */
   --t-karta: 28px;      /* tytul karty i ekranow auth, 700, -.026em */
-  --t-arkusz: 20px;     /* naglowek arkusza skanera, 680, -.024em */
   --t-wiersz: 17px;     /* wiersz listy, pole, przycisk glowny */
   --t-pomoc: 15px;      /* tekst pomocniczy, etykieta pola */
   --t-podpis: 13px;     /* podpis, meta, naglowek sekcji */
-  --t-plakietka: 12px;  /* numer w liscie, plakietki, 590, .02em */
-  --t-chip: 11px;
-  --t-zakladka: 10px;
-  --t-korekta: 60px;    /* liczba w korekcie, 680, -.04em */
-  --t-kafel: 32px;      /* liczba w kaflu „Dzisiaj", 680, -.03em */
 
-  /* Presety sprezyn — jeden zestaw na aplikacje. Trzymane jako zmienne,
-     zeby komponenty Motion siegaly po te same liczby co arkusz. */
-  --sprezyna-snap: 1218 70;
-  --sprezyna-ui: 305 33;
-  --sprezyna-gentle: 110 20;
-  --krzywa-mag: cubic-bezier(.32, .72, 0, 1);
 
   container: magazyn / inline-size;
   padding-inline: 0;
@@ -3960,6 +3322,9 @@ code {
   --wypelnienie: rgba(118, 118, 128, .24);
   --etykieta: #ffffff;
   --etykieta-2: rgba(235, 235, 245, .6);
+  /* Na czarnej karcie sześćdziesiąt procent daje 5,94:1 — próg wzięty
+     z zapasem, więc czwarty stopień nie ma tu czego poprawiać. */
+  --etykieta-2-mocna: var(--etykieta-2);
   --etykieta-3: rgba(235, 235, 245, .3);
   --sep: rgba(84, 84, 88, .65);
   --tint: #cf9a72;
@@ -3967,10 +3332,13 @@ code {
   --zielony: #30d158;
   --pomaranczowy: #ff9f0a;
   --czerwony: #ff453a;
+  --czerwony-tekst: var(--czerwony);
+  /* Na czarnej karcie zieleń systemowa daje 8,42:1 i nie potrzebuje korekty
+     pod litery — przyciemnianie zabrałoby tu czytelność, nie dodało. */
+  --zielony-tekst: var(--zielony);
   --btn-ink: #000000;
   --na-akcencie: #000000;
 }
-
 
 /* Powłoka: przyrząd. Kadr od krawędzi do krawędzi, systemowy krój, własne
    tło i cała wysokość ekranu — tu magazyn nie jest podstroną, tylko całą
@@ -4000,12 +3368,20 @@ code {
   --karta-2: #f2f2f7;
   --etykieta: #000000;
   --etykieta-2: rgba(60, 60, 67, .6);
+  --etykieta-2-mocna: rgba(60, 60, 67, .73);
   --etykieta-3: rgba(60, 60, 67, .3);
   --sep: rgba(60, 60, 67, .29);
-  --tint: #9c6644;
+  --tint: #976342;
   --tint-miekki: rgba(156, 102, 68, .12);
   --btn-ink: #ffffff;
   --na-akcencie: #ffffff;
+  /* Barwy stanu też, bo bez nich wyłamanie brało je z motywu systemu:
+     zieleń z ciemnego bloku dawała na białej karcie 1,9:1. */
+  --zielony: #34c759;
+  --zielony-tekst: #23873d;
+  --pomaranczowy: #ff9500;
+  --czerwony: #ff3b30;
+  --czerwony-tekst: #d13027;
 }
 .mag.motyw-ciemny {
   --tlo: #000000;
@@ -4013,12 +3389,22 @@ code {
   --karta-2: #2c2c2e;
   --etykieta: #ffffff;
   --etykieta-2: rgba(235, 235, 245, .6);
+  /* Na czarnej karcie sześćdziesiąt procent daje 5,94:1 — próg wzięty
+     z zapasem, więc czwarty stopień nie ma tu czego poprawiać. */
+  --etykieta-2-mocna: var(--etykieta-2);
   --etykieta-3: rgba(235, 235, 245, .3);
   --sep: rgba(84, 84, 88, .65);
   --tint: #cf9a72;
   --tint-miekki: rgba(207, 154, 114, .18);
   --btn-ink: #000000;
   --na-akcencie: #000000;
+  /* Jak wyżej, w drugą stronę: zieleń i czerwień z bloku jasnego dawały
+     na czarnej karcie 3,73:1 i 3,37:1. */
+  --zielony: #30d158;
+  --zielony-tekst: var(--zielony);
+  --pomaranczowy: #ff9f0a;
+  --czerwony: #ff453a;
+  --czerwony-tekst: var(--czerwony);
 }
 
 .w-aplikacji .mag {
@@ -4144,7 +3530,6 @@ code {
   font-variant-numeric: tabular-nums;
 }
 
-/* Nagłówek sekcji: maszynowy, kapitaliki, ton drugorzędny. */
 /* Nagłówek sekcji w idiomie iOS: 13 px, waga zwykła, bez wersalików i bez
    rozstrzelenia. Tam nadtytuł nie krzyczy — jest cichym podpisem grupy,
    a hierarchię niesie odstęp nad nim, nie wielkość liter.
@@ -4374,7 +3759,6 @@ code {
 /* Neutralna, nie alarmowa: tym samym stylem jedzie liczba przy pozycji, która
    nikogo nie woła do działania. Nazwa mówi o wyglądzie, bo znaczenie zależy
    od ekranu — patrz komentarz przy diodach niżej. */
-.mag-odczyt-neutralny { color: var(--ink-3); }
 
 /* Brak na stanie. Najmocniejszy stan w magazynie, więc najmocniejszy kontrast —
    nie kolor. Paleta jest monochromatyczna, czerwieni w niej nie ma i nie
@@ -4632,10 +4016,14 @@ code {
 
 /* Komunikat błędu siedzi przy przycisku, nie w okienku — okienko zabiera
    ekran i nie mówi, czego dotyczy. */
+/* Komunikat błędu jechał `--accent-ink`, czyli sienną — tym samym kolorem,
+   co przyciski, odsyłacze i licznik przy zakładce. „Nie udało się zapisać"
+   wyglądało wtedy jak kolejny element sterujący, a nie jak coś, co poszło
+   nie tak. Czerwień systemowa jest w palecie od początku i do tego służy. */
 .mag-blad {
   margin: 0;
   font-size: 13px;
-  color: var(--accent-ink);
+  color: var(--blad);
   text-align: center;
 }
 
@@ -4873,7 +4261,6 @@ code {
 
 /* Wiersz historii nie prowadzi dalej niż do karty produktu, ale w makiecie
    nie ma szewronu — ruch jest zapisem, nie pozycją do otwarcia. */
-.mag-wiersz-ruch { cursor: default; }
 
 /* ---------- Skaner ---------- */
 .mag-skan { margin: 12px var(--mag-gutter) 0; }
@@ -5194,6 +4581,59 @@ code {
 .mag-sheet-pole::placeholder { font-family: inherit; letter-spacing: 0; color: var(--ink-3); }
 
 .mag-sheet-kadr { margin: 12px 0 0; }
+
+/* Dwa przyciski obok siebie przy potwierdzeniu nieodwracalnej akcji.
+   Na wąskim ekranie schodzą pod siebie, żeby żaden nie zwęził się poniżej
+   celu dotyku. */
+.auth-actions-rzad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.auth-actions-rzad .btn { flex: 1 1 14ch; }
+
+/* ---------- Zgoda na regulamin w koszyku ----------
+   Cel dotyku obejmuje cały wiersz, nie sam kwadracik: zaznaczenie zgody na
+   telefonie nie może wymagać trafienia w 16 pikseli. Stąd `label` jako siatka
+   i `align-items: start` — przy dwuwierszowym tekście kwadracik ma zostać
+   przy pierwszej linii, a nie odjechać na środek. */
+.zgoda {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  margin-top: 22px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  font-size: .875rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.zgoda:hover { border-color: var(--line-strong); }
+.zgoda input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+  /* Kwadracik siada na linii pisma pierwszego wiersza, nie nad nim. */
+  margin-top: 1px;
+}
+.zgoda a { text-decoration: underline; text-underline-offset: 2px; }
+.zgoda input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Klauzula informacyjna. Stopień niżej niż zgoda, bo to jest do przeczytania
+   raz, a nie do potwierdzenia — ale nie chowamy jej za odnośnikiem, bo
+   obowiązek informacyjny ma być spełniony w chwili zbierania danych. */
+.zgoda-klauzula {
+  margin: 10px 2px 0;
+  font-size: .8125rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
 
 /* ---------- Panel właściciela ---------- */
 /* Biurko, nie telefon: tabele, kwoty do prawej, filtry w jednym rzędzie.
