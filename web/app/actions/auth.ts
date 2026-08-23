@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
+import { sciezkaPowrotu } from '@/lib/sciezka-powrotu';
 
 /**
  * Logowanie, rejestracja i wylogowanie po stronie serwera.
@@ -17,7 +18,10 @@ export type AuthState = { error?: string; notice?: string };
 export async function signInAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
-  const back = String(formData.get('powrot') ?? '/konto');
+  // Adres powrotu przychodzi z ukrytego pola formularza, więc jest spod
+  // kontroli tego, kto podsunął link. Bez sprawdzenia `redirect()` odsyłał
+  // zalogowanego już gościa na obcą domenę.
+  const back = sciezkaPowrotu(formData.get('powrot'));
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
