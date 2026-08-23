@@ -59,6 +59,7 @@ test.describe('Ścieżka zakupu', () => {
     await page.getByLabel('Kod pocztowy').fill(dane.zip);
     await page.getByLabel('Miasto').fill(dane.city);
 
+    await page.getByRole('checkbox', { name: /regulamin/i }).check();
     await page.getByRole('button', { name: /Zamawiam i płacę/ }).click();
 
     await page.waitForURL(/\/zamowienie\/NOR-/, { timeout: CZAS_ZAMOWIENIA });
@@ -71,6 +72,31 @@ test.describe('Ścieżka zakupu', () => {
     // Koszyk odchodzi dopiero po udanym zamówieniu
     const koszyk = await page.evaluate(() => localStorage.getItem('shop.cart.v1'));
     expect(JSON.parse(koszyk ?? '[]')).toHaveLength(0);
+  });
+
+  test('bez zgody na regulamin zamówienie nie przechodzi', async ({ page }) => {
+    await dodajPierwszyDoKoszyka(page);
+    await page.goto('/koszyk');
+
+    const dane = gosc();
+    await page.getByLabel('Imię i nazwisko').fill(dane.name);
+    await page.getByLabel('E-mail').fill(dane.email);
+    await page.getByLabel('Telefon').fill(dane.phone);
+    await page.getByLabel('Ulica i numer').fill(dane.street);
+    await page.getByLabel('Kod pocztowy').fill(dane.zip);
+    await page.getByLabel('Miasto').fill(dane.city);
+
+    // Zgody celowo nie zaznaczamy. Przeglądarka zatrzyma formularz na `required`,
+    // więc sprawdzamy stan pola i to, że nie doszło do złożenia — adres się
+    // nie zmienił, a koszyk został nietknięty.
+    const zgoda = page.getByRole('checkbox', { name: /regulamin/i });
+    await expect(zgoda).not.toBeChecked();
+
+    await page.getByRole('button', { name: /Zamawiam i płacę/ }).click();
+
+    await expect(page).toHaveURL(/\/koszyk/);
+    const koszyk = await page.evaluate(() => localStorage.getItem('shop.cart.v1'));
+    expect(JSON.parse(koszyk ?? '[]').length).toBeGreaterThan(0);
   });
 
   test('koszyk ponad stan magazynowy blokuje zamówienie', async ({ page }) => {

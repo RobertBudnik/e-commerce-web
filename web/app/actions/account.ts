@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import { toOrder } from '@/lib/mappers';
 import type { OrderRow } from '@/lib/rows';
@@ -118,4 +119,30 @@ export async function cancelOrderAction(orderId: string): Promise<ActionResult<O
 
   revalidatePath('/konto');
   return { ok: true, data: toOrder((Array.isArray(data) ? data[0] : data) as OrderRow) };
+}
+
+/**
+ * Usunięcie własnego konta.
+ *
+ * Cała robota siedzi w `usun_moje_konto()` w bazie, bo kasowanie wiersza
+ * w `auth.users` jest poza zasięgiem roli zalogowanego, a anonimizacja
+ * zamówień musi stać się w jednej transakcji z usunięciem konta. Funkcja
+ * działa wyłącznie na koncie wywołującego — identyfikator nie jest
+ * parametrem, więc nie da się go podstawić.
+ *
+ * Zamówienia zostają jako dokument księgowy, ale bez danych osobowych:
+ * numer, pozycje i kwoty tak, adres i kontakt nie.
+ */
+export async function deleteAccountAction(): Promise<ActionResult<null>> {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc('usun_moje_konto');
+  if (error) return { ok: false, error: error.message };
+
+  // Sesja wskazuje na konto, którego już nie ma — bez tego przeglądarka
+  // zostaje z ciasteczkiem, które przy każdym żądaniu odbija się od Auth.
+  await supabase.auth.signOut();
+
+  revalidatePath('/', 'layout');
+  redirect('/?konto=usuniete');
 }

@@ -212,3 +212,15 @@ export const WARUNKI = {
   /** Zniżka za zapis do newslettera. Pusty tekst ukrywa całą sekcję. */
   rabatNewsletter: '',
 } as const;
+
+/**
+ * Wersja regulaminu i polityki prywatności.
+ *
+ * Zgoda klienta dotyczy konkretnego brzmienia dokumentu, nie jego nazwy —
+ * dlatego przy zamówieniu zapisujemy tę wartość, a nie samo „zgodził się".
+ * Bez niej przy reklamacji nie da się odtworzyć, na co klient przystał.
+ *
+ * **Podnieś ją przy każdej zmianie treści regulaminu albo polityki.**
+ * Format jest datą, żeby dało się ją posortować i porównać na oko.
+ */
+export const WERSJA_DOKUMENTOW = '2026-08-23';

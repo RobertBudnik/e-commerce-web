@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { Icon } from '@/components/Icon';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { ProfileForm } from './ProfileForm';
+import { UsunKonto } from '@/components/account/UsunKonto';
 import { ORDER_STATUSES, OrderRow } from './OrderRow';
 import { cancelOrderAction, setOrderStatusAction } from '@/app/actions/account';
 import { toast } from '@/components/ui/ToastHost';
@@ -289,6 +290,11 @@ export function AccountPanel({
                 przechowuje.
               </p>
             </div>
+            {/* Zaplecze usuwa się inną drogą — konto pracownika bywa podpisane
+                pod korektami stanu i zwrotami, więc jego kasowanie to decyzja
+                właściciela. Funkcja w bazie i tak odmówi, ale pokazywanie
+                przycisku, który zawsze odmawia, byłoby kłamstwem interfejsu. */}
+            {!staff && <UsunKonto />}
           </section>
         )}
       </div>

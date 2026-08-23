@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Metoda niedozwolona' }, 405);
 
   try {
-    const { items, email, phone, shipping_address, coupon } = await req.json();
+    const { items, email, phone, shipping_address, coupon, zgoda_wersja } = await req.json();
 
     if (!Array.isArray(items) || items.length === 0) {
       return json({ error: 'Koszyk jest pusty' }, 400);
@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
       p_phone: phone ?? null,
       p_shipping_address: shipping_address ?? null,
       p_coupon: coupon ?? null,
+      p_zgoda_wersja: zgoda_wersja ?? null,
     });
 
     if (error) return json({ error: error.message }, 400);

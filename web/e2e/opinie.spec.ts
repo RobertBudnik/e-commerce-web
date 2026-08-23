@@ -29,6 +29,7 @@ test.describe('Opinie', () => {
     await page.getByLabel('Ulica i numer').fill('Krucza 12/4');
     await page.getByLabel('Kod pocztowy').fill('00-001');
     await page.getByLabel('Miasto').fill('Warszawa');
+    await page.getByRole('checkbox', { name: /regulamin/i }).check();
     await page.getByRole('button', { name: /Zamawiam i płacę/ }).click();
     await page.waitForURL(/\/zamowienie\/NOR-/, { timeout: CZAS_ZAMOWIENIA });
 

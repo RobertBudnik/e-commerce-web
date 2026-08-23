@@ -4582,6 +4582,59 @@ code {
 
 .mag-sheet-kadr { margin: 12px 0 0; }
 
+/* Dwa przyciski obok siebie przy potwierdzeniu nieodwracalnej akcji.
+   Na wąskim ekranie schodzą pod siebie, żeby żaden nie zwęził się poniżej
+   celu dotyku. */
+.auth-actions-rzad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.auth-actions-rzad .btn { flex: 1 1 14ch; }
+
+/* ---------- Zgoda na regulamin w koszyku ----------
+   Cel dotyku obejmuje cały wiersz, nie sam kwadracik: zaznaczenie zgody na
+   telefonie nie może wymagać trafienia w 16 pikseli. Stąd `label` jako siatka
+   i `align-items: start` — przy dwuwierszowym tekście kwadracik ma zostać
+   przy pierwszej linii, a nie odjechać na środek. */
+.zgoda {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  margin-top: 22px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  font-size: .875rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.zgoda:hover { border-color: var(--line-strong); }
+.zgoda input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+  /* Kwadracik siada na linii pisma pierwszego wiersza, nie nad nim. */
+  margin-top: 1px;
+}
+.zgoda a { text-decoration: underline; text-underline-offset: 2px; }
+.zgoda input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Klauzula informacyjna. Stopień niżej niż zgoda, bo to jest do przeczytania
+   raz, a nie do potwierdzenia — ale nie chowamy jej za odnośnikiem, bo
+   obowiązek informacyjny ma być spełniony w chwili zbierania danych. */
+.zgoda-klauzula {
+  margin: 10px 2px 0;
+  font-size: .8125rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
 /* ---------- Panel właściciela ---------- */
 /* Biurko, nie telefon: tabele, kwoty do prawej, filtry w jednym rzędzie.
    Aplikacja magazynu ma własny język (mag-*) i tamtego tu nie mieszamy —

@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { checkoutMessage } from '@/lib/checkout-message';
 import type { CartLine } from '@/lib/types';
+import { WERSJA_DOKUMENTOW } from '@/lib/dane-sklepu';
 
 export type CheckoutInput = {
   lines: CartLine[];
@@ -13,6 +14,8 @@ export type CheckoutInput = {
   street: string;
   zip: string;
   city: string;
+  /** Czy klient zaznaczył zgodę na regulamin i przyjął klauzulę informacyjną. */
+  zgoda: boolean;
 };
 
 export type CheckoutResult =
@@ -45,6 +48,13 @@ export async function checkoutAction(input: CheckoutInput): Promise<CheckoutResu
   if (!input.city.trim()) return { ok: false, error: 'Podaj miasto.' };
   if (!KOD_POCZTOWY.test(zip)) return { ok: false, error: 'Kod pocztowy w formacie 00-001.' };
 
+  // Zgoda jest warunkiem zawarcia umowy, więc sprawdzamy ją tak samo jak adres:
+  // po stronie serwera. Baza odmówi i tak, ale komunikat z `create_order`
+  // mówiłby o wersji dokumentu, a nie o niezaznaczonym polu.
+  if (!input.zgoda) {
+    return { ok: false, error: 'Zaznacz zgodę na regulamin i politykę prywatności.' };
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -53,6 +63,8 @@ export async function checkoutAction(input: CheckoutInput): Promise<CheckoutResu
       email: input.email,
       phone: input.phone || null,
       coupon: input.coupon,
+      // Wersja, nie „true" — zgoda dotyczy konkretnego brzmienia dokumentu.
+      zgoda_wersja: WERSJA_DOKUMENTOW,
       shipping_address: {
         recipient: input.name.trim(),
         street: input.street.trim(),

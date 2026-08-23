@@ -83,6 +83,7 @@ export function CartPage({ defaults }: { defaults: Defaults }) {
         street: String(form.get('street') ?? ''),
         zip: String(form.get('zip') ?? ''),
         city: String(form.get('city') ?? ''),
+        zgoda: form.get('zgoda') === 'on',
       });
 
       if (!result.ok) {
@@ -251,6 +252,34 @@ export function CartPage({ defaults }: { defaults: Defaults }) {
               />
             </div>
           </div>
+
+          {/* Zgoda jest warunkiem zawarcia umowy, więc stoi nad przyciskiem,
+              a nie w stopce formularza. Pole jest puste na starcie — zgoda
+              zaznaczona domyślnie nie jest zgodą. Odnośniki otwierają się
+              w nowej karcie, żeby nikt nie tracił wypełnionego formularza,
+              zaglądając do regulaminu. */}
+          <label className="zgoda">
+            <input type="checkbox" name="zgoda" required />
+            <span>
+              Zamawiam i akceptuję{' '}
+              <a href="/informacje/regulamin" target="_blank" rel="noopener noreferrer">
+                regulamin
+              </a>
+              {' '}oraz przyjmuję do wiadomości{' '}
+              <a href="/informacje/polityka-prywatnosci" target="_blank" rel="noopener noreferrer">
+                politykę prywatności
+              </a>
+              .
+            </span>
+          </label>
+
+          <p className="zgoda-klauzula">
+            Twoje dane przetwarzamy, żeby zrealizować zamówienie i wypełnić
+            obowiązki podatkowe. Podanie ich jest dobrowolne, ale bez nich nie
+            wyślemy paczki. Masz prawo do wglądu, sprostowania, usunięcia
+            i przeniesienia swoich danych — szczegóły i dane administratora
+            znajdziesz w polityce prywatności.
+          </p>
 
           {error && (
             <p className="notice notice-error" role="alert">
