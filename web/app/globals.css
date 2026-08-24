@@ -281,6 +281,35 @@
      interfejs, bo w tej bibliotece hierarchię niesie stopień i waga, nie
      zmiana pisma. `--mono` to Geist Mono i idzie wyłącznie pod liczby
      stojące w kolumnie. Subset latin-ext obowiązkowy — polskie znaki. */
+  /* ---------------------------------------------------------------------
+     Skala typograficzna z makiety (24.08.2026):
+
+       H1  32/40 Bold        H2  24/32 SemiBold     H3  20/28 SemiBold
+       Body 16/24 Regular    Small 14/20 Regular    Caption 12/16 Regular
+
+     Makieta podaje wartości stałe, bo opisuje jeden ekran. Serwis jest
+     responsywny, więc liczby z makiety są tu górnym krańcem — tym, co widać
+     na laptopie — a `clamp` schodzi z nich na telefonie. Dolne krańce nie
+     pochodzą z makiety i są dobrane tak, żeby nagłówek nie łamał się
+     w połowie słowa na 390 pt.
+
+     Stopnie bez ramp (`h3`, small, caption) zostają stałe: przy 20 px i niżej
+     płynna skala nie ma czego zmieniać, a wprowadza rozjazd między ekranami.
+     --------------------------------------------------------------------- */
+  --t-h1: clamp(1.625rem, 1.35rem + 1.4vw, 2rem);
+  --t-h2: clamp(1.25rem, 1.1rem + .75vw, 1.5rem);
+  --t-h3: 1.25rem;
+  --t-body: 1rem;
+  --t-small: .875rem;
+  --t-caption: .75rem;
+
+  --lh-h1: 1.25;
+  --lh-h2: 1.334;
+  --lh-h3: 1.4;
+  --lh-body: 1.5;
+  --lh-small: 1.43;
+  --lh-caption: 1.334;
+
   --sans: var(--font-sans), ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
   --display: var(--font-display), ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
   --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -337,8 +366,11 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--sans);
-  font-size: 15px;
-  line-height: 1.6;
+  /* 16/24 z makiety. Poprzednie 15/1.6 dawało wiersz o pikselu wyższy przy
+     mniejszym stopniu — makieta stawia na większe litero i ciaśniejszy
+     interlinia, i to jest różnica widoczna na całej stronie. */
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
   font-feature-settings: "cv05" 1, "ss01" 1, "tnum" 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -372,17 +404,16 @@ h1, h2 {
   font-optical-sizing: auto;
   letter-spacing: -.035em;
 }
-h1 { font-weight: 600; line-height: 1; }
-h2 { font-weight: 600; line-height: 1.1; }
-/* Rozstrzał skali robi tu wrażenie ceny. Nagłówek dwa razy większy od treści
-   czyta się jako katalog; cztery razy większy — jako marka. Dolna granica
-   zostaje nietknięta, bo na telefonie większy stopień zaczyna się łamać
-   w połowie słowa i wrażenie znika razem z czytelnością. */
-/* Podloga naglowkow zeszla o stopien. Na 390 pt `2rem` lamalo haslo
-   hero na cztery wiersze i spychalo przyciski pod zagiecie. */
-h1 { font-size: clamp(1.75rem, 1.15rem + 3.9vw, 4.25rem); }
-h2 { font-size: clamp(1.25rem, 1.05rem + 1.7vw, 2.4rem); }
-h3 { font-size: 1.05rem; letter-spacing: -.015em; }
+/* Wagi z makiety: H1 Bold, H2 i H3 SemiBold. */
+h1 { font-weight: 700; }
+h2 { font-weight: 600; }
+/* Stopnie i interlinie prosto z tokenów skali. Poprzednia runda szła do
+   4,25 rem na H1 i budowała wrażenie ceny rozstrzałem skali; makieta robi to
+   inaczej — trzyma nagłówki blisko treści, a hierarchię niesie waga i światło
+   dookoła. Rozstrzał wraca tylko w hero, i tylko tam. */
+h1 { font-size: var(--t-h1); line-height: var(--lh-h1); }
+h2 { font-size: var(--t-h2); line-height: var(--lh-h2); }
+h3 { font-size: var(--t-h3); line-height: var(--lh-h3); letter-spacing: -.015em; }
 
 /* Nagłówki użytkowe — panele, karty, szuflada — jadą `--sans`, nie
    `--display`. Dziś oba wskazują na Geista, więc różnicy nie widać;
@@ -394,9 +425,7 @@ h3 { font-size: 1.05rem; letter-spacing: -.015em; }
   letter-spacing: -.015em;
 }
 
-/* Trzeci stopień nagłówka w makiecie to nie mniejszy tytuł, tylko wersaliki
-   z szerokim rozstrzeleniem — tak podpisany jest sam szyld marki. */
-h3 { font-weight: 500; }
+h3 { font-weight: 600; }
 p { margin: 0 0 1em; }
 p:last-child { margin-bottom: 0; }
 
@@ -1222,7 +1251,7 @@ select:hover { border-color: var(--line-strong); }
 .product-media svg { width: 38%; height: auto; color: var(--img-line); }
 
 .product-info > * + * { margin-top: 18px; }
-.product-info h1 { margin: 6px 0 0; font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.25rem); }
+.product-info h1 { margin: 6px 0 0; font-size: var(--t-h1); }
 .product-price {
   font-size: 1.75rem;
   font-weight: 500;
@@ -1301,7 +1330,7 @@ select:hover { border-color: var(--line-strong); }
   padding-bottom: clamp(56px, 7vw, 88px);
 }
 .cart-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 28px; }
-.cart-head h1 { font-size: clamp(1.7rem, 1.3rem + 1.4vw, 2.25rem); margin: 0; }
+.cart-head h1 { font-size: var(--t-h1); margin: 0; }
 
 .cart-item {
   display: grid;
@@ -1751,7 +1780,7 @@ select {
   padding: clamp(40px, 6vw, 88px) var(--gutter);
 }
 .auth-form > div { width: 100%; max-width: 400px; }
-.auth-form h1 { font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.125rem); margin-bottom: .3em; }
+.auth-form h1 { font-size: var(--t-h1); margin-bottom: .3em; }
 .auth-form .lede { margin-bottom: 32px; }
 
 .tabs {
@@ -1855,7 +1884,7 @@ select {
   gap: 16px;
   padding-block: clamp(32px, 4vw, 48px) 32px;
 }
-.account-head h1 { margin: 0; font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.125rem); }
+.account-head h1 { margin: 0; font-size: var(--t-h1); }
 .account-head span { font-size: .875rem; color: var(--ink-faint); }
 
 .side-nav { display: grid; gap: 2px; position: sticky; top: calc(var(--header-h) + 24px); }
@@ -2677,7 +2706,7 @@ code {
 
 /* ---------- Strony informacyjne ---------- */
 .doc { max-width: 760px; padding-block: 48px 88px; }
-.doc h1 { margin: 6px 0 0; font-size: clamp(30px, 4vw, 44px); overflow-wrap: anywhere; }
+.doc h1 { margin: 6px 0 0; font-size: var(--t-h1); overflow-wrap: anywhere; }
 .doc-lead { margin: 14px 0 0; font-size: 1.0625rem; color: var(--ink-2); }
 
 .crumbs {
