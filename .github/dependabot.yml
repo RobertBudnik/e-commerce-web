@@ -33,6 +33,21 @@ updates:
           - '@supabase/*'
       dev:
         dependency-type: development
+    # Trzy paczki narzędziowe chodzą w parze z Nextem 15 i majorem wyżej
+    # rozwalają build. Sprawdzone: TypeScript 7 wywraca ładowanie
+    # `next.config.ts` („Cannot read properties of undefined (reading
+    # 'fileExists')"), przewraca `tsc` na imporcie CSS (TS2882) i wywala
+    # typescript-eslint komunikatem „does not support TS 7.0". ESLint 10
+    # z `eslint-config-next` 16 pada na `FlatCompat` (circular structure).
+    #
+    # Blokada zdejmowana ręcznie razem z podniesieniem Nexta do 16.
+    ignore:
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      - dependency-name: eslint-config-next
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
