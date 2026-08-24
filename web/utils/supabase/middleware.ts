@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { sessionCookieOptions } from './cookie-options';
+import { NAGLOWEK_CSP, NAGLOWEK_NONCE, losujNonce, politykaCsp } from '@/lib/csp';
 
 /**
  * Odświeżanie sesji przy każdym żądaniu. Bez tego access token wygasa i
@@ -18,6 +19,14 @@ export async function updateSession(request: NextRequest) {
   const naglowki = new Headers(request.headers);
   naglowki.set('x-nordo-path', request.nextUrl.pathname);
 
+  // Nonce losowany dla każdego żądania. Layout czyta go pod własną nazwą
+  // i podpina do skryptu motywu; Next wyłuskuje go z nagłówka polityki
+  // doklejonego do żądania i sam oznacza nim swoje wstawki.
+  const nonce = losujNonce();
+  const polityka = politykaCsp(nonce);
+  naglowki.set(NAGLOWEK_NONCE, nonce);
+  naglowki.set('Content-Security-Policy', polityka);
+
   let response = NextResponse.next({ request: { headers: naglowki } });
 
   const supabase = createServerClient(
@@ -30,7 +39,10 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
+          // Z `naglowki`, nie z surowego żądania: inaczej odpowiedź powstaje
+          // bez nonce'a i bez `x-nordo-path`, a dzieje się to wyłącznie przy
+          // odświeżeniu sesji — czyli rzadko i nie na każdym wejściu.
+          response = NextResponse.next({ request: { headers: naglowki } });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, sessionCookieOptions(options))
           );
@@ -50,8 +62,11 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/logowanie';
     url.searchParams.set('powrot', path);
-    return NextResponse.redirect(url);
+    const przekierowanie = NextResponse.redirect(url);
+    przekierowanie.headers.set(NAGLOWEK_CSP, polityka);
+    return przekierowanie;
   }
 
+  response.headers.set(NAGLOWEK_CSP, polityka);
   return response;
 }

@@ -12,6 +12,7 @@ import { SladKursora } from '@/components/ruch/SladKursora';
 import { OdsloniecieStopki } from '@/components/ruch/OdsloniecieStopki';
 import { WishlistProvider } from '@/components/product/WishlistProvider';
 import { headers } from 'next/headers';
+import { NAGLOWEK_NONCE } from '@/lib/csp';
 import { getSessionUser } from '@/lib/queries';
 import { MARKA } from '@/lib/dane-sklepu';
 import { siteUrl } from '@/lib/site';
@@ -146,6 +147,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // sklep, nie sam magazyn. Klient w aplikacji dostaje nawigację, koszyk
   // i konto; magazynier, wchodząc w `/magazyn`, dostaje przyrząd bez nich.
   const naglowki = await headers();
+  const nonce = naglowki.get(NAGLOWEK_NONCE) ?? undefined;
   const sciezka = naglowki.get('x-nordo-path') ?? '';
   const magazyn = sciezka.startsWith('/magazyn');
 
@@ -168,7 +170,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="pl" className={klasy} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: SKRYPT_MOTYWU }} />
+        {/* Nonce z middleware. Bez niego polityka odrzuci ten skrypt, a wraz
+            z nim zniknie jedyne, co ratuje przed mignięciem jasnego tła przy
+            wejściu w motywie ciemnym.
+
+            `suppressHydrationWarning` jest tu konieczne, nie kosmetyczne:
+            React świadomie nie przesyła nonce'a do przeglądarki, więc po
+            stronie serwera atrybut ma wartość, a po stronie klienta jest
+            pusty. Bez tłumienia każde wejście na dowolną stronę wypisuje
+            w konsoli ostrzeżenie o rozjeździe hydratacji — czyli szum, który
+            z czasem przykrywa prawdziwe rozjazdy. */}
+        <script
+          nonce={nonce}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: SKRYPT_MOTYWU }}
+        />
       </head>
       <body>
         <CartProvider>
