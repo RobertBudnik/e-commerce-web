@@ -5038,7 +5038,9 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
 .pw-akcje-rzad { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
 
 .pw-lista { list-style: none; margin: 0; padding: 0; }
-.pw-lista-luzna { display: flex; flex-direction: column; gap: 1px; }
+/* Odstęp zamiast szczeliny na 1 px: przy kartach z własnym obrysem
+   szczelina robiła z nich pociętą płytę, a to są osobne zadania. */
+.pw-lista-luzna { display: flex; flex-direction: column; gap: 10px; }
 
 .pw-wiersz {
   display: flex;
@@ -5052,10 +5054,18 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
 .pw-wiersz-tresc { flex: 1; }
 .pw-wiersz-kto { flex: none; font-size: .8125rem; }
 
+/* Pozycja „do nadania" jest kartą, nie wierszem oddzielonym kreską. To nie
+   jest lista do przeczytania z góry na dół — to zbiór zadań, z których każde
+   bierze się osobno i każde ma własny przycisk. Prostokąt mówi „to jedna
+   rzecz do zrobienia" wyraźniej niż linia pod spodem. */
 .pw-karta-wysylki {
-  padding: 16px 0;
-  border-bottom: 1px solid var(--line);
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color .16s ease;
 }
+.pw-karta-wysylki:hover { border-color: var(--line-strong); }
 
 .pw-karta-glowa { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
 

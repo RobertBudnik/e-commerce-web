@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { AkcjeZamowienia } from '@/components/panel/AkcjeZamowienia';
 import { wymagajPanelu } from '@/lib/panel-dostep';
 import { getDoNadania, getWDrodze } from '@/lib/queries';
+import { Icon } from '@/components/Icon';
 
 export const metadata: Metadata = {
   title: 'Wysyłki',
@@ -31,6 +32,19 @@ function czytelnyStatus(status: string | null): string {
   return 'w drodze';
 }
 
+/**
+ * Klasa plakietki dla stanu przesyłki. Trzy stany znaczą trzy różne rzeczy
+ * dla obsługi: doręczona to koniec sprawy, „do odbioru" czeka na klienta
+ * i po tygodniu wróci, „w drodze" nie wymaga niczego.
+ *
+ * Barwa wzmacnia słowo, nie zastępuje go — plakietka zawsze niesie tekst.
+ */
+function klasaPrzesylki(stan: string): string {
+  if (stan === 'doręczona') return 'pw-stan pw-stan-ok';
+  if (stan === 'do odbioru') return 'pw-stan pw-stan-uwaga';
+  return 'pw-stan';
+}
+
 export default async function Wysylki() {
   await wymagajPanelu('/panel/wysylki');
 
@@ -45,7 +59,8 @@ export default async function Wysylki() {
         </div>
       </div>
 
-      <div className="notice">
+      <div className="notice notice-akcent">
+        <Icon name="info" />
         <span>
           Numer listu wklejasz na razie z panelu przewoźnika. Integracja z InPostem doda tworzenie
           przesyłki i etykietę — po stronie serwera, bo token pozwala nadawać paczki na Twój
@@ -94,6 +109,12 @@ export default async function Wysylki() {
       <section className="pw-sekcja">
         <div className="pw-sekcja-glowa">
           <h2>W drodze</h2>
+          {/* Licznik przy każdej liście, nie przy wybranej — bez niego nie
+              wiadomo, czy patrzy się na całość, czy na początek czegoś
+              dłuższego. */}
+          <span className="muted">
+            <span className="num">{wDrodze.length}</span> w trasie
+          </span>
         </div>
 
         {wDrodze.length === 0 ? (
@@ -123,7 +144,9 @@ export default async function Wysylki() {
                     <td>{p?.przewoznik ?? '—'}</td>
                     <td>{p?.punktOdbioru ?? z.punktOdbioru ?? <span className="muted">pod adres</span>}</td>
                     <td>
-                      <span className="pw-stan">{czytelnyStatus(p?.status ?? null)}</span>
+                      <span className={klasaPrzesylki(czytelnyStatus(p?.status ?? null))}>
+                        {czytelnyStatus(p?.status ?? null)}
+                      </span>
                     </td>
                     {/* Data odczytu obok statusu, nie zamiast niego: „doręczono"
                         bez daty nie mówi, czy to sprzed minuty, czy sprzed dni. */}
