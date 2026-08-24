@@ -1885,6 +1885,14 @@ select {
   color: var(--ink-soft);
 }
 .notice svg { width: 15px; height: 15px; flex: none; margin-top: 3px; color: var(--ink-faint); }
+/* Wariant akcentowy — komunikat, który coś tłumaczy, a nie ostrzega. Tło
+   z akcentu na niskim kryciu, tak jak na makiecie; litery zostają na
+   `--ink-soft`, bo to nadal tekst pomocniczy, nie wezwanie. */
+.notice-akcent {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+.notice-akcent svg { color: var(--accent-ink); }
 /* display:flex wygrywa z atrybutem hidden — trzeba go przywrócić ręcznie */
 .notice[hidden] { display: none; }
 /* Warianty komunikatu przy formularzu logowania */
@@ -4810,14 +4818,14 @@ code {
 .pw-zakladka:hover { background: var(--panel); color: var(--ink); }
 .pw-zakladka-obok { margin-left: auto; color: var(--ink-3); }
 
+/* Kafle pulpitu z makiety: osobne karty z własną obwódką i odstępem, nie
+   jedna wspólna płyta pocięta liniami na 1 px. Różnica nie jest kosmetyczna —
+   osobne prostokąty czyta się jako cztery niezależne liczby, a pocięta płyta
+   jako jedną tabelę, w której coś się sumuje. Tu nic się nie sumuje. */
 .pw-kafle {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  overflow: hidden;
+  gap: 12px;
   margin-bottom: 28px;
 }
 
@@ -4825,13 +4833,37 @@ code {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 20px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   background: var(--surface);
   color: inherit;
-  transition: background .16s ease;
+  transition: border-color .16s ease, background .16s ease;
 }
 
-a.pw-kafel:hover { background: var(--panel); }
+a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
+
+/* Znak w barwnym polu. Barwa niesie tu wyłącznie rozróżnienie kafli od
+   siebie — informację niosą etykieta i liczba, więc żaden z tych kolorów
+   nie musi przechodzić progu kontrastu dla tekstu. Sama ikona jest
+   `aria-hidden`. */
+.pw-znak {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+}
+.pw-znak svg { width: 17px; height: 17px; }
+.pw-znak-utarg { background: var(--accent-soft); color: var(--accent-ink); }
+.pw-znak-wysylka { background: color-mix(in srgb, #4a7dff 14%, transparent); color: #3b63cc; }
+.pw-znak-stany { background: color-mix(in srgb, #f99c00 18%, transparent); color: #8a5800; }
+.pw-znak-zwroty { background: color-mix(in srgb, var(--accent-2) 18%, transparent); color: #00697f; }
+
+.dark .pw-znak-wysylka { color: #9db6ff; }
+.dark .pw-znak-stany { color: #f2b95c; }
+.dark .pw-znak-zwroty { color: #6fdcf2; }
 
 .pw-liczba {
   font-size: 1.75rem;

@@ -52,6 +52,13 @@ export const ICON_PATHS: Record<string, string> = {
     '<path d="M4 24s7-12 20-12 20 12 20 12-7 12-20 12S4 24 4 24z"/><circle cx="24" cy="24" r="6"/>',
   cart:
     '<path d="M6 8h6l5 22h20l4-15H15"/><circle cx="20" cy="39" r="2.5"/><circle cx="36" cy="39" r="2.5"/>',
+  /* Strzałka zawracająca — zwroty na pulpicie. Bez niej kafel zwrotów brał
+     ikonę zastępczą i mówił co innego, niż liczba pod nim. */
+  zwrot:
+    '<path d="M14 16h16a10 10 0 0 1 0 20H18"/><path d="M20 8l-7 8 7 8"/>',
+  /* Wykres słupkowy — utarg. */
+  slupki:
+    '<path d="M8 40h32"/><path d="M14 40V26M24 40V14M34 40V20"/>',
 };
 
 export function Icon({ name, className }: { name: string; className?: string }) {

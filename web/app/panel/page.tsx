@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { wymagajPanelu } from '@/lib/panel-dostep';
 import { getDziennik, getFinanse, getPrzeglad } from '@/lib/queries';
 import { money } from '@/lib/format';
+import { Icon } from '@/components/Icon';
 
 export const metadata: Metadata = {
   title: 'Pulpit',
@@ -44,7 +45,13 @@ export default async function Pulpit() {
       </div>
 
       <div className="pw-kafle">
+        {/* Znak w barwnym polu na górze kafla — układ z makiety. Ikona jest
+            ozdobą liczby, nie jej nośnikiem, więc `aria-hidden` w `Icon`
+            zostaje: treść niesie etykieta i sama liczba. */}
         <Link className="pw-kafel" href="/panel/finanse">
+          <span className="pw-znak pw-znak-utarg">
+            <Icon name="slupki" />
+          </span>
           <span className="label">Utarg dziś</span>
           <span className="pw-liczba num">{money(finanse.dzis)}</span>
           <span className="pw-kafel-opis">
@@ -55,18 +62,27 @@ export default async function Pulpit() {
         </Link>
 
         <Link className="pw-kafel" href="/panel/zamowienia?stan=kolejka">
+          <span className="pw-znak pw-znak-wysylka">
+            <Icon name="box" />
+          </span>
           <span className="label">Do wysłania</span>
           <span className="pw-liczba num">{przeglad.doWyslania}</span>
           <span className="pw-kafel-opis">zamówień czeka na paczkę</span>
         </Link>
 
         <Link className="pw-kafel" href="/magazyn/stany?segment=niskie">
+          <span className="pw-znak pw-znak-stany">
+            <Icon name="grid" />
+          </span>
           <span className="label">Niskie stany</span>
           <span className="pw-liczba num">{przeglad.niskieStany}</span>
           <span className="pw-kafel-opis">pozycji poniżej progu</span>
         </Link>
 
         <Link className="pw-kafel" href="/panel/zamowienia?platnosc=zwrócone">
+          <span className="pw-znak pw-znak-zwroty">
+            <Icon name="zwrot" />
+          </span>
           <span className="label">Zwroty</span>
           <span className="pw-liczba num">{przeglad.zwroty}</span>
           <span className="pw-kafel-opis">zgłoszeń do przyjęcia</span>
@@ -74,7 +90,8 @@ export default async function Pulpit() {
       </div>
 
       {finanse.dni.length < 7 && (
-        <div className="notice">
+        <div className="notice notice-akcent">
+          <Icon name="info" />
           <span>
             Mniej niż tydzień danych — liczby są prawdziwe, ale na trend jest za wcześnie.
             Wykresu w Finansach nie ma z tego samego powodu.
