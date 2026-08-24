@@ -805,7 +805,9 @@ p:last-child { margin-bottom: 0; }
      na cenę. Rozdzielamy je na dwa wiersze — cena pod nazwą, do lewej,
      bo prawa krawędź jest tu za blisko. */
   .card-naglowek { flex-direction: column; align-items: flex-start; gap: 2px; }
-  .card-title { font-size: 1.0625rem; }
+  /* Nazwa zeszła do stopnia treści, więc na telefonie nie ma już czego
+     zmniejszać — wcześniej schodziła z 1,25 rem, żeby nie wjeżdżać na cenę,
+     a cena i tak stoi teraz w osobnym wierszu. */
 
   /* Szyld z ćwiercią firetu rozstrzelenia jest szeroki i na telefonie
      wypychał przycisk konta poza ekran. Węższy krok i mniejszy stopień
@@ -1174,29 +1176,36 @@ select:hover { border-color: var(--line-strong); }
 .badge-neutral { color: var(--ink); }
 
 .card-body { padding-top: 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-/* Nazwa z lewej, cena z prawej, wyrównane do linii pisma — nie do środka
-   wiersza, bo litery i cyfry mają różną wysokość x. */
-.card-naglowek { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
-.card-naglowek .price { flex: none; }
-.card-podpis { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-/* Przycisk przy dolnej krawędzi, niezależnie od tego, czy nazwa zmieściła
-   się w jednym wierszu, czy w dwóch. Bez tego rząd kafli rozjeżdża się przy
-   pierwszej dłuższej nazwie, a w siatce widać to od razu. */
-.card-body > .btn:last-child { margin-top: auto; }
-/* Nadtytuł kategorii idzie akcentem — w Figmie to jedyne miejsce na karcie,
-   gdzie akcent dotyka liter. W tej palecie akcent jest najciemniejszą
-   czernią, więc 16,4:1 na tle strony: dziewięć pikseli stopnia nie ma tu
-   już czym zaszkodzić. */
-.card-cat { font-size: .5625rem; font-weight: 600; letter-spacing: .25em; text-transform: uppercase; color: var(--accent-ink); }
-/* Nazwa produktu idzie `--display` — w makiecie to ona, nie cena, jest
-   najmocniejszym elementem kafla. Niesie to stopień i waga, nie zmiana
-   pisma: cały serwis jedzie jednym krojem. */
+/* Stopka kafla: ceny z lewej, przycisk z prawej, przyklejona do dolnej
+   krawędzi. `margin-top: auto` jest tu warunkiem równego rzędu — bez niego
+   pierwsza dłuższa nazwa rozjeżdża całą siatkę, a w kafelkach widać to od
+   razu. */
+.card-stopka {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+/* Cena bieżąca i dawna to jedna informacja, więc stoją w jednym wierszu
+   wyrównane do linii pisma — nie do środka, bo cyfry i przekreślenie mają
+   różną wysokość. */
+.card-ceny { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+/* Nadtytuł kategorii schodzi na szary. W poprzedniej rundzie szedł akcentem,
+   bo akcent był najciemniejszą czernią i nie miał czym zaszkodzić. Teraz
+   akcent jest fioletem: dziewięć pikseli wersalików w barwie marki
+   konkurowałoby z nazwą produktu, a na makiecie ta etykieta jest wyciszona. */
+.card-cat { font-size: .5625rem; font-weight: 600; letter-spacing: .25em; text-transform: uppercase; color: var(--ink-faint); }
+/* Nazwa produktu wielkości treści, nie nagłówka — tak stoi na makiecie.
+   Poprzednie 1,25 rem robiło z niej tytuł sekcji i spłaszczało różnicę
+   między kaflem a nagłówkiem listy nad nim. */
 .card-title {
-  font-family: var(--display);
-  font-size: 1.25rem;
+  font-family: var(--sans);
+  font-size: var(--t-body);
   font-weight: 500;
   letter-spacing: normal;
-  line-height: 1.2;
+  line-height: 1.35;
   margin: 0;
 }
 /* `inline-block` z wyściółką podnosi wiersz tytułu z 18 px do 24 px — progu
@@ -1212,9 +1221,28 @@ select:hover { border-color: var(--line-strong); }
 .price { font-size: .9375rem; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .price-old { font-size: .8125rem; color: var(--ink-faint); text-decoration: line-through; }
 
-.card-cta { margin-top: 12px; }
-.card-cta .btn { height: 40px; font-size: .875rem; }
-.card:not(:hover) .card-cta .btn-ghost { color: var(--ink-soft); }
+/* Przycisk dodawania z kafla jest kwadratem ze znakiem — pełnej szerokości
+   pigułka z makiety zniknęła. To nie jest główne wezwanie sklepu: tym jest
+   przycisk na karcie produktu, i tam zostaje duży i podpisany. Tutaj chodzi
+   o skrót dla kogoś, kto już wie, co bierze.
+
+   40 px to próg celu dotykowego z WCAG 2.5.8 (24 px) z zapasem; nazwę
+   dostępną niesie `aria-label`, bo napisu nie ma. */
+.przycisk-koszyk-ikona {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  cursor: pointer;
+}
+.przycisk-koszyk-ikona:hover:not(:disabled) { border-color: var(--accent); }
+.przycisk-koszyk-ikona:disabled { opacity: .45; cursor: default; }
+.przycisk-koszyk-ikona svg { width: 18px; height: 18px; }
 
 /* ---------- Strona produktu ---------- */
 .breadcrumbs {

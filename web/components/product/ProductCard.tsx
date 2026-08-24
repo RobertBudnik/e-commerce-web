@@ -55,30 +55,35 @@ export function ProductCard({
         </button>
       </div>
       <div className="card-body">
+        {/* Kolejność z makiety: kategoria, nazwa w osobnym wierszu, ocena,
+            a na dole cena i przycisk w jednym rzędzie. Poprzednia runda
+            stawiała nazwę i cenę obok siebie — przy dłuższej nazwie cena
+            uciekała na skraj kafla i przestawała się czytać jako para
+            z przekreśloną ceną dawną. */}
         <span className="card-cat">{categoryName}</span>
-        {/* Nazwa i cena w jednym wierszu, rozepchnięte do krawędzi kafla —
-            tak układa je makieta. Ocena schodzi pod spód, bo w tym rytmie
-            jest przypisem, nie treścią. */}
-        <div className="card-naglowek">
-          <h3 className="card-title">
-            <Link href={`/produkt/${product.slug}`}>{product.name}</Link>
-          </h3>
-          <span className="price">
-            <OdometrCeny cena={product.price} />
+        <h3 className="card-title">
+          <Link href={`/produkt/${product.slug}`}>{product.name}</Link>
+        </h3>
+        <span className="rating">
+          <span className="stars" aria-hidden="true">
+            {stars(product.rating)}
           </span>
-        </div>
-        <div className="card-podpis">
-          <span className="rating">
-            <span className="stars" aria-hidden="true">
-              {stars(product.rating)}
+          <span className="sr-only">Ocena {product.rating} na 5.</span>{' '}
+          {ile(product.reviews, OPINIE)}
+        </span>
+        <div className="card-stopka">
+          {/* Cena bieżąca i dawna stoją obok siebie, bo to jedna informacja:
+              ile kosztuje teraz i ile kosztowała. Rozdzielone na dwa wiersze
+              przestawały być porównaniem. */}
+          <span className="card-ceny">
+            <span className="price">
+              <OdometrCeny cena={product.price} />
             </span>
-            <span className="sr-only">Ocena {product.rating} na 5.</span>{' '}
-            {ile(product.reviews, OPINIE)}
+            {product.oldPrice && <span className="price-old">{money(product.oldPrice)}</span>}
           </span>
-          {product.oldPrice && <span className="price-old">{money(product.oldPrice)}</span>}
-        </div>
-        <div className="card-cta">
           <PrzyciskDoKoszyka
+            ikona
+            etykieta={out ? `${product.name} — niedostępny` : `Do koszyka: ${product.name}`}
             disabled={out}
             onAdd={(el) => {
               // Lot startuje z kadru zdjęcia, nie z przycisku: to zdjęcie jest
