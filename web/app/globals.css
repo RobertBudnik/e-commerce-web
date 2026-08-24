@@ -92,6 +92,22 @@
   --ok-soft: rgba(0, 199, 88, .14);
   --ok-ink: #007138;
 
+  /* Rodzina błędu zbudowana tak samo jak rodzina „ok": barwa na obwódkę,
+     wersja miękka pod plamę, wersja ciemna pod litery. Punkt wyjścia to
+     error #fb2c36 z KokonutUI, przyciemniony, bo surowy pod literami daje
+     3,9:1 na tle strony. Panel potrzebował tego przy płatnościach: „nieudane"
+     wyglądało dotąd identycznie jak „oczekuje". */
+  --blad: #d61f2b;
+  --blad-soft: rgba(251, 44, 54, .12);
+  --blad-ink: #a5141e;
+
+  /* Rodzina ostrzeżenia. `--uwaga` (#dd7400) istniał wcześniej i był diodą,
+     nie tekstem — pod literami daje 3,06:1, czyli pod progiem. Plakietka
+     „oczekuje" potrzebowała odcienia, który litery uniesie, więc barwa do
+     plam zostaje bez zmian, a tekst dostaje własny stopień. */
+  --uwaga-soft: rgba(221, 116, 0, .12);
+  --uwaga-ink: #8a4a00;
+
   /* KokonutUI stoi na `--radius:.5rem` i schodzi/rośnie stopniami:
      sm 6 · lg 8 · xl 12 · 2xl 16 · 3xl 24 · full. Zerowy narożnik
      z poprzedniej rundy znika — w tej bibliotece nie ma ani jednego. */
@@ -169,6 +185,15 @@
   --ok: #00c758;
   --ok-soft: rgba(0, 199, 88, .16);
   --ok-ink: #5ee9b5;
+
+  --blad: #fb2c36;
+  --blad-soft: rgba(251, 44, 54, .18);
+  --blad-ink: #ff9aa1;
+
+  /* W ciemności `--uwaga` jest już jasnym piaskiem (8,90:1), więc odcień
+     pod litery jest nim samym. */
+  --uwaga-soft: rgba(217, 187, 92, .16);
+  --uwaga-ink: #d9bb5c;
 
   /* KokonutUI stoi na `--radius:.5rem` i schodzi/rośnie stopniami:
      sm 6 · lg 8 · xl 12 · 2xl 16 · 3xl 24 · full. Zerowy narożnik
@@ -4895,7 +4920,14 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
 }
 
 /* Tabela przewija się we własnym kadrze — strona nigdy nie jedzie w bok. */
-.pw-tabela-kadr { overflow-x: auto; }
+/* Tabela dostaje własny obrys, jak reszta przyrządów panelu. `overflow-x`
+   zostaje — szeroka tabela ma przewijać się w sobie, nigdy całą stroną. */
+.pw-tabela-kadr {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
 
 .pw-tabela {
   width: 100%;
@@ -4911,9 +4943,12 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
   color: var(--ink-3);
   text-align: left;
   font-weight: 400;
-  padding: 10px 12px;
+  padding: 12px;
+  background: var(--panel);
   border-bottom: 1px solid var(--line);
   white-space: nowrap;
+  position: sticky;
+  top: 0;
 }
 
 .pw-tabela td {
@@ -4922,6 +4957,9 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
   vertical-align: middle;
 }
 
+/* Ostatni wiersz bez kreski — obrys karty już ją rysuje, a dwie linie obok
+   siebie czytają się jak niedokończona tabela. */
+.pw-tabela tbody tr:last-child td { border-bottom: 0; }
 .pw-tabela tbody tr { transition: background .16s ease; }
 .pw-tabela tbody tr:hover { background: var(--panel); }
 .pw-tabela tfoot td { border-bottom: 0; color: var(--ink-2); }
@@ -4950,14 +4988,27 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
   white-space: nowrap;
 }
 
+/* Warianty stanu. Barwa jest tu wzmocnieniem, nie nośnikiem: w każdej
+   plakietce stoi słowo, które mówi to samo. Bez tego rozróżnienia „nieudane"
+   i „oczekuje" wyglądały identycznie, choć jedno wymaga reakcji, a drugie
+   tylko czekania. */
 .pw-stan-ok { border-color: var(--ok); color: var(--ok-ink); background: var(--ok-soft); }
+.pw-stan-uwaga { border-color: var(--uwaga); color: var(--uwaga-ink); background: var(--uwaga-soft); }
+.pw-stan-zle { border-color: var(--blad); color: var(--blad-ink); background: var(--blad-soft); }
 
+/* Filtry w karcie, tym samym obrysem co kafle pulpitu. Wcześniej leżały
+   luzem na tle strony i zlewały się z nagłówkiem — a to jest przyrząd, nie
+   treść: ma być widać, gdzie się zaczyna i kończy. */
 .pw-filtry {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   align-items: flex-end;
-  padding: 16px 0 24px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
 }
 
 .pw-pole { display: flex; flex-direction: column; gap: 6px; }

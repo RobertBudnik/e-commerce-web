@@ -21,6 +21,21 @@ const DATA = new Intl.DateTimeFormat('pl-PL', {
 const STANY = ['kolejka', 'nowe', 'spakowane', 'wysłane', 'dostarczone', 'anulowane'];
 const PLATNOSCI = ['oczekuje', 'opłacone', 'nieudane', 'zwrócone'];
 
+/**
+ * Klasa plakietki dla stanu. Barwa jest tu wzmocnieniem, nie nośnikiem —
+ * w każdej plakietce stoi słowo, które mówi to samo, więc czytnik ekranu
+ * i osoba nierozróżniająca barw dostają pełną informację.
+ *
+ * Rozróżnienie jest po to, żeby „nieudane" nie wyglądało jak „oczekuje":
+ * pierwsze wymaga reakcji obsługi, drugie tylko czekania na przelew.
+ */
+function klasaStanu(stan: string): string {
+  if (stan === 'opłacone' || stan === 'dostarczone') return 'pw-stan pw-stan-ok';
+  if (stan === 'nieudane' || stan === 'anulowane') return 'pw-stan pw-stan-zle';
+  if (stan === 'oczekuje' || stan === 'zwrócone') return 'pw-stan pw-stan-uwaga';
+  return 'pw-stan';
+}
+
 export default async function ZamowieniaPanelu({
   searchParams,
 }: {
@@ -148,12 +163,10 @@ export default async function ZamowieniaPanelu({
                   <td className="num">{DATA.format(new Date(z.date))}</td>
                   <td>{z.customer || z.email}</td>
                   <td>
-                    <span className="pw-stan">{z.status}</span>
+                    <span className={klasaStanu(z.status)}>{z.status}</span>
                   </td>
                   <td>
-                    <span className={z.paymentStatus === 'opłacone' ? 'pw-stan pw-stan-ok' : 'pw-stan'}>
-                      {z.paymentStatus}
-                    </span>
+                    <span className={klasaStanu(z.paymentStatus)}>{z.paymentStatus}</span>
                   </td>
                   <td className="num">{z.numerPrzesylki ?? <span className="muted">—</span>}</td>
                   <td className="pw-do-prawej num">{money(z.total)}</td>

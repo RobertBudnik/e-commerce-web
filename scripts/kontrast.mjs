@@ -178,6 +178,13 @@ const PARY_SKLEP = [
   ['accent-ink', 'bg', 4.5, 'drobny napis akcentem'],
   ['accent-ink', 'accent-soft', 4.5, 'napis na znaczniku przeceny'],
   ['ok-ink', 'ok-soft', 4.5, 'napis „opłacone" na zielonym'],
+  // Plakietki stanu w panelu. Rodzina błędu doszła razem z rozróżnieniem
+  // „nieudane" od „oczekuje" — bez pomiaru czerwień pod literami łatwo
+  // schodzi pod próg, bo surowa jest ciemna tylko z pozoru.
+  ['blad-ink', 'blad-soft', 4.5, 'napis „nieudane" na czerwonym'],
+  ['blad-ink', 'surface', 4.5, 'napis błędu na karcie'],
+  ['uwaga-ink', 'uwaga-soft', 4.5, 'napis „oczekuje" na pomarańczowym'],
+  ['uwaga-ink', 'surface', 4.5, 'napis ostrzeżenia na karcie'],
   ['btn-ink', 'btn-bg', 4.5, 'napis na przycisku głównym'],
   // Wypełnienie akcentem nosi litery w dwóch miejscach — aktywny filtr
   // i plakietka koszyka. Para wpisana po tym, jak zrzut pokazał jasny napis
