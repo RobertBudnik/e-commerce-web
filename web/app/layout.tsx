@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Instrument_Sans, Geist_Mono } from 'next/font/google';
 import './globals.css';
 
 import { CartProvider } from '@/components/cart/CartProvider';
@@ -23,18 +23,20 @@ import { siteUrl } from '@/lib/site';
  * Subset latin-ext jest obowiązkowy — polskie znaki.
  */
 /**
- * KokonutUI nie ma szeryfa. Cały serwis — nagłówki, interfejs, etykiety —
- * jedzie jednym krojem Geist; różnicę robi stopień i waga, nie zmiana pisma.
+ * Instrument Sans — krój podany wprost przez makietę, jeden na cały serwis.
+ * Nagłówki, interfejs i etykiety różnią się stopniem i wagą, nie pismem;
+ * szeryfa nie ma nigdzie.
+ *
  * Zmienna `--font-display` zostaje pod tą samą nazwą, bo wisi na niej kilkaset
- * odwołań w `globals.css`; wskazuje teraz na ten sam krój co interfejs.
+ * odwołań w `globals.css`; wskazuje na ten sam krój co interfejs.
  */
-const display = Geist({
+const display = Instrument_Sans({
   subsets: ['latin-ext'],
   variable: '--font-display',
   display: 'swap',
 });
 
-const sans = Geist({
+const sans = Instrument_Sans({
   subsets: ['latin-ext'],
   variable: '--font-sans',
   display: 'swap',

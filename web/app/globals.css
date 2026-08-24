@@ -51,14 +51,36 @@
      robi to KokonutUI i dzięki temu linia działa na każdej powierzchni. */
   --line: rgba(10, 10, 10, .12);
 
-  /* „Akcent" bez barwy: primary z ich palety. Wyróżnienie niesie kontrast. */
-  --accent: #171717;
-  --accent-ink: #171717;
-  --accent-soft: rgba(10, 10, 10, .05);
+  /* ---------------------------------------------------------------------
+     Akcent z makiety: fiolet, i to on niesie wyróżnienie zamiast samego
+     kontrastu. Poprzednia runda stała na czerni z KokonutUI — makieta daje
+     barwę wprost, razem z gradientem na przycisku głównym.
 
-  --btn-bg: #171717;
-  --btn-ink: #fafafa;
-  --na-akcencie: #fafafa;
+     Wartość potwierdzona przez właściciela 24.08.2026: `#6C5CE7`. Lista barw
+     na makiecie czyta się jako `#6CE5C7`, co jest miętą i nie zgadza się
+     z fioletową kropką obok — to przestawione znaki, nie druga barwa.
+
+     Rozdział ról wymuszony kontrastem, nie gustem: `--accent` to plama (tło
+     przycisku, kropka, pasek), `--accent-ink` to ten sam fiolet zejściem
+     ciemniejszy, bo dopiero on unosi litery na jasnym tle. Sprawdzasz to
+     `npm run kontrast`, nie okiem.
+     --------------------------------------------------------------------- */
+  --accent: #6c5ce7;
+  --accent-ink: #5445c0;
+  --accent-soft: rgba(108, 92, 231, .10);
+
+  /* Druga barwa z makiety — cyjan. Wyłącznie znacznik przy danych w panelu
+     (kafel zwrotów), nigdy pod literami: na jasnym tle daje 1,7:1. */
+  --accent-2: #00d4ff;
+
+  /* Gradient przycisku głównego z makiety: fiolet w niebieski, w prawo w dół.
+     Trzymany tokenem, bo powtarza się na przycisku, na pasku zakupu i na
+     zakładce panelu. */
+  --akcent-gradient: linear-gradient(135deg, #6c5ce7 0%, #4a7dff 100%);
+
+  --btn-bg: #6c5ce7;
+  --btn-ink: #ffffff;
+  --na-akcencie: #ffffff;
 
   --img: #ededed;
   --img-line: rgba(10, 10, 10, .14);
@@ -97,16 +119,24 @@
 
   --line: rgba(255, 255, 255, .12);
 
-  /* W ciemności role się odwracają: „akcent" to najjaśniejsza biel z ich
-     palety, a przycisk główny jest białym prostokątem z czarnym napisem —
-     dokładnie jak `dark:bg-white` u nich. */
-  --accent: #ebebeb;
-  --accent-ink: #ebebeb;
-  --accent-soft: rgba(255, 255, 255, .05);
+  /* W ciemności fiolet z makiety zostaje barwą, ale jaśnieje: `#6c5ce7` na
+     tle `#121212` daje 3,4:1, czyli nadaje się pod plamę i nie nadaje pod
+     litery. Rozdział ról jest więc odwrotny niż w jasnym motywie — plama
+     ciemniejsza, tekst jaśniejszy.
 
-  --btn-bg: #ebebeb;
-  --btn-ink: #121212;
-  --na-akcencie: #121212;
+     Przycisk główny zostaje pełnym fioletem z białym napisem, bo gradient
+     z makiety czyta się w ciemności tak samo dobrze jak na bieli. */
+  --accent: #6c5ce7;
+  --accent-ink: #b3a8f7;
+  --accent-soft: rgba(108, 92, 231, .18);
+
+  --accent-2: #00d4ff;
+
+  --akcent-gradient: linear-gradient(135deg, #6c5ce7 0%, #4a7dff 100%);
+
+  --btn-bg: #6c5ce7;
+  --btn-ink: #ffffff;
+  --na-akcencie: #ffffff;
 
   --img: #212121;
   --img-line: rgba(255, 255, 255, .14);
@@ -178,23 +208,28 @@
      Nazwy mówią o roli, nie o liczbie, więc tempo całego serwisu zmienia się
      tutaj, a nie w siedemdziesięciu regułach niżej.
 
-     ROZSTRZYGNIĘCIE: Figma ma własny motion system (`/animation-guide`) i on
-     wygrywa wszędzie tam, gdzie podaje liczbę — bo podaje ją wprost, a nie
-     przez „feeling". Twardych reguł stamtąd nie łamiemy:
+     ROZSTRZYGNIĘCIE (24.08.2026): Figma jest wycięta ze źródeł tego repo.
+     Widełki, które wcześniej stąd brała, zastępuje skill `ruch-i-animacje`
+     — zbudowany z Material Design 3, wytycznych Apple, badań NN/g i WCAG 2.2,
+     każda liczba z adresem. Wartości poniżej mieszczą się w jego zakresach
+     i nie wymagały zmiany:
 
-       hover 80–150 ms · komponenty 150–250 ms · panele 250–400 ms
-       przejście strony 350–500 ms · reveal 500–800 ms, nigdy > 800 ms
-       stagger = index × 60 ms, maks. 6 elementów
-       zakaz: bounce, elastic, spring · zakaz paralaksy na treści
-       scale karty maks. 1.03 — „więcej to tandeta"
+       detal i hover 100–200 ms · komponenty 200–300 ms · panele 250–400 ms
+       duże przejścia 400–500 ms · nic powyżej 500 ms w interfejsie
+       wyjście krócej niż wejście (NN/g: 300 ms wejście, 200–250 ms wyjście)
+       animujemy wyłącznie transform i opacity
+       prefers-reduced-motion obowiązkowo — WCAG 2.2, kryterium 2.3.3
 
-     Referencje wchodzą tam, gdzie Figma milczy: kształt krzywej w klasie
-     ease-out (Cuberto ma .16,1,.3,1 zamiast płaskiego 0,0,.3,1 — ta sama
-     rodzina, mocniejsze dohamowanie), rozdział czasów detalu i masy z B&O
-     oraz cały ślad kursora, którego w Figmie nie ma wcale.
+     Zakazy zostają w mocy, bo makieta ich nie podważa: bez bounce, elastic
+     i spring, bez paralaksy na treści, scale karty najwyżej 1.03.
+     Makieta z 24.08.2026 podaje `translateY(-4px)` z cieniem na karcie
+     i `scale(1.02)` na przycisku — obie mieszczą się w tym limicie.
 
-     Czasy niżej to górne krańce widełek Figmy, nie środek — stamtąd bierze
-     się „wolno i z celem" bez wychodzenia poza specyfikację. */
+     Referencje zmierzone w inspektorze zostają tam, gdzie chodzi o kształt
+     krzywej: Cuberto ma .16,1,.3,1 zamiast płaskiego 0,0,.3,1 — ta sama
+     rodzina co ease-out, mocniejsze dohamowanie. Rozdział czasów detalu
+     i masy pochodzi z B&O, ślad kursora nie ma odpowiednika w żadnym
+     z systemów i jest nasz. */
   --ruch-kolor: .15s;
   --ruch-tlo: .25s;
   --ruch-kadr: .4s;
@@ -392,9 +427,10 @@ p:last-child { margin-bottom: 0; }
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
-  /* Figma stawia siatkę wyraźnie niżej niż nagłówek — 36 px kleiło tytuł
-     do pierwszego rzędu kart i kasowało efekt oddechu, po który idzie
-     całe 120 px na sekcji. */
+  /* Siatka stoi wyraźnie niżej niż nagłówek — 36 px kleiło tytuł do
+     pierwszego rzędu kart i kasowało efekt oddechu, po który idzie całe
+     120 px na sekcji. Zasada z badań: mniejszy odstęp wiąże, większy
+     rozdziela (NN/g, hierarchia wizualna). */
   margin-bottom: clamp(28px, 4vw, 56px);
 }
 .section-head p { margin: 0; color: var(--ink-soft); }
@@ -725,10 +761,16 @@ p:last-child { margin-bottom: 0; }
 }
 
 /* ---------- Hero ----------
-   Figma daje hero cały pierwszy ekran i opiera treść o jego dół, a kadr
-   rozciąga od krawędzi do krawędzi — bez kontenera, bez podziału na kolumny.
+   Hero bierze cały pierwszy ekran i opiera treść o jego dół, a kadr rozciąga
+   od krawędzi do krawędzi — bez kontenera, bez podziału na kolumny.
    Stąd `100svh`, nie `100vh`: na telefonie pasek adresu chowa się przy
    przewijaniu i przy `vh` hero podskakiwałby w trakcie czytania.
+
+   ROZBIEŻNOŚĆ Z MAKIETĄ (24.08.2026): makieta daje hero ograniczony — kadr
+   z produktem po prawej, tekst po lewej, wysokość rzędu wielkości 400 px,
+   pod spodem od razu pasek obietnic. To inny układ niż pełnoekranowy, ale
+   zmiana dotyka całej strony głównej, więc nie idzie przy okazji podmiany
+   tokenów. Do rozstrzygnięcia osobno.
 
    Poprzedni układ (dwie kolumny, tekst obok ilustracji) zniknął, ale nic
    z treści nie — nadtytuł, hasło, akapit, przyciski i statystyki stoją teraz
@@ -860,9 +902,9 @@ p:last-child { margin-bottom: 0; }
    promienia, nazwa oparta o dolną krawędź. Obwódka i cień odpadły razem —
    w tym systemie plamę od plamy oddziela sam kadr, a nie kreska wokół niego.
 
-   Figma kładzie na tych kadrach jasne litery na zdjęciu. Dopóki zdjęć nie ma,
-   litery zostają ciemne na jasnym kadrze — jasne na jasnym dałyby 1,2:1.
-   Rozjaśniamy je w chwili, gdy pod spodem stanie fotografia. */
+   Docelowo na tych kadrach mają leżeć jasne litery na zdjęciu. Dopóki zdjęć
+   nie ma, litery zostają ciemne na jasnym kadrze — jasne na jasnym dałyby
+   1,2:1. Rozjaśniamy je w chwili, gdy pod spodem stanie fotografia. */
 .category {
   position: relative;
   display: flex;
@@ -2090,7 +2132,8 @@ code {
    natychmiastowy. */
 [data-reveal][data-reveal] {
   opacity: 0;
-  /* 20 px i tylko tyle — Figma podaje tę wartość wprost przy fade-up. */
+  /* 20 px i tylko tyle. Odsłonięcie ma podpowiadać kierunek, nie przenosić
+     elementu przez ekran — przy większym skoku ruch zaczyna sam być treścią. */
   translate: 0 20px;
   scale: .985;
   transition:
