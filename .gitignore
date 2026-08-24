@@ -11,3 +11,6 @@ zrzuty-frontu/
 # Wyniki xcodebuild — 286 plików i 61 MB binariów z symbolami debugowania.
 # Trafiły do repozytorium przed dodaniem tej reguły.
 ios/build/
+
+# Zrzuty ekranu robione lokalnie — materiał do oglądania, nie do repozytorium.
+zrzuty-nordo/
