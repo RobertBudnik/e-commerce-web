@@ -31,19 +31,16 @@ export default async function HomePage() {
           którymi sklep byłby związany wobec kupującego. */}
       {OBIETNICE.length > 0 && <Marquee hasla={OBIETNICE.map((o) => o.tytul)} />}
 
-      {/* Hero z Figmy: kadr na całą wysokość pierwszego ekranu, treść oparta
-          o jego dół. Ilustracja przestała być drugą kolumną siatki i zeszła
-          pod spód jako tło — dlatego stoi tu przed `.hero-inner`, a nie w
-          środku. Nic z zawartości nie ubyło: nadtytuł, hasło, akapit, oba
-          przyciski i statystyki są tam, gdzie były. */}
+      {/* Hero z makiety: ograniczona karta w obrysie strony, tekst po lewej,
+          kadr po prawej. Ilustracja wraca do siatki jako druga kolumna —
+          wcześniej leżała pod spodem jako tło na całą wysokość ekranu i to
+          ona spychała pierwszy rząd produktów pod zgięcie.
+
+          Nic z zawartości nie ubyło: nadtytuł, hasło, akapit, oba przyciski
+          i statystyki są tam, gdzie były. */}
       <section className="hero">
         <PoleCzastek />
-        <KadrZoom className="hero-media">
-          <div role="img" aria-label="Ilustracja produktu">
-            <Icon name="headphones" />
-          </div>
-        </KadrZoom>
-        <div className="container hero-inner">
+        <div className="hero-inner">
           <div>
             <span className="label">{MARKA.nadtytulHero}</span>
             <h1>
@@ -69,6 +66,11 @@ export default async function HomePage() {
               </div>
             )}
           </div>
+          <KadrZoom className="hero-media">
+            <div role="img" aria-label="Ilustracja produktu">
+              <Icon name="headphones" />
+            </div>
+          </KadrZoom>
         </div>
       </section>
 

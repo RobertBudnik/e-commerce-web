@@ -97,6 +97,20 @@
      z poprzedniej rundy znika — w tej bibliotece nie ma ani jednego. */
   --radius: 8px;
   --radius-sm: 6px;
+  /* Hero z makiety ma narożnik wyraźnie większy niż karty — to jedna plama
+     na całą szerokość strony, a nie element listy, więc 8 px czytałoby się
+     jak niedopatrzenie. */
+  --radius-hero: 24px;
+
+  /* Wash pod hero: fiolet w róż i błękit, wszystko na niskiej kryciu.
+     Kolejność kolorów z makiety; krycie dobrane tak, żeby `--ink` na tym
+     tle nie schodził poniżej progu — pod spodem nadal pracuje `--surface`. */
+  --hero-wash: linear-gradient(
+    118deg,
+    rgba(108, 92, 231, .13) 0%,
+    rgba(233, 138, 190, .11) 52%,
+    rgba(74, 125, 255, .10) 100%
+  );
 
   --shadow: 0 1px 2px rgba(74, 48, 32, .06), 0 18px 40px -24px rgba(74, 48, 32, .28);
 }
@@ -140,6 +154,17 @@
 
   --img: #212121;
   --img-line: rgba(255, 255, 255, .14);
+
+  --radius-hero: 24px;
+
+  /* Ten sam wash, ale mocniejszy: niskie krycie na czerni ginie zupełnie.
+     Nie na tyle jednak, żeby plama zaczęła konkurować z literami. Róż
+     wypada — na ciemnym tle robił się brudny. */
+  --hero-wash: linear-gradient(
+    118deg,
+    rgba(108, 92, 231, .22) 0%,
+    rgba(74, 125, 255, .14) 100%
+  );
 
   --ok: #00c758;
   --ok-soft: rgba(0, 199, 88, .16);
@@ -761,41 +786,84 @@ p:last-child { margin-bottom: 0; }
 }
 
 /* ---------- Hero ----------
-   Hero bierze cały pierwszy ekran i opiera treść o jego dół, a kadr rozciąga
-   od krawędzi do krawędzi — bez kontenera, bez podziału na kolumny.
-   Stąd `100svh`, nie `100vh`: na telefonie pasek adresu chowa się przy
-   przewijaniu i przy `vh` hero podskakiwałby w trakcie czytania.
+   Układ z makiety (24.08.2026): ograniczony kadr w obrysie strony, nie
+   pełnoekranowa plama. Tekst po lewej, ilustracja po prawej, pod spodem od
+   razu pasek obietnic.
 
-   ROZBIEŻNOŚĆ Z MAKIETĄ (24.08.2026): makieta daje hero ograniczony — kadr
-   z produktem po prawej, tekst po lewej, wysokość rzędu wielkości 400 px,
-   pod spodem od razu pasek obietnic. To inny układ niż pełnoekranowy, ale
-   zmiana dotyka całej strony głównej, więc nie idzie przy okazji podmiany
-   tokenów. Do rozstrzygnięcia osobno.
+   Poprzednia runda dawała `100svh` i treść opartą o dolną krawędź. Zmiana nie
+   jest kosmetyczna: pełny ekran spycha pierwszy rząd produktów pod zgięcie,
+   a na stronie sklepu to właśnie towar ma być tym, co widać najpierw. Baymard
+   mówi o tym wprost przy stronie głównej — przekrój oferty ma być widoczny,
+   bo inaczej kupujący wyrabia sobie zawężone wyobrażenie o asortymencie.
 
-   Poprzedni układ (dwie kolumny, tekst obok ilustracji) zniknął, ale nic
-   z treści nie — nadtytuł, hasło, akapit, przyciski i statystyki stoją teraz
-   w jednej kolumnie nad kadrem. */
+   Wysokość jest widełkowa, nie sztywna: `clamp` trzyma kadr w rozsądku na
+   laptopie i pozwala mu zejść na telefonie, gdzie kolumny i tak się układają
+   jedna pod drugą. `svh` zostaje w górnym krańcu, żeby na niskich oknach hero
+   nie zjadł całego widoku. */
 .hero {
   position: relative;
-  min-height: 100svh;
-  display: flex;
-  align-items: flex-end;
+  /* Karta hero jest wyśrodkowana i trzyma margines boczny strony po obu
+     stronach. `min()` załatwia oba warunki naraz: na szerokim ekranie
+     ogranicza ją `--maxw`, na wąskim — margines. Wcześniej stało tu samo
+     `margin-inline: var(--gutter)`, które gutter dawało, ale środka nie. */
+  max-width: min(var(--maxw), 100% - var(--gutter) * 2);
+  margin-inline: auto;
+  margin-top: clamp(16px, 2vw, 28px);
+  border-radius: var(--radius-hero);
   overflow: hidden;
-  border-bottom: 1px solid var(--line);
+  /* Wash z makiety: fiolet przechodzący w róż i błękit, wszystko na niskiej
+     kryciu, więc pod spodem nadal pracuje `--surface`. Litery zostają na
+     `--ink`, a przy tym kryciu luminancja tła przesuwa się o ułamek stopnia —
+     pomiar kontrastu z tokenów pozostaje miarodajny. */
+  background:
+    var(--hero-wash),
+    var(--surface);
 }
 .hero-inner {
   position: relative;
   z-index: 1;
-  /* Treść siada nad dolną krawędzią z tym samym oddechem, co sekcje niżej —
-     hero nie jest wyjątkiem od rytmu strony, tylko jego pierwszym taktem. */
-  padding-block: var(--oddech) clamp(56px, 7vw, 96px);
+  display: grid;
+  /* Tekst dostaje mniej niż połowę, kadr więcej — tak stoi to na makiecie
+     i tak ma sens: hasło łamie się na czterech–pięciu słowach, a produkt
+     potrzebuje miejsca, żeby dało się go obejrzeć. */
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+  min-height: clamp(320px, 46svh, 440px);
+  padding: clamp(28px, 4vw, 56px);
   max-width: min(var(--maxw), 100%);
 }
-/* Hasło ma się łamać jak w Figmie — na własnej szerokości, nie na całej
-   stronie. Powyżej tej miary wiersz robi się za długi w tym stopniu i oko
-   gubi początek następnego. */
-.hero-inner > div:first-child { max-width: 62ch; }
-.hero h1 { margin-bottom: .35em; text-wrap: balance; }
+/* Miara wiersza dotyczy tekstu, nie całej kolumny. Trzymana na haśle
+   i akapicie osobno, bo nałożona na wrapper obcinała też rząd przycisków —
+   dwie pigułki nie mieściły się w 34ch i łamały się jedna pod drugą, choć
+   w kolumnie było na nie miejsce. */
+.hero h1,
+.hero .lede { max-width: 22ch; }
+.hero .lede { max-width: 34ch; }
+
+@media (max-width: 860px) {
+  /* Na telefonie kolumny stają jedna nad drugą — kadr pod tekstem, bo hasło
+     jest tym, po co ktoś wszedł. */
+  .hero-inner {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  .hero-inner > div:first-child { max-width: none; }
+}
+/* Stopień hasła schodzi wraz z układem, i to nie jest zmiana skali całego
+   serwisu — tylko hero. Poprzednie 68 px brało całą szerokość strony; teraz
+   kolumna tekstu ma jej niecałe 40%, więc ten sam stopień łamał hasło na
+   cztery wiersze zamiast dwóch, jak na makiecie.
+
+   Górny kraniec 46 px trzyma hasło wyraźnie nad H2 (24 px) i zostawia
+   hierarchię czytelną. Reszta skali typograficznej zostaje nietknięta —
+   ta jest do rozstrzygnięcia osobno. */
+.hero h1 {
+  margin-bottom: .35em;
+  text-wrap: balance;
+  font-size: clamp(2rem, 3.4vw, 2.875rem);
+  line-height: 1.08;
+}
 .hero .label { display: block; margin-bottom: 20px; }
 .hero-actions { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
 
@@ -814,62 +882,44 @@ p:last-child { margin-bottom: 0; }
 }
 .hero-stats div span { font-size: .8125rem; color: var(--ink-faint); }
 
-/* Kadr wypełnia całą sekcję i leży pod treścią. `inset: 0` zamiast proporcji,
-   bo o wysokości decyduje teraz hero, nie obrazek. Skala 1.06 daje paralaksie
-   zapas — bez niej przy przesunięciu wyjrzałaby spod kadru goła krawędź. */
+/* Kadr jest teraz prawą kolumną, nie tłem. Proporcja zamiast `inset: 0`,
+   bo o wysokości znów decyduje obrazek — hero ma tylko widełki. */
 .hero-media {
-  position: absolute;
-  inset: 0;
+  position: relative;
   z-index: 0;
-  border-radius: 0;
+  /* Kadr na makiecie jest wyraźnie szerszy niż wysoki — to on decyduje
+     o proporcji całej karty, bo kolumna tekstu jest niższa. Przy 4/3 karta
+     rosła do 550 px i traciła charakter pasa, którym hero ma być. */
+  aspect-ratio: 16 / 9;
+  border-radius: calc(var(--radius-hero) - 12px);
+  overflow: hidden;
   background: var(--bg-soft);
   display: grid;
   place-items: center;
   color: var(--line-strong);
 }
-/* Dopóki w hero nie stoi zdjęcie, ikona jest znakiem miejsca, nie tematem
-   kadru. Siedzi w górnej części, żeby nie wchodzić pod hasło, i trzyma
-   rozmiar bliżej znaku wodnego — na 38vw wyglądała jak bohater strony,
-   którym nie jest. */
 /* Warstwa skalowana przez `KadrZoom`. Mierzony prostokąt (`.hero-media`)
    musi zostać nieruchomy, więc transformacja siedzi o poziom niżej. */
 .kadr-zoom-warstwa {
   width: 100%;
   height: 100%;
-  transform-origin: 50% 45%;
+  transform-origin: 50% 50%;
 }
+/* Dopóki w hero nie stoi zdjęcie, ikona jest znakiem miejsca, nie tematem
+   kadru — stąd krycie i rozmiar bliżej znaku wodnego. Wyśrodkowana, bo kadr
+   nie leży już pod hasłem i nie ma czemu ustępować. */
 .hero-media > div > div {
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
-  padding-bottom: 22vh;
 }
-.hero-media svg { width: min(18vw, 168px); height: auto; opacity: .7; }
+.hero-media svg { width: min(28%, 148px); height: auto; opacity: .55; }
 
-/* Treść leży wprost na kadrze, więc kadr musi ustąpić literom. Pionowy
-   gradient przygasza dolną połowę, gdzie siedzi hasło, i zostawia górę
-   czystą. Sam token `--bg` w obu motywach, więc nie trzeba drugiej reguły. */
-.hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    to top,
-    var(--bg) 0%,
-    color-mix(in srgb, var(--bg) 78%, transparent) 38%,
-    transparent 72%
-  );
-}
-
-@media (max-width: 900px) {
-  /* Na telefonie pełny ekran zjadałby całą pierwszą stronę na samo hasło.
-     Zostaje kadr i rytm, znika sztywne 100svh. */
-  .hero { min-height: 82svh; }
-  .hero-inner { padding-block: 72px 56px; }
-  .hero-stats { gap: 28px; }
+@media (max-width: 860px) {
+  /* Kadr spłaszcza się, żeby nie zajmował na telefonie całego ekranu sam
+     z siebie — hasło i przycisk mają zostać w zasięgu kciuka. */
+  .hero-media { aspect-ratio: 16 / 10; }
 }
 
 /* ---------- Feature strip ---------- */
