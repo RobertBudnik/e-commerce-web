@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function Skan() {
   await wymagajZaplecza('/magazyn/skan');
 
-  // Nagłówek i wybór motywu rysuje powłoka kliencka — motyw obejmuje cały
-  // ekran, więc musi siedzieć nad nagłówkiem, nie pod nim.
+  // Nagłówek i wybór motywu rysuje komponent kliencki EkranSkanera — motyw
+  // obejmuje cały ekran, więc musi siedzieć nad nagłówkiem, nie pod nim.
   return <EkranSkanera />;
 }

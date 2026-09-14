@@ -10,13 +10,12 @@ export const metadata: Metadata = {
 };
 
 /**
- * Ekran dla kogoś, kto zalogował się w aplikacji magazynowej kontem klienta.
+ * Ekran dla kogoś, kto zalogował się kontem bez roli zaplecza i trafił na
+ * /magazyn.
  *
- * Powstał, bo ciche odesłanie na konto — poprawne w przeglądarce — w aplikacji
- * wygląda jak awaria. Ktoś pobrał program nazwany „magazyn", podał prawidłowe
- * hasło i wylądował gdzie indziej bez słowa. Ekran mówi trzy rzeczy, których
- * tamto przekierowanie nie mówiło: że hasło było dobre, że to kwestia
- * uprawnień, i co dalej.
+ * Ciche odesłanie na konto wyglądałoby jak awaria: hasło było dobre, a mimo
+ * to strona podmieniła się bez słowa. Ekran mówi wprost trzy rzeczy: że hasło
+ * było dobre, że to kwestia uprawnień, i co dalej.
  *
  * Nie wylogowujemy go z automatu. Konto może być właściwe, tylko rola jeszcze
  * nienadana — a wylogowanie kazałoby wpisywać hasło drugi raz po to samo.
@@ -35,7 +34,7 @@ export default async function BrakDostepu() {
 
         <p className="mag-brak-tresc">
           Hasło się zgadza, ale to konto nie ma uprawnień do magazynu.
-          Aplikacja jest przeznaczona dla obsługi sklepu.
+          Magazyn jest dostępny wyłącznie dla obsługi sklepu.
         </p>
 
         {user?.email && <p className="mag-brak-konto">{user.email}</p>}

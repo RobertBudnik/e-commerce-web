@@ -3295,63 +3295,13 @@ code {
   white-space: nowrap;
 }
 
-/* ---------- Widok wewnątrz natywnej powłoki ----------
-   Aplikacja rysuje własny pasek zakładek na dole, więc ten z HTML-u znika.
-   Reszta reguł ścina zachowania, po których widać przeglądarkę: zaznaczanie
-   tekstu przy przytrzymaniu, menu kontekstowe na linkach, podświetlenie
-   tapnięcia i sprężynowanie przy krawędzi. */
-.w-aplikacji body {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: contain;
-}
-
-/* Krój systemowy obowiązuje w całej powłoce, nie tylko w magazynie —
-   ekran logowania też jest częścią aplikacji. */
-.w-aplikacji body,
-.w-aplikacji h1,
-.w-aplikacji h2,
-.w-aplikacji h3 {
-  font-family: -apple-system, BlinkMacSystemFont, var(--sans);
-}
-.w-aplikacji h1 { font-weight: 700; letter-spacing: -.022em; }
-
-/* Pasek stanu telefonu: treść musi zaczynać się pod zegarem, nie za nim. */
-.w-aplikacji main { padding-top: max(12px, env(safe-area-inset-top)); }
-
-/* ---------- Logowanie w powłoce ----------
-   To pierwszy ekran aplikacji, więc dostaje własny układ: jedna kolumna,
-   treść wyśrodkowana w pionie, duże pola. Kolumna z korzyściami z wersji
-   sklepowej znika — kto instaluje aplikację magazynową, jest już
-   przekonany. */
-.w-aplikacji .auth { display: block; max-width: 420px; margin-inline: auto; }
-.w-aplikacji .auth-aside { display: none; }
-.w-aplikacji .auth h1 { font-size: 30px; margin-bottom: 6px; }
-
-.w-aplikacji .auth input {
-  min-height: 52px;
-  font-size: 17px;   /* poniżej 16 px Safari sam przybliża stronę przy wejściu w pole */
-}
-.w-aplikacji .auth .btn { height: 52px; }
-
-/* Nadtytuł „KONTO" nad logowaniem: w aplikacji zbędny, bo to jedyny ekran
-   przed wejściem — nie ma czego rozróżniać. */
-.w-aplikacji .auth .label { display: none; }
-
-
 /* ==========================================================================
-   Magazyn — aplikacja
+   Magazyn — narzędzie zaplecza
 
    Narzędzie dla zarządu, nie mobilna odmiana sklepu. Wygląd trzyma się
-   konwencji systemu: listy grupowane jak w Ustawieniach, krój systemowy,
-   odczyty maszynowym. Pasek zakładek rysuje powłoka natywna — tutaj go nie
-   ma i nie może być, byłby drugim paskiem nad pierwszym.
-
-   Reguły działają zarówno w powłoce (`.w-aplikacji`, po User-Agencie albo
-   po `display-mode: standalone`), jak i w przeglądarce na wąskim ekranie —
-   magazyn ma wyglądać tak samo niezależnie od drogi wejścia.
+   konwencji systemu: listy grupowane jak w Ustawieniach, odczyty maszynowe.
+   To podstrona sklepu dostępna po zalogowaniu — nagłówek i stopka serwisu
+   zostają, magazyn ma wyglądać tak samo niezależnie od szerokości ekranu.
    ========================================================================== */
 
 /* ---------- Fundament układu magazynu ----------
@@ -3370,14 +3320,11 @@ code {
  *    sam wiersz zachowuje się tak samo w powłoce, w Safari i w podglądzie
  *    obok innej treści — liczy się miejsce, które faktycznie dostał.
  */
-/* Magazyn ma dwa wcielenia i różnią się tutaj, nie w komponentach.
-   Baza to **podstrona sklepu**: krój serwisu, tło serwisu, wysokość z treści.
-   Wcielenie przyrządu siedzi niżej, pod `.w-aplikacji`, i dopiero ono bierze
-   systemowy krój, własne tło i cały ekran.
-
-   Odwrotna kolejność byłaby wygodniejsza w pisaniu (przyrząd jako baza), ale
-   kłamałaby o tym, co jest normą: magazyn otwierany z laptopa to zwykła
-   podstrona pod nagłówkiem sklepu, a powłoka to przypadek szczególny. */
+/* Magazyn to podstrona sklepu: krój serwisu, tło serwisu, wysokość z treści.
+   Leży pod nagłówkiem sklepu, między nim a stopką — nie wycina z serwisu
+   prostokąta w innym kolorze. Własną paletę Apple bierze dopiero wtedy, gdy
+   magazynier ręcznie wybierze motyw na ekranie skanera (bloki `.mag.motyw-*`
+   niżej). */
 /* ---------- Magazyn: paleta Apple ----------
    Magazyn ma własną paletę i to jest decyzja, nie rozjazd. Sklep jedzie
    neutralnym KokonutUI, magazyn systemowym iOS — bo to przyrząd obsługiwany
@@ -3523,18 +3470,11 @@ code {
   --na-akcencie: #000000;
 }
 
-/* Powłoka: przyrząd. Kadr od krawędzi do krawędzi, systemowy krój, własne
-   tło i cała wysokość ekranu — tu magazyn nie jest podstroną, tylko całą
-   aplikacją. */
-/* Ekran wyłamany z motywu aplikacji musi pomalować własne tło.
+/* Ekran wyłamany z motywu strony musi pomalować własne tło.
    Pod „Auto" `.mag` zostaje przezroczysty i idzie za stroną — i o to chodzi.
    Ale gdy magazynier wybierze „Jasny" albo „Ciemny", klasa podmienia tokeny,
    a bez własnego tła nie ma czego nimi pomalować: obie odmiany pokazywałyby
-   to samo, czyli tło strony pod spodem.
-
-   W powłoce nie było tego widać, bo tam tło maluje `.w-aplikacji .mag` niżej.
-   Wyszło dopiero w przeglądarce — i słusznie, bo to tam magazyn stał się
-   podstroną bez własnego tła. */
+   to samo, czyli tło strony pod spodem. */
 .mag.motyw-jasny,
 .mag.motyw-ciemny { background: var(--tlo); }
 
@@ -3590,13 +3530,6 @@ code {
   --czerwony-tekst: var(--czerwony);
 }
 
-.w-aplikacji .mag {
-  min-height: 100dvh;
-  padding-block: max(8px, env(safe-area-inset-top)) 0;
-  background: var(--panel);
-  font-family: -apple-system, "SF Pro Text", system-ui, var(--sans);
-}
-
 /* Kolumnę wyznacza sam ekran, nie jego dzieci: karty i wiersze mają już
    własne `margin-inline: var(--mag-gutter)` i próba centrowania ich osobno
    biłaby się z tymi regułami. Limit siedzi więc na `.mag`, a marginesy
@@ -3604,47 +3537,6 @@ code {
 .mag {
   max-width: calc(var(--mag-maxw) + 2 * var(--mag-gutter));
   margin-inline: auto;
-}
-
-/* Przyrząd ma własne tło, a po wyśrodkowaniu kolumny zostają boki. Bez tego
-   na tablecie po obu stronach świeciłby kolor sklepu.
-
-   W przeglądarce reguła nie obowiązuje i to jest sedno tej pary wcieleń:
-   magazyn jako podstrona ma leżeć na tle sklepu, między jego nagłówkiem
-   a jego stopką, a nie wycinać z serwisu prostokąt w innym kolorze. */
-.w-aplikacji body:has(.mag) { background: var(--panel); }
-
-/* Powyżej szerokości telefonu przyrząd dostaje oddech u góry — inaczej tytuł
-   przykleja się do krawędzi tabletu tak samo jak do notcha. Podstrony to nie
-   dotyczy: tam odstęp od nagłówka daje już `padding-block` z bazy. */
-@container magazyn (min-width: 520px) {
-  .w-aplikacji .mag { padding-block-start: 24px; }
-}
-
-/* ---------- Miejsce pod natywnym paskiem zakładek ----------
- * W powłoce widok sieciowy sięga krawędzi ekranu, a pasek zakładek rysuje się
- * nad nim. Bez rezerwy ostatni wiersz listy chowa się pod „Skanerem".
- *
- * 49 pt to wysokość paska, `env(safe-area-inset-bottom)` dokłada obszar gestu.
- * Reguła obejmuje wyłącznie `.w-powloce` — w skrócie z ekranu początkowego
- * paska nie ma i ta sama rezerwa byłaby dziurą na dole ekranu.
- */
-/* Wcięcie górne siedzi na `body`, nie na ekranie magazynu. Widok sieciowy
-   sięga krawędzi, więc odstęp od wyspy dynamicznej musi dostać KAŻDA strona
-   otwarta w powłoce — również logowanie, które `.mag` nie używa i któremu
-   nagłówek wjeżdżał pod zegarek. */
-.w-powloce body { padding-top: env(safe-area-inset-top); }
-.w-powloce .mag {
-  /* Wcięcie dodaje już `body`; tu zostaje sam oddech nad tytułem. */
-  padding-block-start: 8px;
-  min-height: calc(100dvh - env(safe-area-inset-top));
-  padding-block-end: calc(49px + env(safe-area-inset-bottom));
-}
-
-/* Przyklejony pasek akcji musi usiąść nad paskiem zakładek, nie pod nim. */
-.w-powloce .mag-akcje {
-  bottom: calc(49px + env(safe-area-inset-bottom));
-  padding-bottom: 12px;
 }
 
 /* ---------- Tytuł ekranu ----------
@@ -3856,9 +3748,6 @@ code {
   background: var(--surface);
   overflow: hidden;
 }
-/* W powłoce karta leży na `--panel` i obrys jest zbędny — kontrast robi
-   różnica powierzchni. */
-.w-aplikacji .mag-karta { border-color: transparent; }
 .mag-karta + .mag-karta { margin-top: 10px; }
 
 .mag-wiersz {
@@ -4005,7 +3894,6 @@ code {
   border-radius: var(--r-lg);
   background: var(--surface);
 }
-.w-aplikacji .mag-kafel { border-color: transparent; }
 .mag-kafel-liczba {
   display: block;
   font-family: var(--mono);
