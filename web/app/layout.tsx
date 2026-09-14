@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { Instrument_Sans, Geist_Mono } from 'next/font/google';
 import './globals.css';
 
 import { CartProvider } from '@/components/cart/CartProvider';
@@ -18,36 +17,10 @@ import { MARKA } from '@/lib/dane-sklepu';
 import { siteUrl } from '@/lib/site';
 
 /**
- * Kroje ładuje `next/font`: pliki serwuje własna domena, więc znika request
- * do Google i skok układu przy zamianie fontu zastępczego.
- * Subset latin-ext jest obowiązkowy — polskie znaki.
+ * Kroje idą z systemu (SF na Apple, Segoe/Roboto indziej) — definicje
+ * `--font-sans` / `--font-display` / `--font-mono` siedzą w `globals.css`.
+ * Bez `next/font`: zero requestów do Google i zero skoku układu.
  */
-/**
- * Instrument Sans — krój podany wprost przez makietę, jeden na cały serwis.
- * Nagłówki, interfejs i etykiety różnią się stopniem i wagą, nie pismem;
- * szeryfa nie ma nigdzie.
- *
- * Zmienna `--font-display` zostaje pod tą samą nazwą, bo wisi na niej kilkaset
- * odwołań w `globals.css`; wskazuje na ten sam krój co interfejs.
- */
-const display = Instrument_Sans({
-  subsets: ['latin-ext'],
-  variable: '--font-display',
-  display: 'swap',
-});
-
-const sans = Instrument_Sans({
-  subsets: ['latin-ext'],
-  variable: '--font-sans',
-  display: 'swap',
-});
-
-/** Geist Mono pod liczby, które mają stać w kolumnie: tabele i kwoty. */
-const mono = Geist_Mono({
-  subsets: ['latin-ext'],
-  variable: '--font-mono',
-  display: 'swap',
-});
 
 /**
  * Skrypt blokujący — musi wykonać się przed pierwszym malowaniem, inaczej
@@ -100,8 +73,8 @@ export const metadata: Metadata = {
  */
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f5f5f5' },
-    { media: '(prefers-color-scheme: dark)', color: '#121212' },
+    { media: '(prefers-color-scheme: light)', color: '#efe9de' },
+    { media: '(prefers-color-scheme: dark)', color: '#1f1d1a' },
   ],
   // Blokada powiększania szczypaniem byłaby wygodna przy skanowaniu, ale
   // odbiera możliwość powiększenia komuś, kto tego potrzebuje.
@@ -119,10 +92,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const naglowki = await headers();
   const nonce = naglowki.get(NAGLOWEK_NONCE) ?? undefined;
 
-  const klasy = [display.variable, sans.variable, mono.variable].join(' ');
-
   return (
-    <html lang="pl" className={klasy} suppressHydrationWarning>
+    <html lang="pl" suppressHydrationWarning>
       <head>
         {/* Nonce z middleware. Bez niego polityka odrzuci ten skrypt, a wraz
             z nim zniknie jedyne, co ratuje przed mignięciem jasnego tła przy
