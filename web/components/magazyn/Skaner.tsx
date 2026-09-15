@@ -26,18 +26,11 @@ type Stan =
 const POWOD_SKANERA = 'Korekta inwentaryzacyjna';
 
 /**
- * Ścieżka do zgody na aparat zależy od tego, gdzie widok jest oglądany.
- * W powłoce na iPhonie nie ma żadnych „ustawień przeglądarki" — odesłanie
- * tam zostawia magazyniera z instrukcją, której nie da się wykonać.
+ * Skaner chodzi w przeglądarce, więc zgoda na aparat siedzi w jej
+ * ustawieniach dla tej strony.
  */
 function instrukcjaZgody(): string {
-  const wPowloce =
-    typeof document !== 'undefined' &&
-    document.documentElement.classList.contains('w-aplikacji');
-
-  return wPowloce
-    ? 'Włącz aparat w Ustawieniach iPhone’a: Nordo → Aparat.'
-    : 'Włącz aparat w ustawieniach przeglądarki dla tej strony.';
+  return 'Włącz aparat w ustawieniach przeglądarki dla tej strony.';
 }
 
 export function Skaner() {

@@ -1,7 +1,7 @@
 /**
  * Dane konkretnego sklepu — jedyne miejsce, które wypełnia się przy wdrożeniu.
  *
- * To repozytorium jest szablonem: front sklepu plus aplikacja magazynowa, która
+ * To repozytorium jest szablonem: front sklepu plus magazyn zaplecza, który
  * przez Supabase synchronizuje produkty i stany. Wszystko, co odróżnia jeden
  * sklep od drugiego — nazwa, hasła, obietnice, dane sprzedawcy — siedzi tutaj,
  * a nie po komponentach. Rebranding to edycja jednego pliku.
@@ -41,7 +41,7 @@ export function gotowe(wartosc: string): string | null {
 
 export const MARKA = {
   /**
-   * Nazwa w nagłówku, stopce, tytułach kart i manifeście aplikacji.
+   * Nazwa w nagłówku, stopce i tytułach kart.
    * Jedno miejsce — podmiana tutaj przechodzi przez cały sklep.
    */
   nazwa: '⟨nazwa sklepu⟩',

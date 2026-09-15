@@ -64,24 +64,14 @@ const SKRYPT_MOTYWU = `
     var ciemny = zapis === 'dark' || (zapis !== 'light' && pytanie.matches);
     if (ciemny) document.documentElement.classList.add('dark');
 
-    // Ustawienie systemu potrafi zmienić się przy działającej stronie —
-    // w powłoce na telefonie o zmierzchu robi to sam iOS. Bez nasłuchu strona
-    // zostawała w motywie z chwili wczytania: system ciemny, sklep jasny.
-    // Zapis użytkownika wygrywa, więc kto wybrał motyw ręcznie, ten go trzyma.
+    // Ustawienie systemu potrafi zmienić się przy działającej stronie — bez
+    // nasłuchu strona zostawała w motywie z chwili wczytania: system ciemny,
+    // sklep jasny. Zapis użytkownika wygrywa, więc kto wybrał motyw ręcznie,
+    // ten go trzyma.
     pytanie.addEventListener('change', function (e) {
       if (localStorage.getItem('nordo-theme')) return;
       document.documentElement.classList.toggle('dark', e.matches);
     });
-
-    // Skrót z ekranu początkowego to też aplikacja, tylko uruchamiana przez
-    // Safari — nie niesie więc User-Agenta powłoki i serwer nie ma po czym
-    // jej poznać. Bez tego magazyn otwarty z ikony dostawał wygląd strony:
-    // nadtytuł, szeryfowy nagłówek i pasek zakładek w HTML-u, mimo że pasek
-    // adresu był schowany. Klasa jest ta sama, więc reguły powłoki obejmują
-    // obie drogi bez dublowania.
-    if (matchMedia('(display-mode: standalone)').matches) {
-      document.documentElement.classList.add('w-aplikacji');
-    }
   } catch (e) {}
 })();
 `;
@@ -99,23 +89,13 @@ export const metadata: Metadata = {
     siteName: MARKA.nazwa,
   },
 
-  /**
-   * iOS nie czyta ikon z manifestu — kafel na ekranie początkowym bierze
-   * wyłącznie z `apple-touch-icon`. Bez tego Safari wstawia zrzut strony.
-   */
-  appleWebApp: {
-    capable: true,
-    title: MARKA.nazwa,
-    statusBarStyle: 'default',
-  },
   icons: {
     icon: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
-    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
 };
 
 /**
- * Pasek stanu telefonu dostaje kolor tła aplikacji — inaczej w ciemnym
+ * Pasek stanu telefonu dostaje kolor tła strony — inaczej w ciemnym
  * motywie zostaje jasny pasek nad ciemną treścią.
  */
 export const viewport: Viewport = {
@@ -133,41 +113,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // dodatkowego zapytania, a token weryfikuje Auth, nie przeglądarka.
   const user = await getSessionUser();
 
-  // Magazyn ma dwie twarze i to jest świadome:
-  //
-  //   w przeglądarce — zwykła podstrona sklepu. Nagłówek, stopka, ta sama
-  //     typografia i to samo tło. Ktoś, kto wchodzi tu z laptopa, porusza się
-  //     po jednym serwisie, a nie po dwóch różnych aplikacjach pod jednym
-  //     adresem, i musi mieć jak wrócić do sklepu.
-  //
-  //   w powłoce — przyrząd. Bez nagłówka z koszykiem, bez stopki
-  //     z regulaminem, systemowy krój, kadr od krawędzi do krawędzi.
-  //     Tam magazyn jest całą aplikacją, więc nawigacja sklepu tylko
-  //     zabierałaby miejsce.
-  //
-  // Rozróżnia je `wAplikacji` **i** ścieżka — bo powłoka niesie teraz cały
-  // sklep, nie sam magazyn. Klient w aplikacji dostaje nawigację, koszyk
-  // i konto; magazynier, wchodząc w `/magazyn`, dostaje przyrząd bez nich.
+  // Magazyn to zwykła podstrona sklepu: nagłówek, stopka, ta sama typografia
+  // i to samo tło. Ktoś, kto wchodzi tu z laptopa, porusza się po jednym
+  // serwisie i musi mieć jak wrócić do sklepu.
   const naglowki = await headers();
   const nonce = naglowki.get(NAGLOWEK_NONCE) ?? undefined;
-  const sciezka = naglowki.get('x-nordo-path') ?? '';
-  const magazyn = sciezka.startsWith('/magazyn');
 
-  // Treść jedzie do natywnej powłoki? Wtedy pasek zakładek jest już na dole
-  // ekranu, narysowany przez system — powtarzanie go w HTML-u byłoby dublem.
-  const wAplikacji = (naglowki.get('user-agent') ?? '').includes('NordoApp');
-
-  // `w-aplikacji` obejmuje też skrót z ekranu początkowego, a tam nie ma
-  // natywnego paska zakładek. Osobna klasa dla powłoki pozwala zarezerwować
-  // miejsce pod paskiem wyłącznie tam, gdzie ten pasek naprawdę jest.
-  const klasy = [
-    display.variable,
-    sans.variable,
-    mono.variable,
-    wAplikacji ? 'w-aplikacji w-powloce' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const klasy = [display.variable, sans.variable, mono.variable].join(' ');
 
   return (
     <html lang="pl" className={klasy} suppressHydrationWarning>
@@ -195,23 +147,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 podstronie przez cały nagłówek — logo, cztery pozycje menu,
                 motyw, konto i koszyk — zanim dotrze do tego, po co ktoś
                 przyszedł. Widoczny dopiero na fokusie, więc mysz go nie widzi. */}
-            {!(wAplikacji && magazyn) && (
-              <a className="skip-link" href="#tresc">
-                Przejdź do treści
-              </a>
-            )}
-            {!(wAplikacji && magazyn) && <SiteHeader user={user} />}
+            <a className="skip-link" href="#tresc">
+              Przejdź do treści
+            </a>
+            <SiteHeader user={user} />
             <div id="tresc" tabIndex={-1}>
               {children}
             </div>
-            {!(wAplikacji && magazyn) && <SiteFooter />}
-            {!(wAplikacji && magazyn) && <OdsloniecieStopki />}
+            <SiteFooter />
+            <OdsloniecieStopki />
             <MiniCart />
             <QuickViewHost />
             <ToastHost />
             {/* Ślad kursora nic nie renderuje przy ograniczonym ruchu ani
-                na dotyku, a w powłoce aplikacji nie ma go wcale. */}
-            {!wAplikacji && <SladKursora />}
+                na dotyku. */}
+            <SladKursora />
           </WishlistProvider>
         </CartProvider>
       </body>

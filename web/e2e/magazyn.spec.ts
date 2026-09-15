@@ -244,12 +244,12 @@ test.describe('Nadanie przesyłki', () => {
 });
 
 test.describe('Motyw skanera', () => {
-  test('wybór wyłamuje ekran z motywu aplikacji i przeżywa przeładowanie', async ({ page }) => {
+  test('wybór wyłamuje ekran z motywu strony i przeżywa przeładowanie', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
     await page.goto('/magazyn/skan');
 
     const ekran = page.locator('main.mag');
-    // Domyślnie „Auto" — ekran idzie za motywem aplikacji i nie nosi klasy
+    // Domyślnie „Auto" — ekran idzie za motywem strony i nie nosi klasy
     await expect(page.getByRole('tab', { name: 'Auto' })).toHaveAttribute('aria-selected', 'true');
     await expect(ekran).not.toHaveClass(/motyw-(ciemny|jasny)/);
 
