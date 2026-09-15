@@ -18,72 +18,53 @@
   color-scheme: light;
 
   /* ---------------------------------------------------------------------
-     Paleta z KokonutUI (kokonutui.com), zdjęta z arkusza serwisu:
-
-       tło        #f5f5f5     tekst      #0a0a0a
-       karta      #f1f1f1     drugi plan #737373
-       podniesione#fafafa     obwódka    #cccccc80
-       primary    #171717     na primary #fafafa
-       ciemny: tło #121212 · tekst #ebebeb · karta #212121 · warstwa #1e1e1e
-
-     Charakter tej biblioteki: **zero barwy**. Cała paleta to neutralna szarość
-     Tailwinda, a powierzchnie robi się przezroczystością na atramencie
-     (`bg-black/5`, `dark:bg-white/5`, obwódki na 6%), nie osobnym odcieniem.
-     Stąd `--accent` nie jest tu kolorem, tylko najciemniejszą czernią —
-     w tym systemie wyróżnia kontrast, nie barwa.
-
-     Złoto i ciepła biel z poprzedniej rundy wypadły w całości.
+     Paleta Apple HIG: ciepły beż w jasnym motywie, ciepły grafit w ciemnym.
+     Bez bieli i bez błękitu — akcent to grafit, a realny kolor wnoszą
+     wyłącznie zdjęcia produktów. Zatwierdzona przez właściciela 15.09.2026.
+     Kontrast każdej pary pilnuje `npm run kontrast`.
      --------------------------------------------------------------------- */
 
-  /* powierzchnie — od najjaśniejszej do najgłębszej */
-  --surface: #fafafa;
-  --bg: #f5f5f5;
-  --panel: #f1f1f1;
+  /* powierzchnie — ciepły beż, od najjaśniejszej do najgłębszej.
+     Zero bieli: nawet `--surface` jest lekko kremowy (Apple HIG + Aesop). */
+  --surface: #f5f1e8;
+  --bg: #efe9de;
+  --panel: #e7e0d2;
 
-  /* tekst — trzy stopnie neutralnej czerni. `--ink-3` zszedł o stopień
-     wobec ich `#737373`: tamten daje na tle strony 4,35:1, czyli tuż pod
-     progiem AA. #6b6b6b trzyma 4,89:1 i nie rusza charakteru. */
-  --ink: #0a0a0a;
-  --ink-2: #525252;
-  --ink-3: #6b6b6b;
+  /* tekst — trzy stopnie ciepłego atramentu. `--ink-3` trzymany nad progiem
+     AA na tle strony (`npm run kontrast` pilnuje). */
+  --ink: #1c1917;
+  --ink-2: #57514a;
+  --ink-3: #665f54;
 
-  /* Hairline przezroczystością na atramencie, nie własnym szarym — tak
-     robi to KokonutUI i dzięki temu linia działa na każdej powierzchni. */
-  --line: rgba(10, 10, 10, .12);
+  /* Hairline przezroczystością na ciepłym atramencie — działa na każdej
+     z beżowych powierzchni bez własnego szarego. */
+  --line: rgba(28, 25, 23, .12);
 
   /* ---------------------------------------------------------------------
-     Akcent z makiety: fiolet, i to on niesie wyróżnienie zamiast samego
-     kontrastu. Poprzednia runda stała na czerni z KokonutUI — makieta daje
-     barwę wprost, razem z gradientem na przycisku głównym.
+     Akcent = grafit (Apple HIG, minimal). Kolor wnoszą wyłącznie zdjęcia
+     produktów; interfejs zostaje neutralny. Bez błękitu.
 
-     Wartość potwierdzona przez właściciela 24.08.2026: `#6C5CE7`. Lista barw
-     na makiecie czyta się jako `#6CE5C7`, co jest miętą i nie zgadza się
-     z fioletową kropką obok — to przestawione znaki, nie druga barwa.
-
-     Rozdział ról wymuszony kontrastem, nie gustem: `--accent` to plama (tło
-     przycisku, kropka, pasek), `--accent-ink` to ten sam fiolet zejściem
-     ciemniejszy, bo dopiero on unosi litery na jasnym tle. Sprawdzasz to
-     `npm run kontrast`, nie okiem.
+     `--accent` to plama (tło przycisku, kropka, pasek), `--accent-ink` niesie
+     litery na jasnym tle — oba grafitowe, kontrast pilnuje `npm run kontrast`.
      --------------------------------------------------------------------- */
-  --accent: #6c5ce7;
-  --accent-ink: #5445c0;
-  --accent-soft: rgba(108, 92, 231, .10);
+  --accent: #1c1917;
+  --accent-ink: #1c1917;
+  --accent-soft: rgba(28, 25, 23, .08);
 
-  /* Druga barwa z makiety — cyjan. Wyłącznie znacznik przy danych w panelu
-     (kafel zwrotów), nigdy pod literami: na jasnym tle daje 1,7:1. */
-  --accent-2: #00d4ff;
+  /* Znacznik przy danych w panelu (kafel zwrotów) — ciepła neutralna szarość,
+     nigdy pod literami. */
+  --accent-2: #8a8178;
 
-  /* Gradient przycisku głównego z makiety: fiolet w niebieski, w prawo w dół.
-     Trzymany tokenem, bo powtarza się na przycisku, na pasku zakupu i na
-     zakładce panelu. */
-  --akcent-gradient: linear-gradient(135deg, #6c5ce7 0%, #4a7dff 100%);
+  /* Przycisk główny: pełny grafit, ledwie zauważalny gradient dla głębi.
+     Token, bo powtarza się na przycisku, pasku zakupu i zakładce panelu. */
+  --akcent-gradient: linear-gradient(135deg, #1c1917 0%, #2a2622 100%);
 
-  --btn-bg: #6c5ce7;
-  --btn-ink: #ffffff;
-  --na-akcencie: #ffffff;
+  --btn-bg: #1c1917;
+  --btn-ink: #f5f1e8;
+  --na-akcencie: #f5f1e8;
 
-  --img: #ededed;
-  --img-line: rgba(10, 10, 10, .14);
+  --img: #e7e0d2;
+  --img-line: rgba(28, 25, 23, .14);
 
   /* Kolory znaczące zostają — KokonutUI też trzyma osobny zestaw dla stanów
      (success #00c758, warning #f99c00, error #fb2c36). Bierzemy ich rodzinę,
@@ -118,14 +99,12 @@
      jak niedopatrzenie. */
   --radius-hero: 24px;
 
-  /* Wash pod hero: fiolet w róż i błękit, wszystko na niskiej kryciu.
-     Kolejność kolorów z makiety; krycie dobrane tak, żeby `--ink` na tym
-     tle nie schodził poniżej progu — pod spodem nadal pracuje `--surface`. */
+  /* Wash pod hero: ledwie ciepły taupe na niskim kryciu — dość, by oddzielić
+     hero od tła, za mało, by `--ink` zszedł poniżej progu. */
   --hero-wash: linear-gradient(
     118deg,
-    rgba(108, 92, 231, .13) 0%,
-    rgba(233, 138, 190, .11) 52%,
-    rgba(74, 125, 255, .10) 100%
+    rgba(28, 25, 23, .05) 0%,
+    rgba(138, 129, 120, .06) 100%
   );
 
   --shadow: 0 1px 2px rgba(74, 48, 32, .06), 0 18px 40px -24px rgba(74, 48, 32, .28);
@@ -139,47 +118,42 @@
 .motyw-ciemny {
   color-scheme: dark;
 
-  --surface: #1e1e1e;
-  --bg: #121212;
-  --panel: #212121;
+  --surface: #26221e;
+  --bg: #1f1d1a;
+  --panel: #2e2a25;
 
-  --ink: #ebebeb;
-  --ink-2: #b3b3b3;
-  --ink-3: #949494;
+  --ink: #ede7db;
+  --ink-2: #ada79b;
+  --ink-3: #a29b8a;
 
-  --line: rgba(255, 255, 255, .12);
+  --line: rgba(237, 231, 219, .14);
 
-  /* W ciemności fiolet z makiety zostaje barwą, ale jaśnieje: `#6c5ce7` na
-     tle `#121212` daje 3,4:1, czyli nadaje się pod plamę i nie nadaje pod
-     litery. Rozdział ról jest więc odwrotny niż w jasnym motywie — plama
-     ciemniejsza, tekst jaśniejszy.
+  /* W ciemności role akcentu się odwracają: plama jest jasna (grafit
+     rozjaśniony do ciepłej kości słoniowej) i ten sam ton niesie litery.
+     Przycisk główny: jasny na ciemnym, napis grafitowy. Bez błękitu. */
+  --accent: #ede7db;
+  --accent-ink: #ede7db;
+  --accent-soft: rgba(237, 231, 219, .12);
 
-     Przycisk główny zostaje pełnym fioletem z białym napisem, bo gradient
-     z makiety czyta się w ciemności tak samo dobrze jak na bieli. */
-  --accent: #6c5ce7;
-  --accent-ink: #b3a8f7;
-  --accent-soft: rgba(108, 92, 231, .18);
+  --accent-2: #98907f;
 
-  --accent-2: #00d4ff;
+  --akcent-gradient: linear-gradient(135deg, #ede7db 0%, #cfc8b8 100%);
 
-  --akcent-gradient: linear-gradient(135deg, #6c5ce7 0%, #4a7dff 100%);
+  --btn-bg: #ede7db;
+  --btn-ink: #1f1d1a;
+  --na-akcencie: #1f1d1a;
 
-  --btn-bg: #6c5ce7;
-  --btn-ink: #ffffff;
-  --na-akcencie: #ffffff;
-
-  --img: #212121;
-  --img-line: rgba(255, 255, 255, .14);
+  --img: #2e2a25;
+  --img-line: rgba(237, 231, 219, .14);
 
   --radius-hero: 24px;
 
-  /* Ten sam wash, ale mocniejszy: niskie krycie na czerni ginie zupełnie.
-     Nie na tyle jednak, żeby plama zaczęła konkurować z literami. Róż
-     wypada — na ciemnym tle robił się brudny. */
+  /* Ten sam wash na ciemnym: ciepła kość na niskim kryciu — dość, by oddzielić
+     hero od tła, za mało, by konkurować z literami. */
   --hero-wash: linear-gradient(
     118deg,
-    rgba(108, 92, 231, .22) 0%,
-    rgba(74, 125, 255, .14) 100%
+    rgba(237, 231, 219, .06) 0%,
+    rgba(173, 167, 155, .05) 100%
   );
 
   --ok: #00c758;
@@ -301,11 +275,15 @@
   --z-modal: 100;
   --z-toast: 120;
 
-  /* typografia — Geist wszędzie, tak jak w KokonutUI.
-     Szeryf zniknął w całości: `--display` wskazuje na ten sam krój co
-     interfejs, bo w tej bibliotece hierarchię niesie stopień i waga, nie
-     zmiana pisma. `--mono` to Geist Mono i idzie wyłącznie pod liczby
-     stojące w kolumnie. Subset latin-ext obowiązkowy — polskie znaki. */
+  /* typografia — font systemowy (Apple HIG): SF na Apple, Segoe/Roboto
+     indziej. Zero pobierania z Google, zero skoku układu przy zamianie kroju.
+     Hierarchię niesie stopień i waga, nie zmiana pisma; `--display` to ten
+     sam rodzaj co interfejs (SF Pro Display pod duże stopnie), `--mono` idzie
+     wyłącznie pod liczby stojące w kolumnie. `--font-*` definiujemy tutaj, bo
+     next/font już ich nie wstrzykuje. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   /* ---------------------------------------------------------------------
      Skala typograficzna z makiety (24.08.2026):
 
