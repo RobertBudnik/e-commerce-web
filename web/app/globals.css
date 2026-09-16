@@ -1182,7 +1182,7 @@ select:hover { border-color: var(--line-strong); }
    bo akcent był najciemniejszą czernią i nie miał czym zaszkodzić. Teraz
    akcent jest fioletem: dziewięć pikseli wersalików w barwie marki
    konkurowałoby z nazwą produktu, a na makiecie ta etykieta jest wyciszona. */
-.card-cat { font-size: .5625rem; font-weight: 600; letter-spacing: .25em; text-transform: uppercase; color: var(--ink-faint); }
+.card-cat { font-size: .6875rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
 /* Nazwa produktu wielkości treści, nie nagłówka — tak stoi na makiecie.
    Poprzednie 1,25 rem robiło z niej tytuł sekcji i spłaszczało różnicę
    między kaflem a nagłówkiem listy nad nim. */
@@ -1203,8 +1203,8 @@ select:hover { border-color: var(--line-strong); }
 .rating .stars { letter-spacing: .06em; color: var(--ink-soft); }
 
 .price-row { display: flex; align-items: baseline; gap: 9px; margin-top: 10px; }
-.price { font-family: var(--sans); }
-.price { font-size: .9375rem; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.price { font-family: var(--mono); }
+.price { font-size: 1.0625rem; font-weight: 550; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .price-old { font-size: .8125rem; color: var(--ink-faint); text-decoration: line-through; }
 
 /* Przycisk dodawania z kafla jest kwadratem ze znakiem — pełnej szerokości
