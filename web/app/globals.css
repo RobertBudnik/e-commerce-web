@@ -449,9 +449,9 @@ p:last-child { margin-bottom: 0; }
    kolor. */
 .label {
   font-family: var(--sans);
-  font-size: .5625rem;
+  font-size: .75rem;
   font-weight: 600;
-  letter-spacing: .25em;
+  letter-spacing: .14em;
   text-transform: uppercase;
   color: var(--etykieta);
 }
@@ -503,19 +503,17 @@ p:last-child { margin-bottom: 0; }
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: 44px;
-  padding-inline: 22px;
+  height: 48px;
+  padding-inline: 24px;
   border: 1px solid var(--b-bd);
   border-radius: var(--r-pill);
   background: var(--b-bg);
   color: var(--b-fg);
-  /* Przycisk mówi tu wersalikami i rozstrzeleniem, nie rozmiarem. Litera
-     jest drobna (11 px), więc cel dotyku trzyma wysokość, nie tekst —
-     44 px zostaje. */
-  font-size: .6875rem;
-  font-weight: 600;
-  letter-spacing: .18em;
-  text-transform: uppercase;
+  /* Sentence-case w duchu Apple HIG — przycisk niesie wagą i rozmiarem, nie
+     wersalikami. Wysokość 48 px trzyma wygodny cel dotyku. */
+  font-size: .9375rem;
+  font-weight: 550;
+  letter-spacing: 0;
   cursor: pointer;
   white-space: nowrap;
   transition: background var(--ruch-tlo) ease, border-color var(--ruch-tlo) ease, color var(--ruch-kolor) ease, opacity var(--ruch-kolor) ease;
@@ -539,7 +537,7 @@ p:last-child { margin-bottom: 0; }
 .btn svg { width: 16px; height: 16px; flex: none; }
 .btn[aria-pressed="true"] svg { fill: currentColor; color: var(--accent-ink); }
 
-.btn-sm { height: 38px; padding-inline: 18px; font-size: .5625rem; letter-spacing: .16em; }
+.btn-sm { height: 40px; padding-inline: 18px; font-size: .8125rem; letter-spacing: 0; }
 .btn-block { width: 100%; }
 
 .btn-link {
@@ -614,51 +612,35 @@ p:last-child { margin-bottom: 0; }
 
 .logo {
   font-family: var(--display);
-  font-size: 1.0625rem;
+  font-size: 1.3rem;
   font-weight: 700;
-  letter-spacing: .28em;
-  text-transform: uppercase;
+  letter-spacing: -.02em;
   white-space: nowrap;
-  /* Rozstrzelenie dokłada światło po ostatniej literze — bez tego szyld
-     wygląda na przesunięty w lewo, choć siatka trzyma go w osi. */
-  padding-left: .28em;
 }
 .logo::after {
   content: "";
   display: inline-block;
-  width: 4px; height: 4px;
+  width: 5px; height: 5px;
   margin-left: 3px;
   border-radius: 50%;
-  background: var(--accent);
-  vertical-align: middle;
+  background: var(--ink-3);
+  vertical-align: baseline;
 }
 
-.nav { display: flex; gap: 32px; }
-/* Nawigacja w wersalikach z szerokim rozstrzeleniem — w tym języku to ona
-   ustawia ton całej górze strony. Podkreślenie na hoverze zostaje: jest
-   jedynym ruchem w nagłówku i nie kłóci się z kanciastością. */
+.nav { display: flex; gap: 4px; }
+/* Sentence-case w pigułkach — hover i strona bieżąca dostają miękkie tło,
+   zamiast wersalików z podkreśleniem. */
 .nav a {
-  position: relative;
-  font-size: .6875rem;
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  font-size: .9375rem;
   font-weight: 500;
-  letter-spacing: .18em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   color: var(--ink-2);
-  transition: color var(--ruch-kolor) ease;
+  transition: color var(--ruch-kolor) ease, background-color var(--ruch-kolor) ease;
 }
-.nav a::after {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: -6px;
-  height: 1px;
-  background: var(--ink);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform .2s ease;
-}
-.nav a:hover { color: var(--ink); }
-.nav a:hover::after, .nav a[aria-current="page"]::after { transform: scaleX(1); }
-.nav a[aria-current="page"] { color: var(--ink); }
+.nav a:hover { color: var(--ink); background: var(--bg-soft); }
+.nav a[aria-current="page"] { color: var(--ink); background: var(--bg-soft); }
 
 .header-actions { justify-self: end; display: flex; align-items: center; gap: 14px; }
 
@@ -860,7 +842,7 @@ p:last-child { margin-bottom: 0; }
   /* Tekst dostaje mniej niż połowę, kadr więcej — tak stoi to na makiecie
      i tak ma sens: hasło łamie się na czterech–pięciu słowach, a produkt
      potrzebuje miejsca, żeby dało się go obejrzeć. */
-  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
   align-items: center;
   gap: clamp(24px, 4vw, 64px);
   min-height: clamp(320px, 46svh, 440px);
@@ -871,9 +853,8 @@ p:last-child { margin-bottom: 0; }
    i akapicie osobno, bo nałożona na wrapper obcinała też rząd przycisków —
    dwie pigułki nie mieściły się w 34ch i łamały się jedna pod drugą, choć
    w kolumnie było na nie miejsce. */
-.hero h1,
-.hero .lede { max-width: 22ch; }
-.hero .lede { max-width: 34ch; }
+.hero h1 { max-width: 15ch; }
+.hero .lede { max-width: 40ch; }
 
 @media (max-width: 860px) {
   /* Na telefonie kolumny stają jedna nad drugą — kadr pod tekstem, bo hasło
@@ -893,10 +874,12 @@ p:last-child { margin-bottom: 0; }
    hierarchię czytelną. Reszta skali typograficznej zostaje nietknięta —
    ta jest do rozstrzygnięcia osobno. */
 .hero h1 {
-  margin-bottom: .35em;
+  margin-bottom: .3em;
   text-wrap: balance;
-  font-size: clamp(2rem, 3.4vw, 2.875rem);
-  line-height: 1.08;
+  font-size: clamp(2.5rem, 6vw, 4.75rem);
+  line-height: 1.0;
+  letter-spacing: -.035em;
+  font-weight: 700;
 }
 .hero .label { display: block; margin-bottom: 20px; }
 .hero-actions { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
@@ -910,8 +893,8 @@ p:last-child { margin-bottom: 0; }
 }
 .hero-stats div strong {
   display: block;
-  font-size: 1.5rem;
-  font-weight: 500;
+  font-size: 1.75rem;
+  font-weight: 620;
   letter-spacing: -.03em;
 }
 .hero-stats div span { font-size: .8125rem; color: var(--ink-faint); }
