@@ -12,9 +12,12 @@ test.describe('Magazyn', () => {
   test('klient nie wchodzi do magazynu', async ({ page }) => {
     await zaloguj(page, KONTA.klient);
 
+    // Po odpowłokowaniu magazynu (koniec natywnej aplikacji) zalogowany bez
+    // roli zaplecza dostaje jawny ekran „brak dostępu" pod /magazyn, zamiast
+    // cichego odesłania na /konto.
     for (const adres of ['/magazyn', '/magazyn/zamowienia', '/magazyn/stany', '/magazyn/skan']) {
       await page.goto(adres);
-      await expect(page).toHaveURL(/\/konto/);
+      await expect(page).toHaveURL(/\/magazyn\/brak-dostepu/);
     }
   });
 
