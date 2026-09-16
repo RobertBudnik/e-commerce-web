@@ -1028,19 +1028,18 @@ p:last-child { margin-bottom: 0; }
 }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 /* Filtry: pigułki z hairline'em, aktywna na pełnym atramencie.
-   Wersaliki i rozstrzelenie jak w całej nawigacji. */
+   Sentence-case jak reszta nawigacji (koniec wersalików). */
 .chip {
   position: relative;
-  height: 34px;
-  padding-inline: 18px;
+  height: 36px;
+  padding-inline: 16px;
   border: 1px solid var(--line);
   border-radius: var(--r-pill);
   background: transparent;
   color: var(--ink-2);
-  font-size: .5625rem;
-  font-weight: 600;
-  letter-spacing: .18em;
-  text-transform: uppercase;
+  font-size: .8125rem;
+  font-weight: 500;
+  letter-spacing: 0;
   cursor: pointer;
   transition: color .15s ease, border-color .15s ease;
 }
@@ -1806,16 +1805,15 @@ select {
   background: var(--bg-soft);
 }
 .tab {
-  height: 34px;
-  padding-inline: 18px;
+  height: 36px;
+  padding-inline: 16px;
   border: 0;
   border-radius: var(--r-pill);
   background: none;
   color: var(--ink-2);
-  font-size: .5625rem;
-  font-weight: 600;
-  letter-spacing: .18em;
-  text-transform: uppercase;
+  font-size: .8125rem;
+  font-weight: 500;
+  letter-spacing: 0;
   cursor: pointer;
   transition: background .16s ease, color .16s ease;
 }
