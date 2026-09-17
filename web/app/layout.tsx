@@ -7,7 +7,6 @@ import { QuickViewHost } from '@/components/product/QuickViewHost';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ToastHost } from '@/components/ui/ToastHost';
-import { SladKursora } from '@/components/ruch/SladKursora';
 import { OdsloniecieStopki } from '@/components/ruch/OdsloniecieStopki';
 import { WishlistProvider } from '@/components/product/WishlistProvider';
 import { headers } from 'next/headers';
@@ -132,9 +131,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <MiniCart />
             <QuickViewHost />
             <ToastHost />
-            {/* Ślad kursora nic nie renderuje przy ograniczonym ruchu ani
-                na dotyku. */}
-            <SladKursora />
           </WishlistProvider>
         </CartProvider>
       </body>
