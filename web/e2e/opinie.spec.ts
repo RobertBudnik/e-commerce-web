@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { CZAS_ZAMOWIENIA, dodajPierwszyDoKoszyka, KONTA, wyloguj, zaloguj } from './pomoce';
+import { CZAS_ZAMOWIENIA, dodajPierwszyDoKoszyka, KONTA, tresc, wyloguj, zaloguj } from './pomoce';
 
 /**
  * Opinie — od zakupu do gwiazdek w katalogu.
@@ -15,6 +15,9 @@ test.describe('Opinie', () => {
     await page.waitForURL(/\/produkt\//);
 
     await expect(page.getByRole('heading', { name: 'Opinie' })).toBeVisible();
+    // Bez zawężenia do `#tresc` celowo: pytanie „nigdzie w dokumencie” jest
+    // mocniejsze niż „nie ma go w treści”, a przy zerze bufor strumieniowania
+    // nie ma czego zdublować.
     await expect(page.locator('.opinia-form')).toHaveCount(0);
   });
 
@@ -41,6 +44,9 @@ test.describe('Opinie', () => {
     await page.goto('/sklep');
     await page.getByRole('link', { name: nazwa }).first().click();
     await page.waitForURL(/\/produkt\//);
+    // Bez zawężenia do `#tresc` celowo: pytanie „nigdzie w dokumencie” jest
+    // mocniejsze niż „nie ma go w treści”, a przy zerze bufor strumieniowania
+    // nie ma czego zdublować.
     await expect(page.locator('.opinia-form')).toHaveCount(0);
 
     const adresProduktu = page.url();
@@ -62,7 +68,7 @@ test.describe('Opinie', () => {
     await zaloguj(page, KONTA.klient);
     await page.goto(adresProduktu);
 
-    const formularz = page.locator('.opinia-form');
+    const formularz = tresc(page).locator('.opinia-form');
     await expect(formularz).toBeVisible();
 
     await formularz.getByRole('radio', { name: /^4 gwiazdki$/ }).check();
@@ -72,7 +78,7 @@ test.describe('Opinie', () => {
     await expect(page.getByText('Dziękujemy za opinię')).toBeVisible();
 
     // Opinia na liście, z podpisem skróconym do imienia z inicjałem
-    const opinia = page.locator('.opinia').filter({ hasText: 'Sprawdziło się' });
+    const opinia = tresc(page).locator('.opinia').filter({ hasText: 'Sprawdziło się' });
     await expect(opinia).toBeVisible();
     await expect(opinia.locator('.opinia-moja')).toContainText('Twoja opinia');
     await expect(opinia.locator('.opinia-autor')).not.toContainText('null');
@@ -81,8 +87,8 @@ test.describe('Opinie', () => {
     // kolumny z opisem — `.rating` pojawia się też na kartach „podobnych
     // produktów" niżej na stronie.
     await page.reload();
-    await expect(page.locator('#tresc .product-info .rating')).toContainText('4');
+    await expect(tresc(page).locator('.product-info .rating')).toContainText('4');
     // „1 opinia", nie „1 opinii" — liczebnik odmienia `ile()` z lib/odmiana.
-    await expect(page.locator('#tresc .product-info .rating')).toContainText('1 opinia');
+    await expect(tresc(page).locator('.product-info .rating')).toContainText('1 opinia');
   });
 });

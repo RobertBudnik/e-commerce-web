@@ -72,16 +72,12 @@ export function AccountMenu({ user }: { user: SessionUser | null }) {
           <Icon name="heart" /> Lista życzeń
         </Link>
         {user.role === 'admin' && (
-          <>
-            {/* Magazyn wyżej niż katalog: pakowanie to codzienność,
-                edycja produktów zdarza się raz na jakiś czas. */}
-            <Link href="/magazyn">
-              <Icon name="box" /> Magazyn
-            </Link>
-            <Link href="/panel">
-              <Icon name="grid" /> Panel firmy
-            </Link>
-          </>
+          /* Jedno wejście do zaplecza, bo zaplecze jest jedno. Magazynier
+             ląduje od razu na kolejce pakowania — pulpit jest dla niego
+             zamknięty, a odesłanie go tam wyglądałoby jak awaria. */
+          <Link href={user.rawRole === 'staff' ? '/panel/kolejka' : '/panel'}>
+            <Icon name="grid" /> Zaplecze
+          </Link>
         )}
         <div className="menu-sep" />
         {/* Wylogowanie idzie Server Action: ciasteczko sesji kasuje serwer,

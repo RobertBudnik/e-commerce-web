@@ -24,8 +24,7 @@ function odswiezZamowienia() {
   revalidatePath('/panel');
   revalidatePath('/panel/zamowienia');
   revalidatePath('/panel/wysylki');
-  revalidatePath('/magazyn');
-  revalidatePath('/magazyn/zamowienia');
+  revalidatePath('/panel/kolejka');
 }
 
 export async function ustawStanAction(

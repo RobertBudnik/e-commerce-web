@@ -18,6 +18,31 @@ export const KONTA = {
   zaplecze: { email: 'admin@nordo.pl', haslo: 'nordo-local-dev' },
 };
 
+/**
+ * Treść strony, bez bufora strumieniowania.
+ *
+ * React wysyła zawartość granic `Suspense` osobno od reszty dokumentu: serwer
+ * dopisuje ją na końcu `<body>` w ukrytym `<div id="S:0">`, a krótki skrypt
+ * przenosi ją na miejsce. Przez ten czas ten sam element stoi w dokumencie
+ * dwa razy — raz w `#tresc`, raz w buforze:
+ *
+ *   BODY > DIV#tresc > … > SPAN.mag-korekta-wynik
+ *   BODY > DIV#S:0   > … > SPAN.mag-korekta-wynik
+ *
+ * Tryb ścisły Playwrighta słusznie wtedy odmawia, bo „ten element na stronie"
+ * przestaje być jednoznaczne. Bufor leży poza `#tresc` i poza drzewem
+ * dostępności, więc pytanie zawężone do kontenera treści trafia zawsze
+ * w jeden egzemplarz — i przy okazji pyta o to, o co testowi naprawdę
+ * chodzi: o to, co widzi człowiek, a nie o dowolny pasujący węzeł w DOM-ie.
+ *
+ * Używaj tego wszędzie tam, gdzie selektor jest klasą albo tekstem ze strony.
+ * `getByRole` na ogół nie potrzebuje zawężenia, bo bufor jest ukryty przed
+ * drzewem dostępności — ale zawężenie mu nie szkodzi.
+ */
+export function tresc(page: Page) {
+  return page.locator('#tresc');
+}
+
 /** Dane wysyłki dla gościa — każdy przebieg dostaje własny adres e-mail. */
 export function gosc() {
   const znacznik = Date.now();
@@ -37,6 +62,15 @@ export async function zaloguj(page: Page, konto: { email: string; haslo: string 
   await page.getByLabel('Hasło').fill(konto.haslo);
   await page.getByRole('button', { name: 'Zaloguj się' }).click();
   await page.waitForURL(/\/konto/);
+
+  // Sam adres to za słaby dowód. Ciasteczko sesji bywa jeszcze w drodze,
+  // a następne `goto` na stronę za bramką trafia wtedy w logowanie —
+  // tak wywrócił się przebieg zwrotów: test wylądował na ekranie logowania
+  // z nagłówkiem gościa, choć `zaloguj` już zwróciło. Przycisk konta
+  // z nazwą jest dowodem, że serwer widzi sesję.
+  await expect(page.getByRole('button', { name: /Nordo HQ|Robert Kowalski/ })).toBeVisible({
+    timeout: 15_000,
+  });
 }
 
 export async function wyloguj(page: Page) {

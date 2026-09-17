@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { PrzyjmijZwrot } from '@/components/magazyn/PrzyjmijZwrot';
-import { wymagajZaplecza } from '@/lib/magazyn-dostep';
+import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getZwroty } from '@/lib/queries';
 import { ile, ZWROTY } from '@/lib/odmiana';
 
@@ -15,15 +14,11 @@ export const dynamic = 'force-dynamic';
 const DATA = new Intl.DateTimeFormat('pl-PL', { day: '2-digit', month: '2-digit' });
 
 export default async function Zwroty() {
-  await wymagajZaplecza('/magazyn/zwroty');
+  await wymagajZaplecza('/panel/zwroty');
   const zwroty = await getZwroty();
 
   return (
     <main className="mag">
-      <Link className="mag-powrot" href="/magazyn">
-        Przegląd
-      </Link>
-
       <header className="mag-top">
         <h1>Zwroty</h1>
         <p className="mag-podtytul">

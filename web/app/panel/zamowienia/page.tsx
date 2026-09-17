@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { wymagajPanelu } from '@/lib/panel-dostep';
+import { wymagajBiura } from '@/lib/panel-dostep';
 import { getZamowieniaPanelu } from '@/lib/queries';
 import { money } from '@/lib/format';
 
@@ -41,7 +41,7 @@ export default async function ZamowieniaPanelu({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  await wymagajPanelu('/panel/zamowienia');
+  await wymagajBiura('/panel/zamowienia');
 
   const parametry = await searchParams;
   // Filtry siedzą w adresie, nie w stanie komponentu: taki widok da się wysłać

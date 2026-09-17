@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { wymagajPanelu } from '@/lib/panel-dostep';
+import { wymagajBiura } from '@/lib/panel-dostep';
 import { getDziennik, getFinanse, getPrzeglad } from '@/lib/queries';
 import { money } from '@/lib/format';
 import { Icon } from '@/components/Icon';
@@ -21,7 +21,7 @@ const CZAS = new Intl.DateTimeFormat('pl-PL', {
 });
 
 export default async function Pulpit() {
-  const user = await wymagajPanelu('/panel');
+  const user = await wymagajBiura('/panel');
 
   const [przeglad, finanse, dziennik] = await Promise.all([
     getPrzeglad(),
@@ -70,7 +70,7 @@ export default async function Pulpit() {
           <span className="pw-kafel-opis">zamówień czeka na paczkę</span>
         </Link>
 
-        <Link className="pw-kafel" href="/magazyn/stany?segment=niskie">
+        <Link className="pw-kafel" href="/panel/stany?segment=niskie">
           <span className="pw-znak pw-znak-stany">
             <Icon name="grid" />
           </span>
@@ -79,7 +79,7 @@ export default async function Pulpit() {
           <span className="pw-kafel-opis">pozycji poniżej progu</span>
         </Link>
 
-        <Link className="pw-kafel" href="/panel/zamowienia?platnosc=zwrócone">
+        <Link className="pw-kafel" href="/panel/zwroty">
           <span className="pw-znak pw-znak-zwroty">
             <Icon name="zwrot" />
           </span>
@@ -88,6 +88,24 @@ export default async function Pulpit() {
           <span className="pw-kafel-opis">zgłoszeń do przyjęcia</span>
         </Link>
       </div>
+
+      {/* Dwie liczby przeniesione z przeglądu magazynu. Nie mają kafla, bo nic
+          nie otwierają — to podsumowanie dnia, nie wejście w ekran. Zgubienie
+          ich przy scaleniu byłoby cichą stratą: magazynier patrzył na nie
+          codziennie, żeby wiedzieć, czy dzień się domyka. */}
+      <section className="pw-dzisiaj" aria-label="Dzisiaj">
+        <h2>Dzisiaj</h2>
+        <dl>
+          <div>
+            <dt>Wysłane paczki</dt>
+            <dd className="num">{przeglad.paczkiDzis}</dd>
+          </div>
+          <div>
+            <dt>Przyjęte sztuki</dt>
+            <dd className="num">{przeglad.sztukiDzis}</dd>
+          </div>
+        </dl>
+      </section>
 
       {finanse.dni.length < 7 && (
         <div className="notice notice-akcent">

@@ -7,7 +7,7 @@
     "dev": "npm --prefix web run dev",
     "build": "npm --prefix web run build",
     "typecheck": "npm --prefix web run typecheck",
-    "kontrast": "for p in sklep magazyn; do for m in jasny ciemny; do node scripts/kontrast.mjs --paleta $p --motyw $m || exit 1; done; done",
+    "kontrast": "for m in jasny ciemny; do node scripts/kontrast.mjs --motyw $m || exit 1; done",
     "db:start": "SITE_URL=${SITE_URL:-http://localhost:3000} ADDITIONAL_REDIRECT_URL=${ADDITIONAL_REDIRECT_URL:-http://localhost:3000} supabase start",
     "db:stop": "supabase stop",
     "db:reset": "SITE_URL=${SITE_URL:-http://localhost:3000} ADDITIONAL_REDIRECT_URL=${ADDITIONAL_REDIRECT_URL:-http://localhost:3000} supabase db reset",

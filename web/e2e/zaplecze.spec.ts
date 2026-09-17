@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { CZAS_ZAMOWIENIA, dodajPierwszyDoKoszyka, KONTA, wyloguj, zaloguj } from './pomoce';
+import { CZAS_ZAMOWIENIA, dodajPierwszyDoKoszyka, KONTA, tresc, wyloguj, zaloguj } from './pomoce';
 
 /**
  * Magazyn — narzędzie zaplecza.
@@ -9,37 +9,39 @@ import { CZAS_ZAMOWIENIA, dodajPierwszyDoKoszyka, KONTA, wyloguj, zaloguj } from
  * i że stan nie schodzi poniżej zera. Reszta wyglądu jest sprawą CSS-u.
  */
 test.describe('Magazyn', () => {
-  test('klient nie wchodzi do magazynu', async ({ page }) => {
+  test('klient nie wchodzi na zaplecze', async ({ page }) => {
     await zaloguj(page, KONTA.klient);
 
-    // Po odpowłokowaniu magazynu (koniec natywnej aplikacji) zalogowany bez
-    // roli zaplecza dostaje jawny ekran „brak dostępu" pod /magazyn, zamiast
-    // cichego odesłania na /konto.
-    for (const adres of ['/magazyn', '/magazyn/zamowienia', '/magazyn/stany', '/magazyn/skan']) {
+    // Po scaleniu zaplecza ekran „brak dostępu" zniknął: przy zakładkach
+    // filtrowanych rolą nie ma jak trafić tam, gdzie się nie wolno, więc
+    // bramka po prostu odsyła klienta na jego konto.
+    for (const adres of ['/panel/kolejka', '/panel/stany', '/panel/skan', '/panel/zwroty']) {
       await page.goto(adres);
-      await expect(page).toHaveURL(/\/magazyn\/brak-dostepu/);
+      await expect(page).toHaveURL(/\/konto/);
     }
   });
 
-  test('gość jest odsyłany na logowanie z powrotem do magazynu', async ({ page }) => {
-    await page.goto('/magazyn/stany');
-    await expect(page).toHaveURL(/\/logowanie\?powrot=%2Fmagazyn%2Fstany/);
+  test('gość jest odsyłany na logowanie z powrotem na zaplecze', async ({ page }) => {
+    await page.goto('/panel/stany');
+    await expect(page).toHaveURL(/\/logowanie\?powrot=%2Fpanel%2Fstany/);
   });
 
-  test('przegląd prowadzi do kolejki i do stanów', async ({ page }) => {
+  test('pulpit prowadzi do zamówień i do stanów', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
-    await page.goto('/magazyn');
+    await page.goto('/panel');
 
-    await expect(page.getByRole('heading', { name: 'Przegląd' })).toBeVisible();
-
+    // Przegląd magazynu zniknął przy scaleniu — jego kafle przejął pulpit.
     await page.getByRole('link', { name: /Do wysłania/ }).click();
-    await expect(page).toHaveURL(/\/magazyn\/zamowienia\?stan=nowe/);
-    await expect(page.getByRole('heading', { name: 'Zamówienia' })).toBeVisible();
+    await expect(page).toHaveURL(/\/panel\/zamowienia/);
+
+    await page.goto('/panel');
+    await page.getByRole('link', { name: /Niskie stany/ }).click();
+    await expect(page).toHaveURL(/\/panel\/stany/);
   });
 
   test('segmenty kolejki trzymają stan w adresie', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
-    await page.goto('/magazyn/zamowienia');
+    await page.goto('/panel/kolejka');
 
     await page.getByRole('tab', { name: /Wysłane/ }).click();
     await expect(page).toHaveURL(/stan=wys/);
@@ -54,9 +56,9 @@ test.describe('Magazyn', () => {
 
   test('szukanie w magazynie zawęża listę i zostaje w adresie', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
-    await page.goto('/magazyn/stany');
+    await page.goto('/panel/stany');
 
-    const wiersze = page.locator('.mag-karta .mag-wiersz');
+    const wiersze = tresc(page).locator('.mag-stany .mag-wiersz');
     await expect(wiersze.first()).toBeVisible();
 
     await page.getByPlaceholder('Szukaj nazwy lub SKU').fill('laptop');
@@ -65,17 +67,17 @@ test.describe('Magazyn', () => {
 
     // Fraza bez trafień mówi to wprost, zamiast pokazywać pustą kartę
     await page.getByPlaceholder('Szukaj nazwy lub SKU').fill('zzzzz');
-    await expect(page.locator('.mag-pusto')).toContainText('Nic nie pasuje');
+    await expect(tresc(page).locator('.mag-pusto')).toContainText('Nic nie pasuje');
   });
 
   test('korekta stanu zapisuje ruch i podnosi stan', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
-    await page.goto('/magazyn/stany?szukaj=laptop');
+    await page.goto('/panel/stany?szukaj=laptop');
 
-    await page.locator('.mag-karta .mag-wiersz').first().click();
-    await expect(page).toHaveURL(/\/magazyn\/stany\/[0-9a-f-]{36}/);
+    await tresc(page).locator('.mag-stany .mag-wiersz').first().click();
+    await expect(page).toHaveURL(/\/panel\/stany\/[0-9a-f-]{36}/);
 
-    const wynik = page.locator('.mag-korekta-wynik');
+    const wynik = tresc(page).locator('.mag-korekta-wynik');
     const przed = Number(await wynik.innerText());
 
     // Bez powodu zapis jest nieczynny — powód jest obowiązkowy
@@ -90,20 +92,21 @@ test.describe('Magazyn', () => {
 
     // Stan przetrwał przeładowanie, czyli poszedł do bazy, a nie tylko na ekran
     await page.reload();
-    await expect(page.locator('.mag-korekta-wynik')).toHaveText(String(przed + 1));
+    await expect(tresc(page).locator('.mag-korekta-wynik')).toHaveText(String(przed + 1));
 
-    // I widać go w historii na przeglądzie. Powód jedzie małą literą, bo
-    // w wierszu czyta się jak zdanie, a nie jak nagłówek.
-    await page.goto('/magazyn');
-    await expect(page.locator('.mag-karta').last()).toContainText('przyjęcie dostawy');
+    // I widać go w historii pod Stanami — przegląd magazynu zniknął, a ruchy
+    // przeniosły się tam, gdzie stoją liczby, które tłumaczą. Powód jedzie
+    // małą literą, bo w wierszu czyta się jak zdanie, a nie jak nagłówek.
+    await page.goto('/panel/stany');
+    await expect(tresc(page).locator('.mag-karta').last()).toContainText('przyjęcie dostawy');
   });
 
   test('stan nie schodzi poniżej zera, a komunikat stoi przy liczbie', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
-    await page.goto('/magazyn/stany?szukaj=laptop');
-    await page.locator('.mag-karta .mag-wiersz').first().click();
+    await page.goto('/panel/stany?szukaj=laptop');
+    await tresc(page).locator('.mag-stany .mag-wiersz').first().click();
 
-    const wynik = page.locator('.mag-korekta-wynik');
+    const wynik = tresc(page).locator('.mag-korekta-wynik');
     const przed = Number(await wynik.innerText());
 
     await page.getByRole('button', { name: 'Przełącz na odejmowanie' }).click();
@@ -113,7 +116,7 @@ test.describe('Magazyn', () => {
       await page.getByRole('button', { name: 'Zdejmij jedną sztukę' }).click();
     }
 
-    await expect(page.locator('.mag-blad')).toContainText('nie można zdjąć');
+    await expect(tresc(page).locator('.mag-blad')).toContainText('nie można zdjąć');
     await expect(page.getByRole('button', { name: /Zapisz zmianę/ })).toBeDisabled();
   });
 });
@@ -159,8 +162,8 @@ test.describe('Zwroty', () => {
     await expect(page.getByText('Oznaczono jako doręczone')).toBeVisible();
 
     // Zwrotów do przyjęcia przed zgłoszeniem
-    await page.goto('/magazyn/zwroty');
-    const przed = await page.locator('.mag-karta').count();
+    await page.goto('/panel/zwroty');
+    const przed = await tresc(page).locator('.mag-karta').count();
 
     await page.goto('/');
     await wyloguj(page);
@@ -183,24 +186,24 @@ test.describe('Zwroty', () => {
     await wyloguj(page);
 
     await zaloguj(page, KONTA.zaplecze);
-    await page.goto('/magazyn/zwroty');
-    await expect(page.locator('.mag-karta')).toHaveCount(przed + 1);
+    await page.goto('/panel/zwroty');
+    await expect(tresc(page).locator('.mag-karta')).toHaveCount(przed + 1);
 
     await page.getByRole('button', { name: /Przyjmij zwrot/ }).first().click();
-    await expect(page.locator('.mag-karta')).toHaveCount(przed);
+    await expect(tresc(page).locator('.mag-karta')).toHaveCount(przed);
 
-    // Sztuki wróciły na stan przez historię magazynu
-    await page.goto('/magazyn');
+    // Sztuki wróciły na stan przez historię magazynu, widoczną pod Stanami
+    await page.goto('/panel/stany');
     // Mała litera jest poprawna i celowa: baza zapisuje powód jako „Zwrot od
     // klienta", ale `getOstatnieRuchy` zbija pierwszą literę do małej, zeby
     // wpis czytal sie jak zdanie, a nie jak naglowek (queries.ts:684).
     // Asercja sprawdza to, co widzi magazynier, nie to, co stoi w kolumnie.
-    await expect(page.locator('.mag-karta').last()).toContainText('zwrot od klienta');
+    await expect(tresc(page).locator('.mag-karta').last()).toContainText('zwrot od klienta');
   });
 });
 
-test.describe('Nadanie przesyłki', () => {
-  test('arkusz przyjmuje numer, zamówienie idzie do wysłanych', async ({ page }) => {
+test.describe('Nadanie paczki', () => {
+  test('numer trafia do danych dostawy, a zamówienie idzie do wysłanych', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
 
     // Seed nie trzyma żadnego zamówienia w kolejce — wszystkie są już
@@ -212,67 +215,33 @@ test.describe('Nadanie przesyłki', () => {
     await page.getByRole('option', { name: 'nowe' }).click();
     await expect(wKoncie.locator('.pill')).toHaveText('nowe');
 
-    await page.goto('/magazyn/zamowienia?stan=nowe');
+    await page.goto('/panel/kolejka?stan=nowe');
 
-    const pierwsze = page.locator('.mag-karta .mag-wiersz').first();
+    const pierwsze = tresc(page).locator('.mag-karta .mag-wiersz').first();
     await expect(pierwsze).toBeVisible();
     await pierwsze.click();
-    await expect(page).toHaveURL(/\/magazyn\/zamowienia\/[^/]+/);
+    await expect(page).toHaveURL(/\/panel\/zamowienia\/[^/]+/);
 
-    // Arkusz otwiera się dopiero na żądanie — karta zamówienia nie nosi
-    // pustego pola na numer przy każdym otwarciu
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Nadaj przesyłkę' }).click();
+    // Po scaleniu nadaje się w miejscu, bez nakładki: formularz stoi na karcie
+    // zamówienia, bo to jedyny ekran, na którym paczka powstaje. Zostaje
+    // `nadaj_paczke` — z przewoźnikiem i idempotencją po stronie bazy.
+    const nadaj = page.getByRole('button', { name: 'Nadaj paczkę' });
+    await expect(nadaj).toBeDisabled();
 
-    const arkusz = page.getByRole('dialog');
-    await expect(arkusz).toBeVisible();
-    await expect(arkusz.getByRole('button', { name: 'Nadaj przesyłkę' })).toBeDisabled();
+    await page.getByPlaceholder('wklej z panelu przewoźnika').fill('JVGL0099887766');
+    await expect(nadaj).toBeEnabled();
+    await nadaj.click();
 
-    // Escape zamyka, tak jak każdą nakładkę w tym projekcie
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-
-    await page.getByRole('button', { name: 'Nadaj przesyłkę' }).click();
-    await page.getByPlaceholder('Numer listu przewozowego').fill('JVGL0099887766');
-    await page.getByRole('dialog').getByRole('button', { name: 'Nadaj przesyłkę' }).click();
-
-    // Numer wylądował w danych dostawy, a akcje ustąpiły miejsca informacji
-    await expect(page.getByText('JVGL0099887766')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText('paczka nadana')).toBeVisible();
+    // Jedna asercja zamiast dwóch: po zapisie formularz ustępuje miejsca
+    // potwierdzeniu, które samo niesie numer. Pytanie o sam numer trafiało
+    // w cztery miejsca naraz — potwierdzenie, dane dostawy i ślad zdarzeń —
+    // i wywracało się na trybie ścisłym.
+    await expect(
+      tresc(page).getByText(/Paczka nadana — list JVGL0099887766/)
+    ).toBeVisible({ timeout: 15_000 });
 
     // I zamówienie przeniosło się do zakładki wysłanych
-    await page.goto('/magazyn/zamowienia?stan=wysłane');
-    await expect(page.locator('.mag-karta .mag-wiersz').first()).toBeVisible();
-  });
-});
-
-test.describe('Motyw skanera', () => {
-  test('wybór wyłamuje ekran z motywu strony i przeżywa przeładowanie', async ({ page }) => {
-    await zaloguj(page, KONTA.zaplecze);
-    await page.goto('/magazyn/skan');
-
-    const ekran = page.locator('main.mag');
-    // Domyślnie „Auto" — ekran idzie za motywem strony i nie nosi klasy
-    await expect(page.getByRole('tab', { name: 'Auto' })).toHaveAttribute('aria-selected', 'true');
-    await expect(ekran).not.toHaveClass(/motyw-(ciemny|jasny)/);
-
-    await page.getByRole('tab', { name: 'Ciemny' }).click();
-    await expect(ekran).toHaveClass(/motyw-ciemny/);
-
-    // Tło naprawdę się zmienia, nie tylko klasa
-    const ciemne = await ekran.evaluate((el) => getComputedStyle(el).backgroundColor);
-
-    await page.getByRole('tab', { name: 'Jasny' }).click();
-    await expect(ekran).toHaveClass(/motyw-jasny/);
-    const jasne = await ekran.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(jasne).not.toBe(ciemne);
-
-    // Wybór zostaje przy telefonie
-    await page.reload();
-    await expect(page.getByRole('tab', { name: 'Jasny' })).toHaveAttribute(
-      'aria-selected',
-      'true'
-    );
-    await expect(page.locator('main.mag')).toHaveClass(/motyw-jasny/);
+    await page.goto('/panel/kolejka?stan=wysłane');
+    await expect(tresc(page).locator('.mag-karta .mag-wiersz').first()).toBeVisible();
   });
 });

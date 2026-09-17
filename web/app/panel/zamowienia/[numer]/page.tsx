@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AkcjeZamowienia } from '@/components/panel/AkcjeZamowienia';
-import { wymagajPanelu } from '@/lib/panel-dostep';
+import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getZamowieniePanelu } from '@/lib/queries';
 import { money } from '@/lib/format';
 
@@ -22,32 +22,55 @@ const CZAS = new Intl.DateTimeFormat('pl-PL', {
 
 export default async function SzczegolyZamowienia({
   params,
+  searchParams,
 }: {
   params: Promise<{ numer: string }>;
+  searchParams: Promise<{ powrot?: string; stan?: string }>;
 }) {
-  await wymagajPanelu('/panel/zamowienia');
+  /**
+   * Jeden ekran zamówienia dla całego zaplecza — także dla magazyniera, bo po
+   * scaleniu nie ma drugiego. Wpuszczamy więc `staff`, ale zakres danych tnie
+   * się rolą po stronie serwera, nie CSS-em: kwota schowana klasą nadal jedzie
+   * do przeglądarki i stoi w źródle strony.
+   *
+   * Co zostaje magazynierowi: imię, adres, punkt odbioru, list przewozowy
+   * i pozycje ze sztukami. Bez tego nie spakuje. Co znika: kwoty, e-mail,
+   * telefon i stan płatności — przy pakowaniu bezużyteczne, a to dane
+   * kontaktowe cudzego klienta.
+   */
+  const user = await wymagajZaplecza('/panel/zamowienia');
+  const pakujacy = user.rawRole === 'staff';
 
   const { numer } = await params;
+  const { powrot } = await searchParams;
   const dane = await getZamowieniePanelu(decodeURIComponent(numer));
   if (!dane) notFound();
 
   const { zamowienie: z, przesylka, slad } = dane;
 
+  // Powrót tam, skąd przyszedł: z kolejki do kolejki, z listy do listy.
+  const wroc = powrot === 'kolejka' || pakujacy
+    ? { href: '/panel/kolejka', etykieta: '← Kolejka' }
+    : { href: '/panel/zamowienia', etykieta: '← Zamówienia' };
+
   return (
     <main className="container section">
       <div className="section-head">
         <div>
-          <Link className="pw-link" href="/panel/zamowienia">
-            ← Zamówienia
+          <Link className="pw-link" href={wroc.href}>
+            {wroc.etykieta}
           </Link>
           <h1>{z.number}</h1>
           <p className="muted">
-            {CZAS.format(new Date(z.date))} · {z.status} · płatność {z.paymentStatus}
+            {CZAS.format(new Date(z.date))} · {z.status}
+            {!pakujacy && <> · płatność {z.paymentStatus}</>}
           </p>
         </div>
-        <div className="admin-toolbar">
-          <span className="pw-liczba num">{money(z.total)}</span>
-        </div>
+        {!pakujacy && (
+          <div className="admin-toolbar">
+            <span className="pw-liczba num">{money(z.total)}</span>
+          </div>
+        )}
       </div>
 
       <AkcjeZamowienia
@@ -68,8 +91,8 @@ export default async function SzczegolyZamowienia({
                 <tr>
                   <th>Produkt</th>
                   <th className="pw-do-prawej">Szt.</th>
-                  <th className="pw-do-prawej">Cena</th>
-                  <th className="pw-do-prawej">Razem</th>
+                  {!pakujacy && <th className="pw-do-prawej">Cena</th>}
+                  {!pakujacy && <th className="pw-do-prawej">Razem</th>}
                 </tr>
               </thead>
               <tbody>
@@ -79,11 +102,14 @@ export default async function SzczegolyZamowienia({
                   <tr key={`${p.productId ?? 'usuniety'}-${p.name}`}>
                     <td>{p.name}</td>
                     <td className="pw-do-prawej num">{p.qty}</td>
-                    <td className="pw-do-prawej num">{money(p.price)}</td>
-                    <td className="pw-do-prawej num">{money(p.price * p.qty)}</td>
+                    {!pakujacy && <td className="pw-do-prawej num">{money(p.price)}</td>}
+                    {!pakujacy && (
+                      <td className="pw-do-prawej num">{money(p.price * p.qty)}</td>
+                    )}
                   </tr>
                 ))}
               </tbody>
+{!pakujacy && (
               <tfoot>
                 <tr>
                   <td colSpan={3}>Dostawa</td>
@@ -104,6 +130,7 @@ export default async function SzczegolyZamowienia({
                   </td>
                 </tr>
               </tfoot>
+              )}
             </table>
           </div>
         </section>
@@ -115,10 +142,14 @@ export default async function SzczegolyZamowienia({
           <dl className="pw-dane">
             <dt>Klient</dt>
             <dd>{z.customer || '—'}</dd>
-            <dt>E-mail</dt>
-            <dd>{z.email}</dd>
-            <dt>Telefon</dt>
-            <dd>{z.phone || '—'}</dd>
+            {!pakujacy && (
+              <>
+                <dt>E-mail</dt>
+                <dd>{z.email}</dd>
+                <dt>Telefon</dt>
+                <dd>{z.phone || '—'}</dd>
+              </>
+            )}
             <dt>Adres</dt>
             <dd>{z.address || '—'}</dd>
             <dt>Punkt odbioru</dt>
@@ -141,11 +172,17 @@ export default async function SzczegolyZamowienia({
                 <span className="muted">brak danych</span>
               )}
             </dd>
-            <dt>Płatność</dt>
-            <dd>
-              {z.paymentStatus}
-              {z.operatorPlatnosci && <span className="muted"> · {z.operatorPlatnosci}</span>}
-            </dd>
+            {!pakujacy && (
+              <>
+                <dt>Płatność</dt>
+                <dd>
+                  {z.paymentStatus}
+                  {z.operatorPlatnosci && (
+                    <span className="muted"> · {z.operatorPlatnosci}</span>
+                  )}
+                </dd>
+              </>
+            )}
           </dl>
         </section>
       </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { AdminPanel } from '@/components/admin/AdminPanel';
 import { PoleKosztu } from '@/components/panel/PoleKosztu';
-import { wymagajPanelu } from '@/lib/panel-dostep';
+import { wymagajBiura } from '@/lib/panel-dostep';
 import { getCategories, getKosztyProduktow, getProducts } from '@/lib/queries';
 import { money } from '@/lib/format';
 
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Katalog() {
-  await wymagajPanelu('/panel/katalog');
+  await wymagajBiura('/panel/katalog');
 
   const [products, categories, koszty] = await Promise.all([
     getProducts(),

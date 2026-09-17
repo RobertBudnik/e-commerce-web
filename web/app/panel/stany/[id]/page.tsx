@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { KorektaStanu } from '@/components/magazyn/KorektaStanu';
-import { wymagajZaplecza } from '@/lib/magazyn-dostep';
+import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getProduktPoId } from '@/lib/queries';
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default async function Korekta({
   searchParams: Promise<{ szukaj?: string; segment?: string }>;
 }) {
   const { id } = await params;
-  await wymagajZaplecza(`/magazyn/stany/${id}`);
+  await wymagajZaplecza(`/panel/stany/${id}`);
 
   const produkt = await getProduktPoId(id);
   if (!produkt) notFound();
@@ -30,12 +30,12 @@ export default async function Korekta({
   const p = new URLSearchParams();
   if (szukaj) p.set('szukaj', szukaj);
   if (segment) p.set('segment', segment);
-  const powrot = p.toString() ? `/magazyn/stany?${p}` : '/magazyn/stany';
+  const powrot = p.toString() ? `/panel/stany?${p}` : '/panel/stany';
 
   return (
     <main className="mag">
       <Link className="mag-powrot" href={powrot}>
-        Magazyn
+        Stany
       </Link>
 
       <header className="mag-top mag-top-kolumna">

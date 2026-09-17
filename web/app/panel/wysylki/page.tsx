@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AkcjeZamowienia } from '@/components/panel/AkcjeZamowienia';
-import { wymagajPanelu } from '@/lib/panel-dostep';
+import { wymagajBiura } from '@/lib/panel-dostep';
 import { getDoNadania, getWDrodze } from '@/lib/queries';
 import { Icon } from '@/components/Icon';
 
@@ -46,7 +46,7 @@ function klasaPrzesylki(stan: string): string {
 }
 
 export default async function Wysylki() {
-  await wymagajPanelu('/panel/wysylki');
+  await wymagajBiura('/panel/wysylki');
 
   const [doNadania, wDrodze] = await Promise.all([getDoNadania(), getWDrodze()]);
 

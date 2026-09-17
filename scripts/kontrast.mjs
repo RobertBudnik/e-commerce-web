@@ -13,7 +13,6 @@
  *
  * Użycie:
  *   node scripts/kontrast.mjs
- *   node scripts/kontrast.mjs --paleta magazyn
  *   node scripts/kontrast.mjs --motyw ciemny
  */
 import { readFileSync } from 'node:fs';
@@ -27,12 +26,6 @@ const wartoscFlagi = (nazwa, domyslna) =>
 const motyw = wartoscFlagi('--motyw', 'jasny');
 if (!['jasny', 'ciemny'].includes(motyw)) {
   console.error(`Nieznany motyw: ${motyw}. Dozwolone: jasny, ciemny.`);
-  process.exit(2);
-}
-
-const paleta = wartoscFlagi('--paleta', 'sklep');
-if (!['sklep', 'magazyn'].includes(paleta)) {
-  console.error(`Nieznana paleta: ${paleta}. Dozwolone: sklep, magazyn.`);
   process.exit(2);
 }
 
@@ -56,15 +49,6 @@ function tokeny(nazwaMotywu) {
     /(:root|\.dark)\s*\{\s*--([\w-]+):\s*([^;]+);\s*\}/g
   )) {
     if (sel === prefiks) mapa.set(nazwa, wartosc.trim());
-  }
-
-  // Magazyn stoi na palecie Apple, nie na palecie sklepu, ale nie podmienia
-  // wszystkiego — `.mag` przykrywa część tokenów, a reszta zostaje odziedziczona
-  // po stronie. Dlatego nakładamy jego blok na komplet sklepowy zamiast czytać
-  // go osobno: inaczej wynik mierzyłby kolory, których na tym ekranie nie ma.
-  if (paleta === 'magazyn') {
-    for (const [n, w] of zBloku('\n.mag {')) mapa.set(n, w);
-    if (nazwaMotywu === 'ciemny') for (const [n, w] of zBloku('.dark .mag {')) mapa.set(n, w);
   }
 
   return mapa;
@@ -128,30 +112,6 @@ function kontrast(nazwaPrzod, nazwaTlo) {
   return (a + 0.05) / (b + 0.05);
 }
 
-/** Co z czym się spotyka w magazynie. Inna paleta, inne powierzchnie:
- *  treść leży tam na białej karcie (`--surface`) albo na tle listy (`--bg`),
- *  a nie na trzech powierzchniach sklepu. */
-const PARY_MAGAZYN = [
-  ['ink', 'surface', 4.5, 'etykieta na karcie'],
-  ['ink', 'bg', 4.5, 'etykieta na tle listy'],
-  ['ink-2', 'surface', 4.5, 'podpis na karcie'],
-  ['ink-2', 'bg', 4.5, 'podpis na tle listy'],
-  // Trzeci stopień tuszu niesie placeholdery i ikony w polu szukania — nigdy
-  // treść, którą trzeba przeczytać, żeby wiedzieć, co robić. Apple trzyma go
-  // na 30% i to jest wartość z systemu, nie nasza pomyłka.
-  ['ink-faint', 'surface', 4.5, 'placeholder na karcie', 'wyjątek: nie niesie treści'],
-  ['accent-ink', 'surface', 4.5, 'sienna na karcie'],
-  ['accent-ink', 'bg', 4.5, 'sienna na tle listy'],
-  ['na-akcencie', 'accent', 4.5, 'napis na przycisku siennym'],
-  ['ok-ink', 'surface', 4.5, 'korekta dodatnia'],
-  ['blad', 'surface', 4.5, 'komunikat błędu na karcie'],
-  ['blad', 'bg', 4.5, 'komunikat błędu na tle listy'],
-  ['uwaga', 'surface', 4.5, 'stan przy progu', 'wyjątek: dioda ma podpis słowny'],
-  // Separator w liście grupowanej rozdziela wiersze, ale nie niesie treści —
-  // wiersz czyta się bez niego. SC 1.4.11 go nie obejmuje.
-  ['line', 'surface', 3, 'separator w liście', 'wyjątek: rozdziela, nie informuje'],
-];
-
 /** Co z czym się spotyka w interfejsie i jakiego progu wymaga. */
 const PARY_SKLEP = [
   ['ink', 'bg', 4.5, 'treść na tle strony'],
@@ -197,12 +157,10 @@ const PARY_SKLEP = [
   ['etykieta', 'panel', 4.5, 'nadtytuł na panelu'],
 ];
 
-const PARY = paleta === 'magazyn' ? PARY_MAGAZYN : PARY_SKLEP;
-
 let upadlo = 0;
-console.log(`\n  paleta: ${paleta} · motyw: ${motyw}\n`);
+console.log(`\n  motyw: ${motyw}\n`);
 
-for (const [przod, tlo, prog, opis, wyjatek] of PARY) {
+for (const [przod, tlo, prog, opis, wyjatek] of PARY_SKLEP) {
   const wynik = kontrast(przod, tlo);
   if (wynik === null) {
     console.log(`  ·  ${opis.padEnd(34)} — nie policzono (${przod} / ${tlo})`);

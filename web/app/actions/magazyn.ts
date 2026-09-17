@@ -45,64 +45,11 @@ export async function korygujStanAction(
 
   if (error) return { ok: false, blad: error.message };
 
-  revalidatePath('/magazyn');
-  revalidatePath('/magazyn/stany');
+  revalidatePath('/panel/stany');
+  revalidatePath('/panel');
   revalidatePath('/sklep');
 
   return { ok: true, stan: Number(data) };
-}
-
-export type PrzesylkaWynik =
-  | { ok: true; numer: string }
-  | { ok: false; blad: string };
-
-/**
- * Nadanie przesyłki. Numer listu i zmiana stanu idą jednym wywołaniem —
- * gdyby to były dwa zapisy, drugi mógłby nie dojść i paczka wyjechałaby
- * bez numeru albo numer wisiałby przy zamówieniu, które stoi w magazynie.
- */
-export async function nadajPrzesylkeAction(
-  zamowienieId: string,
-  numer: string
-): Promise<PrzesylkaWynik> {
-  const czysty = numer.trim();
-  if (!czysty) return { ok: false, blad: 'Podaj numer przesyłki.' };
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc('nadaj_przesylke', {
-    p_zamowienie: zamowienieId,
-    p_numer: czysty,
-  });
-
-  if (error) return { ok: false, blad: error.message };
-
-  revalidatePath('/magazyn');
-  revalidatePath('/magazyn/zamowienia');
-
-  return { ok: true, numer: String(data) };
-}
-
-export type StanZamowieniaWynik =
-  | { ok: true; stan: string }
-  | { ok: false; blad: string };
-
-/** Zmiana stanu zamówienia w kolejce. Stan „wysłane" nadaje wyłącznie przesyłka. */
-export async function ustawStanZamowieniaAction(
-  zamowienieId: string,
-  stan: 'nowe' | 'spakowane'
-): Promise<StanZamowieniaWynik> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc('ustaw_stan_zamowienia', {
-    p_zamowienie: zamowienieId,
-    p_stan: stan,
-  });
-
-  if (error) return { ok: false, blad: error.message };
-
-  revalidatePath('/magazyn');
-  revalidatePath('/magazyn/zamowienia');
-
-  return { ok: true, stan: String(data) };
 }
 
 export type ZwrotWynik = { ok: true; sztuk: number } | { ok: false; blad: string };
@@ -121,9 +68,9 @@ export async function przyjmijZwrotAction(zwrotId: string): Promise<ZwrotWynik> 
 
   if (error) return { ok: false, blad: error.message };
 
-  revalidatePath('/magazyn');
-  revalidatePath('/magazyn/zwroty');
-  revalidatePath('/magazyn/stany');
+  revalidatePath('/panel/zwroty');
+  revalidatePath('/panel/stany');
+  revalidatePath('/panel');
   revalidatePath('/sklep');
 
   return { ok: true, sztuk: Number(data) };
