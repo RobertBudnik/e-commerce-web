@@ -81,8 +81,8 @@ test.describe('Opinie', () => {
     // kolumny z opisem — `.rating` pojawia się też na kartach „podobnych
     // produktów" niżej na stronie.
     await page.reload();
-    await expect(page.locator('.product-info .rating')).toContainText('4');
+    await expect(page.locator('#tresc .product-info .rating')).toContainText('4');
     // „1 opinia", nie „1 opinii" — liczebnik odmienia `ile()` z lib/odmiana.
-    await expect(page.locator('.product-info .rating')).toContainText('1 opinia');
+    await expect(page.locator('#tresc .product-info .rating')).toContainText('1 opinia');
   });
 });

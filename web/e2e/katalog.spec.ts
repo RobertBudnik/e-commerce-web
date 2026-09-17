@@ -70,7 +70,7 @@ test.describe('Katalog', () => {
     await expect(page.locator('.card')).toHaveCount(1);
 
     await page.getByRole('searchbox', { name: 'Szukaj produktu' }).fill('czegoś takiego nie ma');
-    await expect(page.getByText('Brak produktów spełniających kryteria.')).toBeVisible();
+    await expect(page.locator('#tresc').getByText('Brak produktów spełniających kryteria.')).toBeVisible();
   });
 
   test('filtr i fraza zostają w adresie i przeżywają odświeżenie', async ({ page }) => {
@@ -89,7 +89,7 @@ test.describe('Katalog', () => {
 
     // Strona poza zakresem nie wywraca widoku, tylko oddaje pustą listę
     await page.goto('/sklep?strona=99');
-    await expect(page.getByText('Brak produktów spełniających kryteria.')).toBeVisible();
+    await expect(page.locator('#tresc').getByText('Brak produktów spełniających kryteria.')).toBeVisible();
   });
 
   test('szybki podgląd otwiera się i zamyka Escapem', async ({ page }) => {
