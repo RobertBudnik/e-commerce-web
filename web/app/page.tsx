@@ -1,10 +1,18 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
+import { SekcjaPrzypieta } from '@/components/ruch/SekcjaPrzypieta';
 import { ProductMedia } from '@/components/product/ProductMedia';
 import { getCategories, getProducts } from '@/lib/queries';
 import { money } from '@/lib/format';
 import { ile, PRODUKTY } from '@/lib/odmiana';
-import { DZIENNIK, MARKA, OBIETNICE, PRACOWNIA, STATYSTYKI } from '@/lib/dane-sklepu';
+import {
+  DZIENNIK,
+  JAK_TO_DZIALA,
+  MARKA,
+  OBIETNICE,
+  PRACOWNIA,
+  STATYSTYKI,
+} from '@/lib/dane-sklepu';
 
 /** Katalog zmienia się rzadko — strona główna może stać w cache przez minutę. */
 export const revalidate = 60;
@@ -119,6 +127,12 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* „Jak to działa" zostaje na stronie głównej — jeden krok na wysokość
+          ekranu, przypięty przy przewijaniu. Nie dostaje numeru z narracji
+          makiety (01–04), bo nie jest jej działem: to przerywnik między
+          asortymentem a ludźmi, którzy go robią. */}
+      {JAK_TO_DZIALA.length > 0 && <SekcjaPrzypieta kroki={[...JAK_TO_DZIALA]} />}
 
       <section className="dg-pracownia">
         <div className="dg-pracownia-tresc">

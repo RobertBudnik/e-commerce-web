@@ -168,20 +168,23 @@ export const JAK_TO_DZIALA: readonly {
 }[] = [
   {
     nadtytul: 'Krok pierwszy',
-    tytul: '⟨co robi kupujący⟩',
-    opis: '⟨jedno–dwa zdania; jeśli podajesz godzinę graniczną, musi być dotrzymywana⟩',
+    tytul: 'Wybierasz sztukę, nie nakład',
+    opis:
+      'Każda rzecz jest toczona albo tkana pojedynczo, więc dwie nigdy nie są identyczne. To, co widzisz na zdjęciu, jest tą sztuką, którą pakujemy.',
     ikona: 'box',
   },
   {
     nadtytul: 'Krok drugi',
-    tytul: '⟨co robisz ty⟩',
-    opis: '⟨jedno–dwa zdania o pakowaniu i nadaniu przesyłki⟩',
+    tytul: 'Pakujemy w pracowni',
+    opis:
+      'Zawijamy ręcznie, bez folii bąbelkowej — w makulaturę i tekturę. Paczkę nadajemy z Krakowa i odsyłamy numer przesyłki na twój adres.',
     ikona: 'shield',
   },
   {
     nadtytul: 'Krok trzeci',
-    tytul: '⟨co kupujący dostaje po dostawie⟩',
-    opis: '⟨np. zasady zwrotu — termin musi zgadzać się z WARUNKI.dniNaOdstapienie⟩',
+    tytul: 'Sprawdzasz u siebie',
+    opis:
+      'Ceramikę trzeba wziąć do ręki, żeby wiedzieć. Jeśli nie siada, odsyłasz — zasady i termin zwrotu opisuje strona „Odstąpienie od umowy".',
     ikona: 'check',
   },
 ];
