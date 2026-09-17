@@ -49,10 +49,27 @@ export default defineConfig({
 
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 
+  /**
+   * W CI testy jadą po buildzie produkcyjnym, lokalnie po serwerze
+   * deweloperskim.
+   *
+   * Do tej pory CI robiło rzecz bez sensu: budowało produkcyjnie
+   * (`build:check` pisze do `.next-build`), po czym wyrzucało ten build
+   * i puszczało testy po `next dev`, który kompiluje każdą trasę przy
+   * pierwszym wejściu. Stąd brały się minuty czekania na `page.goto`
+   * i kaskada przekroczonych limitów, gdy runner zwolnił.
+   *
+   * `start:check` podnosi serwer z katalogu, który zbudował poprzedni krok,
+   * więc kompilacja na żądanie znika w całości. To jest dokładnie ten krok,
+   * który zapowiadał komentarz przy limitach czasu wyżej.
+   *
+   * Lokalnie zostaje `next dev`: tam liczy się przeładowanie po zmianie
+   * pliku, a nie czas zestawu.
+   */
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: 'npm run dev',
+        command: process.env.CI ? 'npm run start:check' : 'npm run dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

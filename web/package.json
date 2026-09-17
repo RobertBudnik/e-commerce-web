@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "build:check": "NEXT_DIST_DIR=.next-build next build",
+    "start:check": "NEXT_DIST_DIR=.next-build next start -p 3000",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:smoke": "playwright test --config playwright.smoke.config.ts"
