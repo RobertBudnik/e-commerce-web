@@ -5287,3 +5287,47 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
   --b-fg: var(--btn-ink);
   --b-bd: transparent;
 }
+
+/* „Dzisiaj" na pulpicie — dwie liczby przeniesione z przeglądu magazynu.
+   Celowo nie są kaflami: kafel obiecuje kliknięcie, a te nic nie otwierają.
+   Stoją w rzędzie pod kaflami jako podsumowanie dnia. */
+.pw-dzisiaj { margin: 0 0 28px; }
+
+.pw-dzisiaj h2 {
+  margin: 0 0 12px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.pw-dzisiaj dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.pw-dzisiaj dl > div {
+  display: grid;
+  gap: 4px;
+  padding: 16px 18px;
+  border-radius: var(--r-lg);
+  background: var(--panel);
+}
+
+.pw-dzisiaj dt {
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.pw-dzisiaj dd {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
