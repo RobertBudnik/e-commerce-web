@@ -12,6 +12,9 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
+  /* Rozgrzewka cache'u — patrz `e2e/rozgrzewka.ts`. Chodzi po starcie
+     serwera, a przed pierwszym testem. */
+  globalSetup: './e2e/rozgrzewka.ts',
   fullyParallel: false,
   // Zamówienia i stany magazynowe to wspólny stan; równoległe pliki
   // potrafiłyby sobie nawzajem wyczyścić koszyk albo zabrać ostatnią sztukę.
