@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { CZAS_ZAMOWIENIA, dodajPierwszyDoKoszyka, KONTA, wyloguj, zaloguj } from './pomoce';
+import { CZAS_ZAMOWIENIA, dodajPierwszyDoKoszyka, KONTA, tresc, wyloguj, zaloguj } from './pomoce';
 
 /**
  * Magazyn — narzędzie zaplecza.
@@ -58,7 +58,7 @@ test.describe('Magazyn', () => {
     await zaloguj(page, KONTA.zaplecze);
     await page.goto('/panel/stany');
 
-    const wiersze = page.locator('.mag-stany .mag-wiersz');
+    const wiersze = tresc(page).locator('.mag-stany .mag-wiersz');
     await expect(wiersze.first()).toBeVisible();
 
     await page.getByPlaceholder('Szukaj nazwy lub SKU').fill('laptop');
@@ -67,17 +67,17 @@ test.describe('Magazyn', () => {
 
     // Fraza bez trafień mówi to wprost, zamiast pokazywać pustą kartę
     await page.getByPlaceholder('Szukaj nazwy lub SKU').fill('zzzzz');
-    await expect(page.locator('.mag-pusto')).toContainText('Nic nie pasuje');
+    await expect(tresc(page).locator('.mag-pusto')).toContainText('Nic nie pasuje');
   });
 
   test('korekta stanu zapisuje ruch i podnosi stan', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
     await page.goto('/panel/stany?szukaj=laptop');
 
-    await page.locator('.mag-stany .mag-wiersz').first().click();
+    await tresc(page).locator('.mag-stany .mag-wiersz').first().click();
     await expect(page).toHaveURL(/\/panel\/stany\/[0-9a-f-]{36}/);
 
-    const wynik = page.locator('.mag-korekta-wynik');
+    const wynik = tresc(page).locator('.mag-korekta-wynik');
     const przed = Number(await wynik.innerText());
 
     // Bez powodu zapis jest nieczynny — powód jest obowiązkowy
@@ -92,21 +92,21 @@ test.describe('Magazyn', () => {
 
     // Stan przetrwał przeładowanie, czyli poszedł do bazy, a nie tylko na ekran
     await page.reload();
-    await expect(page.locator('.mag-korekta-wynik')).toHaveText(String(przed + 1));
+    await expect(tresc(page).locator('.mag-korekta-wynik')).toHaveText(String(przed + 1));
 
     // I widać go w historii pod Stanami — przegląd magazynu zniknął, a ruchy
     // przeniosły się tam, gdzie stoją liczby, które tłumaczą. Powód jedzie
     // małą literą, bo w wierszu czyta się jak zdanie, a nie jak nagłówek.
     await page.goto('/panel/stany');
-    await expect(page.locator('.mag-karta').last()).toContainText('przyjęcie dostawy');
+    await expect(tresc(page).locator('.mag-karta').last()).toContainText('przyjęcie dostawy');
   });
 
   test('stan nie schodzi poniżej zera, a komunikat stoi przy liczbie', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
     await page.goto('/panel/stany?szukaj=laptop');
-    await page.locator('.mag-stany .mag-wiersz').first().click();
+    await tresc(page).locator('.mag-stany .mag-wiersz').first().click();
 
-    const wynik = page.locator('.mag-korekta-wynik');
+    const wynik = tresc(page).locator('.mag-korekta-wynik');
     const przed = Number(await wynik.innerText());
 
     await page.getByRole('button', { name: 'Przełącz na odejmowanie' }).click();
@@ -116,7 +116,7 @@ test.describe('Magazyn', () => {
       await page.getByRole('button', { name: 'Zdejmij jedną sztukę' }).click();
     }
 
-    await expect(page.locator('.mag-blad')).toContainText('nie można zdjąć');
+    await expect(tresc(page).locator('.mag-blad')).toContainText('nie można zdjąć');
     await expect(page.getByRole('button', { name: /Zapisz zmianę/ })).toBeDisabled();
   });
 });
@@ -163,7 +163,7 @@ test.describe('Zwroty', () => {
 
     // Zwrotów do przyjęcia przed zgłoszeniem
     await page.goto('/panel/zwroty');
-    const przed = await page.locator('.mag-karta').count();
+    const przed = await tresc(page).locator('.mag-karta').count();
 
     await page.goto('/');
     await wyloguj(page);
@@ -187,10 +187,10 @@ test.describe('Zwroty', () => {
 
     await zaloguj(page, KONTA.zaplecze);
     await page.goto('/panel/zwroty');
-    await expect(page.locator('.mag-karta')).toHaveCount(przed + 1);
+    await expect(tresc(page).locator('.mag-karta')).toHaveCount(przed + 1);
 
     await page.getByRole('button', { name: /Przyjmij zwrot/ }).first().click();
-    await expect(page.locator('.mag-karta')).toHaveCount(przed);
+    await expect(tresc(page).locator('.mag-karta')).toHaveCount(przed);
 
     // Sztuki wróciły na stan przez historię magazynu, widoczną pod Stanami
     await page.goto('/panel/stany');
@@ -198,7 +198,7 @@ test.describe('Zwroty', () => {
     // klienta", ale `getOstatnieRuchy` zbija pierwszą literę do małej, zeby
     // wpis czytal sie jak zdanie, a nie jak naglowek (queries.ts:684).
     // Asercja sprawdza to, co widzi magazynier, nie to, co stoi w kolumnie.
-    await expect(page.locator('.mag-karta').last()).toContainText('zwrot od klienta');
+    await expect(tresc(page).locator('.mag-karta').last()).toContainText('zwrot od klienta');
   });
 });
 
@@ -217,7 +217,7 @@ test.describe('Nadanie paczki', () => {
 
     await page.goto('/panel/kolejka?stan=nowe');
 
-    const pierwsze = page.locator('.mag-karta .mag-wiersz').first();
+    const pierwsze = tresc(page).locator('.mag-karta .mag-wiersz').first();
     await expect(pierwsze).toBeVisible();
     await pierwsze.click();
     await expect(page).toHaveURL(/\/panel\/zamowienia\/[^/]+/);
@@ -237,11 +237,11 @@ test.describe('Nadanie paczki', () => {
     // w cztery miejsca naraz — potwierdzenie, dane dostawy i ślad zdarzeń —
     // i wywracało się na trybie ścisłym.
     await expect(
-      page.locator('#tresc').getByText(/Paczka nadana — list JVGL0099887766/)
+      tresc(page).getByText(/Paczka nadana — list JVGL0099887766/)
     ).toBeVisible({ timeout: 15_000 });
 
     // I zamówienie przeniosło się do zakładki wysłanych
     await page.goto('/panel/kolejka?stan=wysłane');
-    await expect(page.locator('.mag-karta .mag-wiersz').first()).toBeVisible();
+    await expect(tresc(page).locator('.mag-karta .mag-wiersz').first()).toBeVisible();
   });
 });
