@@ -66,10 +66,10 @@ test.describe('Katalog', () => {
 
   test('szukajka zawęża listę, a brak trafień mówi to wprost', async ({ page }) => {
     await page.goto('/sklep');
-    await page.getByPlaceholder('Szukaj produktu').fill('laptop');
+    await page.getByRole('searchbox', { name: 'Szukaj produktu' }).fill('laptop');
     await expect(page.locator('.card')).toHaveCount(1);
 
-    await page.getByPlaceholder('Szukaj produktu').fill('czegoś takiego nie ma');
+    await page.getByRole('searchbox', { name: 'Szukaj produktu' }).fill('czegoś takiego nie ma');
     await expect(page.getByText('Brak produktów spełniających kryteria.')).toBeVisible();
   });
 
@@ -78,14 +78,14 @@ test.describe('Katalog', () => {
     // da się wysłać linkiem, a „wstecz" wraca do poprzedniego filtra.
     await page.goto('/sklep?kategoria=audio&szukaj=sluchawki');
 
-    await expect(page.getByPlaceholder('Szukaj produktu')).toHaveValue('sluchawki');
+    await expect(page.getByRole('searchbox', { name: 'Szukaj produktu' })).toHaveValue('sluchawki');
     await expect(page.getByRole('button', { name: 'Audio', exact: true })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
 
     await page.reload();
-    await expect(page.getByPlaceholder('Szukaj produktu')).toHaveValue('sluchawki');
+    await expect(page.getByRole('searchbox', { name: 'Szukaj produktu' })).toHaveValue('sluchawki');
 
     // Strona poza zakresem nie wywraca widoku, tylko oddaje pustą listę
     await page.goto('/sklep?strona=99');
