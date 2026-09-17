@@ -4,8 +4,8 @@ import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getKolejkaZamowien, getLicznikiZamowien } from '@/lib/queries';
 import { ile, POZYCJE } from '@/lib/odmiana';
 export const metadata: Metadata = {
-  title: 'Zamówienia',
-  description: 'Kolejka wysyłek.',
+  title: 'Kolejka',
+  description: 'Kolejka pakowania.',
 };
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +31,7 @@ export default async function Zamowienia({
 }: {
   searchParams: Promise<{ stan?: string }>;
 }) {
-  await wymagajZaplecza('/magazyn/zamowienia');
+  await wymagajZaplecza('/panel/kolejka');
 
   const { stan: stanZUrl } = await searchParams;
   const stan: Stan = ZAKLADKI.some((z) => z.klucz === stanZUrl) ? (stanZUrl as Stan) : 'nowe';
@@ -44,7 +44,7 @@ export default async function Zamowienia({
   return (
     <main className="mag">
       <header className="mag-top">
-        <h1>Zamówienia</h1>
+        <h1>Kolejka</h1>
       </header>
 
       {/* Stan zakładki siedzi w adresie, więc powrót z karty zamówienia
@@ -56,7 +56,7 @@ export default async function Zamowienia({
             className="mag-segment"
             role="tab"
             aria-selected={z.klucz === stan}
-            href={`/magazyn/zamowienia?stan=${encodeURIComponent(z.klucz)}`}
+            href={`/panel/kolejka?stan=${encodeURIComponent(z.klucz)}`}
           >
             {z.etykieta}
             <span className="mag-segment-licznik">{liczniki[z.klucz] ?? 0}</span>
@@ -75,7 +75,7 @@ export default async function Zamowienia({
               <Link
                 key={z.id}
                 className="mag-wiersz"
-                href={`/magazyn/zamowienia/${encodeURIComponent(z.number)}?stan=${stan}`}
+                href={`/panel/zamowienia/${encodeURIComponent(z.number)}?powrot=kolejka&stan=${stan}`}
               >
                 <span
                   className={`mag-dioda${
