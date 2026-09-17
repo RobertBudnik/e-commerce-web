@@ -43,7 +43,10 @@
      szarość z makiety daje na tym gruncie ok. 3:1. Skoro meta nie może iść
      w górę, akapit schodzi w dół: inaczej oba stopnie czytają się jak jeden
      kolor i strona traci hierarchię, na której makieta stoi. */
-  --ink-2: #4f4a41;
+  /* Akapit jest średnim stopniem, nie ciemnym: hierarchię na górze strony
+     buduje teraz ciemny nadtytuł, więc `--ink-2` nie musi go zastępować.
+     Od `--ink-3` dzieli go tyle, żeby meta faktycznie odstawało. */
+  --ink-2: #544f46;
   --ink-3: #666055;
 
   /* Hairline przezroczystością na ciepłym atramencie — działa na każdej
@@ -135,7 +138,7 @@
   --ink: #ede9de;
   /* Ta sama korekta co w jasnym, w drugą stronę: akapit idzie w górę, meta
      zostaje. Wcześniej oba stopnie dzieliło piętnaście jednostek. */
-  --ink-2: #bdb8ad;
+  --ink-2: #b4afa4;
   --ink-3: #9a9489;
 
   --line: rgba(237, 233, 222, .14);
@@ -5154,6 +5157,10 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
 
 /* Nadtytuł: wersaliki na rozstrzelonym tracking. Ten sam stopień niesie
    nadtytuł hero, numer sekcji i dział wpisu w dzienniku. */
+/* Nadtytuł jest w makiecie ciemny i mocny, a akapit pod nim jaśniejszy —
+   nie odwrotnie. Bierze `--etykieta`, czyli token zrobiony dokładnie na
+   nadtytuły sekcji: niesie treść („01 — WYBÓR", „JESIENNY STÓŁ"), więc nie
+   ma prawa być bladym szarym. Meta i daty zostają przy `--ink-3`. */
 .dg-nadtytul,
 .dg-numer {
   display: block;
@@ -5161,7 +5168,7 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
   font-weight: 600;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--etykieta);
 }
 
 /* ---------- Hero ---------- */
@@ -5461,6 +5468,10 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
 .dg-wpis-kadr svg { width: 20px; height: 20px; opacity: .55; }
 
 .dg-wpis-tresc { flex: 1 1 auto; min-width: 0; display: grid; gap: 4px; }
+
+/* Dział wpisu to nie nadtytuł sekcji — w makiecie jest szary, słabszy od
+   tytułu, który stoi pod nim. Stąd wyjątek od ciemnej `--etykieta`. */
+.dg-wpis-tresc .dg-nadtytul { color: var(--ink-3); }
 .dg-wpis-tresc strong { font-size: 1rem; font-weight: 700; color: var(--ink); }
 .dg-wpis-opis { font-size: .8125rem; color: var(--ink-3); }
 .dg-wpis-data { flex: 0 0 auto; font-size: .75rem; color: var(--ink-3); }
