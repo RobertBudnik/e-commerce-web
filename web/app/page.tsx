@@ -7,7 +7,8 @@ import { PrzyciskMagnetyczny } from '@/components/ruch/PrzyciskMagnetyczny';
 import { PoleCzastek } from '@/components/ruch/PoleCzastek';
 import { SekcjaPrzypieta } from '@/components/ruch/SekcjaPrzypieta';
 import { KadrZoom } from '@/components/ruch/KadrZoom';
-import { ProductGrid } from '@/components/product/ProductGrid';
+import { StrzepkaPrzeciagana } from '@/components/ruch/StrzepkaPrzeciagana';
+import { ProductCard } from '@/components/product/ProductCard';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { getCategories, getProducts } from '@/lib/queries';
 import { ile, PRODUKTY } from '@/lib/odmiana';
@@ -18,9 +19,8 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
-  // Sześć najlepiej ocenianych w spokojną siatkę zamiast przeciąganej taśmy —
-  // przegląd bez chwytania myszą, w duchu Apple/Aesop.
-  const featured = [...products].sort((a, b) => b.rating - a.rating).slice(0, 6);
+  // Cały asortyment w przeciąganej taśmie — przegląd bez skakania po stronach.
+  const featured = [...products].sort((a, b) => b.rating - a.rating);
 
   // Bento: pierwszy dział duży (2×2), drugi szeroki (2×1), reszta zwykła.
   // Asymetria robi rytm; przy trzech kategoriach (audio/komputery/foto) układ
@@ -124,7 +124,16 @@ export default async function HomePage() {
             Wszystkie produkty
           </Link>
         </div>
-        <ProductGrid products={featured} categories={categories} empty="Katalog jest jeszcze pusty." />
+        <StrzepkaPrzeciagana>
+          {featured.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              categoryName={categories.find((c) => c.id === product.category)?.name ?? product.category}
+              delay={0}
+            />
+          ))}
+        </StrzepkaPrzeciagana>
       </section>
 
       {JAK_TO_DZIALA.length > 0 && <SekcjaPrzypieta kroki={[...JAK_TO_DZIALA]} />}
