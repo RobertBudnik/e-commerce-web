@@ -99,7 +99,7 @@ test.describe('Konto i uprawnienia', () => {
 
     await page.goto('/produkt/zarowka-smart-glow-e27');
     const stanPrzed = Number(
-      (await page.locator('.stock').innerText()).replace(/\D/g, '')
+      (await page.locator('#tresc .stock').innerText()).replace(/\D/g, '')
     );
 
     await page.goto('/koszyk');
@@ -127,7 +127,7 @@ test.describe('Konto i uprawnienia', () => {
     // Zamówiona sztuka wróciła do katalogu
     if (nazwa.includes('Żarówka')) {
       await page.goto('/produkt/zarowka-smart-glow-e27');
-      const stanPo = Number((await page.locator('.stock').innerText()).replace(/\D/g, ''));
+      const stanPo = Number((await page.locator('#tresc .stock').innerText()).replace(/\D/g, ''));
       expect(stanPo).toBe(stanPrzed);
     }
   });
