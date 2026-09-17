@@ -44,31 +44,33 @@ export const MARKA = {
    * Nazwa w nagłówku, stopce i tytułach kart.
    * Jedno miejsce — podmiana tutaj przechodzi przez cały sklep.
    */
-  nazwa: '⟨nazwa sklepu⟩',
+  nazwa: 'dwie głowy',
 
   /** Jedno zdanie pod logo w stopce. Czym jest sklep, bez liczb i przechwałek. */
-  opisStopki: '⟨jedno zdanie: co sprzedajesz i dla kogo⟩',
+  opisStopki: 'Kamionka, len i dąb do codziennego użytku. Robione w dwie pary rąk w Krakowie.',
 
   /** Nadtytuł nad hasłem na stronie głównej — krótki, np. nazwa kolekcji. */
-  nadtytulHero: '⟨nadtytuł, np. nazwa kolekcji albo kategoria⟩',
+  nadtytulHero: 'Jesienny stół · Kraków · 2026',
 
-  /** Hasło główne. Animacja rozsypuje litery, więc trzymaj do ośmiu słów. */
-  hasloHero: '⟨hasło główne, do ośmiu słów⟩',
+  /** Hasło główne. Trzy linie ciężkiego grotesku — tak stoi w makiecie. */
+  hasloHero: 'Dwie głowy,\njedna pracownia,\nłagodniejsze rzeczy.',
 
   /** Akapit pod hasłem. Tu wchodzą warunki, które faktycznie obowiązują. */
-  podtytulHero: '⟨akapit pod hasłem: dwa–trzy zdania o ofercie⟩',
+  podtytulHero:
+    'Kamionka, len i dąb do codziennego użytku. Toczone, szkliwione i tkane przez dwoje ludzi na zapleczu przy Józefa — w partiach na tyle małych, że pamiętamy każdą.',
 
   /** Tekst sekcji z mocnym wyróżnieniem, w połowie strony głównej. */
 
   /** Tytuł karty przeglądarki na stronie głównej i w wynikach wyszukiwania. */
-  tytulKarty: '⟨nazwa sklepu⟩ — ⟨czym handlujesz⟩',
+  tytulKarty: 'dwie głowy — kamionka, len i dąb z Krakowa',
 
   /**
    * Opis w metadanych — widoczny w wynikach wyszukiwania i przy udostępnianiu.
    * Nie wpisuj tu obietnic, których nie ma w `OBIETNICE`: to ta sama informacja
    * handlowa, tylko czytana poza sklepem.
    */
-  opisMeta: '⟨opis sklepu, jedno–dwa zdania, bez obietnic bez pokrycia⟩',
+  opisMeta:
+    'Kamionka, len i dąb do codziennego użytku — toczone, szkliwione i tkane w dwie pary rąk w Krakowie.',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -114,10 +116,27 @@ export const SPRZEDAWCA = {
  * Pusta tablica ukrywa pasek i kafle w całości. To prawidłowy stan dla sklepu,
  * który nie chce niczego obiecywać.
  */
+/*
+ * Z paska w makiecie wchodzą tu wyłącznie zdania o samej pracowni. Trzy
+ * pozostałe hasła z makiety — „darmowa dostawa od 90", „60 dni na zwrot",
+ * „naprawiamy zawsze" — są wobec kupującego wiążące i dziś **kłócą się
+ * z konfiguracją sklepu**: `WARUNKI.dniNaOdstapienie` to 14, a
+ * `WARUNKI.progDarmowejDostawy` to 0. Rozjazd między hasłem a rachunkiem
+ * rozstrzyga się na korzyść konsumenta, więc sklep byłby związany dłuższym
+ * terminem, którego kasa i tak nie liczy.
+ *
+ * Dopisz je dopiero razem z prawdziwymi liczbami w `WARUNKI` — wtedy pasek
+ * urośnie sam, bo czyta tę tablicę.
+ */
 export const OBIETNICE: readonly { tytul: string; opis: string }[] = [
-  { tytul: '⟨obietnica 1⟩', opis: '⟨np. termin wysyłki — tylko jeśli go dotrzymujesz⟩' },
-  { tytul: '⟨obietnica 2⟩', opis: '⟨np. termin zwrotu, zgodny z WARUNKI.dniNaOdstapienie⟩' },
-  { tytul: '⟨obietnica 3⟩', opis: '⟨np. próg darmowej dostawy albo forma płatności⟩' },
+  {
+    tytul: 'Zrobione w Krakowie',
+    opis: 'Toczone i tkane na miejscu, przy Józefa — nie sprowadzane.',
+  },
+  {
+    tytul: 'Bez sezonów, bez wyprzedaży',
+    opis: 'Jedna cena przez cały rok. Nie przeceniamy, żeby zaraz podnieść.',
+  },
 ];
 
 /**
@@ -183,7 +202,63 @@ export const STATYSTYKI: readonly {
   sufiks?: string;
   etykieta: string;
   opis: string;
-}[] = [];
+}[] = [
+  { do: 9, etykieta: '9 lat na Kazimierzu', opis: 'lat na Kazimierzu' },
+  { do: 140, etykieta: '140 rzeczy miesięcznie', opis: 'rzeczy miesięcznie' },
+  { do: 2, etykieta: '2 pary rąk', opis: 'pary rąk' },
+];
+
+// ---------------------------------------------------------------------------
+// Pracownia i dziennik — sekcje redakcyjne strony głównej
+// ---------------------------------------------------------------------------
+
+/**
+ * Ciemny blok „pracownia" w połowie strony głównej. Liczby bierze ze
+ * `STATYSTYKI`, więc stoją w jednym miejscu z resztą pomiarów.
+ *
+ * `przyciskHref` celowo prowadzi do sklepu: strony „o nas" w tym serwisie
+ * nie ma (`SLUGI_INFO` zna tylko dokumenty sprzedażowe), a przycisk
+ * w ciemnym bloku nie ma prawa kończyć się czterysta czwórką. Gdy taka
+ * strona powstanie, podmiana jest tutaj.
+ */
+export const PRACOWNIA = {
+  nadtytul: 'Pracownia',
+  haslo:
+    'Robimy w parze. Jedno toczy, drugie tka, i nic nie wychodzi z pokoju, dopóki oboje nie zatrzymalibyśmy tego u siebie.',
+  przyciskEtykieta: 'Zobacz, co powstało',
+  przyciskHref: '/sklep',
+} as const;
+
+/**
+ * Wpisy dziennika na stronie głównej. Pusta tablica ukrywa sekcję — tak samo
+ * jak przy obietnicach, bo dziennik bez wpisów wygląda na awarię, a nie na
+ * wybór. `data` jedzie tekstem, bo niesie miesiąc, nie dzień.
+ */
+export const DZIENNIK: readonly {
+  dzial: string;
+  tytul: string;
+  opis: string;
+  data: string;
+}[] = [
+  {
+    dzial: 'Proces',
+    tytul: 'Co powolny wypał robi ze szkliwem popiołowym',
+    opis: 'Jedenaście godzin, dwa stożki i dlaczego przestaliśmy poganiać stygnięcie.',
+    data: 'wrzesień 2026',
+  },
+  {
+    dzial: 'U siebie',
+    tytul: 'Nakrywanie do stołu we dwoje, byle jak',
+    opis: 'Niedobrane talerze, jedna świeca, nic odmierzone.',
+    data: 'sierpień 2026',
+  },
+  {
+    dzial: 'Materiał',
+    tytul: 'Len z Podlasia, prany cztery razy',
+    opis: 'Jak trzecie pranie zmienia to, w jaki sposób narzuta układa się na krześle.',
+    data: 'lipiec 2026',
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Warunki sprzedaży — liczby, które muszą być spójne w całym sklepie

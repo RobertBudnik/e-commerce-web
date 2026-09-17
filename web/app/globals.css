@@ -5121,3 +5121,376 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   .kurtyna { display: none; }
 }
+
+/* ==========================================================================
+   Strona główna wg makiety „dwie głowy" (Claude Design, 17.09.2026)
+
+   Własny prefiks `dg-`, bo to osobna narracja, a nie wariant kart katalogu:
+   sekcje mają numer w nadtytule, kadry są duże i puste z założenia (zdjęcia
+   dochodzą później), a rytm pionowy jest rzadszy niż w sklepie. Reguły
+   katalogu zostają nietknięte — ta strona ich po prostu nie używa.
+   ========================================================================== */
+
+.dg {
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  padding-block: clamp(28px, 5vw, 56px) clamp(64px, 10vw, 128px);
+}
+
+/* Nadtytuł: wersaliki na rozstrzelonym tracking. Ten sam stopień niesie
+   nadtytuł hero, numer sekcji i dział wpisu w dzienniku. */
+.dg-nadtytul,
+.dg-numer {
+  display: block;
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ---------- Hero ---------- */
+
+.dg-haslo {
+  margin: clamp(18px, 3vw, 32px) 0 0;
+  font-family: var(--display);
+  font-size: var(--t-hero);
+  font-weight: 800;
+  line-height: .95;
+  letter-spacing: -.035em;
+  color: var(--ink);
+  /* Łamanie niesie treść (trzy linie z makiety), więc bierzemy je z danych. */
+  white-space: pre-line;
+  text-wrap: balance;
+}
+
+.dg-hero-dol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(20px, 3vw, 40px);
+  margin-top: clamp(24px, 3vw, 40px);
+}
+
+.dg-lede {
+  max-width: 44ch;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.dg-hero-akcje { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.dg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Cel dotykowy ponad 44 px także przy krótkiej etykiecie — WCAG 2.5.8. */
+  min-height: 46px;
+  padding: 12px 26px;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  font-size: .9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--ruch-kolor) var(--krzywa-detal),
+              color var(--ruch-kolor) var(--krzywa-detal),
+              border-color var(--ruch-kolor) var(--krzywa-detal);
+}
+
+.dg-btn:hover { background: var(--accent-ink); }
+
+.dg-btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-pole);
+}
+
+.dg-btn-ghost:hover { background: var(--bg-soft); border-color: var(--ink); }
+
+.dg-hero-kadr {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin-top: clamp(24px, 4vw, 44px);
+  min-height: clamp(240px, 40vw, 420px);
+  border-radius: var(--radius-hero);
+  background: var(--img);
+}
+
+.dg-kadr-znak { display: grid; place-items: center; color: var(--ink-3); opacity: .55; }
+.dg-kadr-znak svg { width: 28px; height: 28px; }
+
+/* ---------- Pasek obietnic ---------- */
+
+.dg-pasek {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(18px, 4vw, 52px);
+  margin: clamp(28px, 4vw, 44px) 0 0;
+  padding: 0 0 22px;
+  border-bottom: 1px solid var(--line);
+  list-style: none;
+}
+
+.dg-pasek li {
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ---------- Sekcja: nadtytuł z numerem, nagłówek, odsyłacz ---------- */
+
+.dg-sekcja { margin-top: clamp(56px, 9vw, 104px); }
+
+.dg-glowa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: clamp(14px, 2.5vw, 28px);
+  margin-bottom: clamp(18px, 2.5vw, 28px);
+}
+
+.dg-numer { flex: 0 0 auto; }
+
+.dg-glowa h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(1.5rem, 1rem + 2.2vw, 2.25rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+  color: var(--ink);
+}
+
+.dg-link {
+  margin-left: auto;
+  font-size: .8125rem;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.dg-link:hover { color: var(--ink); text-decoration: underline; }
+
+/* ---------- Siatka kadrów (produkty i pokoje) ---------- */
+
+.dg-siatka {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 20px);
+}
+
+.dg-karta { display: block; text-decoration: none; color: inherit; }
+
+.dg-karta-kadr {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  aspect-ratio: 1 / 1.08;
+  border-radius: var(--r-lg);
+  background: var(--img);
+  transition: background var(--ruch-tlo) var(--krzywa-detal);
+}
+
+.dg-karta:hover .dg-karta-kadr { background: var(--bg-sunken); }
+
+/* Ikona zastępcza z `ProductMedia` — przy braku zdjęcia zostaje sam znak. */
+.dg-karta-kadr > svg { width: 28px; height: 28px; color: var(--ink-3); opacity: .55; }
+
+.dg-karta-wiersz {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.dg-karta-nazwa { font-size: .9375rem; font-weight: 700; color: var(--ink); }
+.dg-karta-cena { font-size: .9375rem; font-weight: 600; color: var(--ink); }
+.dg-karta-opis { display: block; margin-top: 3px; font-size: .8125rem; color: var(--ink-3); }
+
+/* ---------- Pokoje: podpis leży na kadrze ---------- */
+
+.dg-pokoj {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  text-decoration: none;
+  color: inherit;
+}
+
+.dg-pokoj .dg-karta-kadr { aspect-ratio: 1 / 1.12; border-radius: var(--r-lg); }
+
+.dg-pokoj-podpis {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: grid;
+  gap: 2px;
+  padding: 16px;
+  /* Przyciemnienie, nie krycie: podpis ma zostać czytelny także wtedy, gdy
+     pod spód wejdzie jasne zdjęcie. */
+  background: linear-gradient(to top, rgba(28, 26, 23, .78), rgba(28, 26, 23, 0));
+  color: #f4f1ea;
+}
+
+.dg-pokoj-podpis strong { font-size: .9375rem; font-weight: 700; }
+.dg-pokoj-podpis span { font-size: .75rem; opacity: .82; }
+
+/* ---------- Pracownia: ciemny blok w środku jasnej strony ---------- */
+
+.dg-pracownia {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+  margin-top: clamp(56px, 9vw, 104px);
+  padding: clamp(26px, 4vw, 56px);
+  border-radius: var(--radius-hero);
+  /* Blok jest ciemny w obu motywach — to plama w narracji, nie powierzchnia
+     motywu, więc barwy stoją wprost, a nie przez tokeny. */
+  background: #1c1a17;
+  color: #ede9de;
+}
+
+.dg-pracownia .dg-numer { color: rgba(237, 233, 222, .62); }
+
+.dg-pracownia h2 {
+  max-width: 26ch;
+  margin: 14px 0 0;
+  font-family: var(--display);
+  font-size: clamp(1.375rem, 1rem + 1.8vw, 2rem);
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: -.02em;
+}
+
+.dg-liczby {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(20px, 4vw, 52px);
+  margin: clamp(22px, 3vw, 32px) 0 0;
+}
+
+.dg-liczby div { display: grid; gap: 4px; }
+
+.dg-liczby dt {
+  font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.25rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dg-liczby dd { margin: 0; font-size: .75rem; color: rgba(237, 233, 222, .62); }
+
+.dg-btn-ciemny {
+  margin-top: clamp(22px, 3vw, 32px);
+  color: #ede9de;
+  border-color: rgba(237, 233, 222, .32);
+  background: transparent;
+}
+
+.dg-btn-ciemny:hover {
+  background: rgba(237, 233, 222, .1);
+  border-color: rgba(237, 233, 222, .6);
+}
+
+.dg-pracownia-kadry {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dg-kadr-ciemny {
+  display: grid;
+  place-items: center;
+  min-height: 148px;
+  border-radius: var(--r-lg);
+  background: #262320;
+  color: rgba(237, 233, 222, .38);
+}
+
+.dg-kadr-ciemny svg { width: 26px; height: 26px; }
+.dg-kadr-wysoki { grid-row: span 2; }
+
+/* ---------- Dziennik ---------- */
+
+.dg-dziennik { margin: 0; padding: 0; list-style: none; }
+
+.dg-wpis {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2vw, 24px);
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.dg-wpis-kadr {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 56px;
+  border-radius: var(--radius);
+  background: var(--img);
+  color: var(--ink-3);
+}
+
+.dg-wpis-kadr svg { width: 20px; height: 20px; opacity: .55; }
+
+.dg-wpis-tresc { flex: 1 1 auto; min-width: 0; display: grid; gap: 4px; }
+.dg-wpis-tresc strong { font-size: 1rem; font-weight: 700; color: var(--ink); }
+.dg-wpis-opis { font-size: .8125rem; color: var(--ink-3); }
+.dg-wpis-data { flex: 0 0 auto; font-size: .75rem; color: var(--ink-3); }
+
+/* ---------- Schodzenie na węższe ekrany ---------- */
+
+@media (max-width: 1000px) {
+  .dg-siatka { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dg-pracownia { grid-template-columns: 1fr; align-items: start; }
+}
+
+@media (max-width: 620px) {
+  .dg-siatka { grid-template-columns: 1fr; }
+  .dg-hero-akcje { width: 100%; }
+  .dg-btn { flex: 1 1 auto; }
+  .dg-wpis { align-items: flex-start; flex-wrap: wrap; }
+  .dg-wpis-data { width: 100%; padding-left: calc(64px + clamp(14px, 2vw, 24px)); }
+}
+
+/* ---------- Nagłówek i przyciski pod makietę „dwie głowy" ----------
+   Makieta jest pigułkowa: marka ciężkim groteskiem, nawigacja cicha,
+   a każdy przycisk ma pełne zaokrąglenie. Zmiana siedzi tu, a nie
+   w komponentach — `.btn` obsługuje warianty własnościami `--b-*`,
+   więc wystarczy podmienić je punktowo. */
+
+.logo {
+  font-family: var(--display);
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.nav a { font-size: .875rem; }
+
+.btn { border-radius: var(--r-pill); }
+
+/* Koszyk z makiety to wypełniona pigułka, nie przycisk-duch. */
+.cart-btn {
+  --b-bg: var(--btn-bg);
+  --b-fg: var(--btn-ink);
+  --b-bd: transparent;
+}
+
+.cart-btn:hover {
+  --b-bg: var(--accent-ink);
+  --b-fg: var(--btn-ink);
+  --b-bd: transparent;
+}
