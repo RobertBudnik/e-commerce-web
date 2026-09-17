@@ -5,9 +5,9 @@ import { TekstDekodujacy } from '@/components/ruch/TekstDekodujacy';
 import { Licznik } from '@/components/ruch/Licznik';
 import { PrzyciskMagnetyczny } from '@/components/ruch/PrzyciskMagnetyczny';
 import { PoleCzastek } from '@/components/ruch/PoleCzastek';
-import { StrzepkaPrzeciagana } from '@/components/ruch/StrzepkaPrzeciagana';
 import { SekcjaPrzypieta } from '@/components/ruch/SekcjaPrzypieta';
 import { KadrZoom } from '@/components/ruch/KadrZoom';
+import { StrzepkaPrzeciagana } from '@/components/ruch/StrzepkaPrzeciagana';
 import { ProductCard } from '@/components/product/ProductCard';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { getCategories, getProducts } from '@/lib/queries';
@@ -19,10 +19,14 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
-  // Strzępka pokazuje cały asortyment, nie cztery pozycje: przy czterech
-  // kartach lista mieści się w kontenerze na szerokim ekranie i nie ma czego
-  // przeciągać — zostaje kilkadziesiąt pikseli zapasu.
+  // Cały asortyment w przeciąganej taśmie — przegląd bez skakania po stronach.
   const featured = [...products].sort((a, b) => b.rating - a.rating);
+
+  // Bento: pierwszy dział duży (2×2), drugi szeroki (2×1), reszta zwykła.
+  // Asymetria robi rytm; przy trzech kategoriach (audio/komputery/foto) układ
+  // domyka się w jeden ekran bez pustych pól.
+  const bento = (i: number) =>
+    i === 0 ? 'category cat-big' : i === 1 ? 'category cat-wide' : 'category';
 
   return (
     <main>
@@ -31,13 +35,8 @@ export default async function HomePage() {
           którymi sklep byłby związany wobec kupującego. */}
       {OBIETNICE.length > 0 && <Marquee hasla={OBIETNICE.map((o) => o.tytul)} />}
 
-      {/* Hero z makiety: ograniczona karta w obrysie strony, tekst po lewej,
-          kadr po prawej. Ilustracja wraca do siatki jako druga kolumna —
-          wcześniej leżała pod spodem jako tło na całą wysokość ekranu i to
-          ona spychała pierwszy rząd produktów pod zgięcie.
-
-          Nic z zawartości nie ubyło: nadtytuł, hasło, akapit, oba przyciski
-          i statystyki są tam, gdzie były. */}
+      {/* Hero: nadtytuł, hasło dosypujące się literami, akapit, dwa wejścia
+          w sklep, statystyki i kadr produktu po prawej. */}
       <section className="hero">
         <PoleCzastek />
         <div className="hero-inner">
@@ -99,9 +98,9 @@ export default async function HomePage() {
             Zobacz wszystko
           </Link>
         </div>
-        <div className="categories">
-          {categories.map((c) => (
-            <Link className="category" href={`/sklep?kategoria=${c.id}`} key={c.id}>
+        <div className="categories bento">
+          {categories.map((c, i) => (
+            <Link className={bento(i)} href={`/sklep?kategoria=${c.id}`} key={c.id}>
               <Icon name={c.icon} />
               <strong>{c.name}</strong>
               <span>{c.desc}</span>
