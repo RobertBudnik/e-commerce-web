@@ -51,7 +51,15 @@ export async function wyloguj(page: Page) {
  */
 export async function dodajPierwszyDoKoszyka(page: Page) {
   await page.goto('/sklep');
-  const kafelek = page.locator('.card').filter({ hasText: 'Do koszyka' }).first();
+  // Filtr po nazwie dostępnej, nie po tekście. W siatce sklepu `ProductCard`
+  // podaje `PrzyciskDoKoszyka` z `ikona`, a ten renderuje wtedy samą ikonę
+  // koszyka — napis „Do koszyka" nie trafia do DOM-u i żyje wyłącznie
+  // w `aria-label`. `filter({ hasText })` nie miał więc czego dopasować
+  // i wywracał dziewięć testów naraz dwudziestosekundowym limitem.
+  const kafelek = page
+    .locator('.card')
+    .filter({ has: page.getByRole('button', { name: 'Do koszyka' }) })
+    .first();
   const nazwa = await kafelek.locator('.card-title').innerText();
 
   await kafelek.getByRole('button', { name: 'Do koszyka' }).click();
