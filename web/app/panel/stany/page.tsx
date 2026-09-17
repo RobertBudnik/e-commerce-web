@@ -84,7 +84,10 @@ export default async function Stany({
       {produkty.length === 0 ? (
         <p className="mag-pusto">{pustyKomunikat}</p>
       ) : (
-        <div className="mag-karta" style={{ marginTop: 10 }}>
+        {/* `mag-stany` nie niesie stylu — nazywa tę listę, odkąd pod nią stoi
+              druga karta z wierszami („Ostatnie ruchy") i „którakolwiek karta
+              na ekranie" przestało być jednoznaczne. */}
+          <div className="mag-karta mag-stany" style={{ marginTop: 10 }}>
           {produkty.map((p) => {
             const zero = p.stock === 0;
             const przyProgu = !zero && p.progNiski > 0 && p.stock <= p.progNiski;

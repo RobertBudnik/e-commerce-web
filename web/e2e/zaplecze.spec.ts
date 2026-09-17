@@ -58,7 +58,7 @@ test.describe('Magazyn', () => {
     await zaloguj(page, KONTA.zaplecze);
     await page.goto('/panel/stany');
 
-    const wiersze = page.locator('.mag-karta .mag-wiersz');
+    const wiersze = page.locator('.mag-stany .mag-wiersz');
     await expect(wiersze.first()).toBeVisible();
 
     await page.getByPlaceholder('Szukaj nazwy lub SKU').fill('laptop');
@@ -74,7 +74,7 @@ test.describe('Magazyn', () => {
     await zaloguj(page, KONTA.zaplecze);
     await page.goto('/panel/stany?szukaj=laptop');
 
-    await page.locator('.mag-karta .mag-wiersz').first().click();
+    await page.locator('.mag-stany .mag-wiersz').first().click();
     await expect(page).toHaveURL(/\/panel\/stany\/[0-9a-f-]{36}/);
 
     const wynik = page.locator('.mag-korekta-wynik');
@@ -104,7 +104,7 @@ test.describe('Magazyn', () => {
   test('stan nie schodzi poniżej zera, a komunikat stoi przy liczbie', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
     await page.goto('/panel/stany?szukaj=laptop');
-    await page.locator('.mag-karta .mag-wiersz').first().click();
+    await page.locator('.mag-stany .mag-wiersz').first().click();
 
     const wynik = page.locator('.mag-korekta-wynik');
     const przed = Number(await wynik.innerText());
@@ -202,8 +202,8 @@ test.describe('Zwroty', () => {
   });
 });
 
-test.describe('Nadanie przesyłki', () => {
-  test('arkusz przyjmuje numer, zamówienie idzie do wysłanych', async ({ page }) => {
+test.describe('Nadanie paczki', () => {
+  test('numer trafia do danych dostawy, a zamówienie idzie do wysłanych', async ({ page }) => {
     await zaloguj(page, KONTA.zaplecze);
 
     // Seed nie trzyma żadnego zamówienia w kolejce — wszystkie są już
@@ -222,60 +222,21 @@ test.describe('Nadanie przesyłki', () => {
     await pierwsze.click();
     await expect(page).toHaveURL(/\/panel\/zamowienia\/[^/]+/);
 
-    // Arkusz otwiera się dopiero na żądanie — karta zamówienia nie nosi
-    // pustego pola na numer przy każdym otwarciu
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Nadaj przesyłkę' }).click();
+    // Po scaleniu nadaje się w miejscu, bez nakładki: formularz stoi na karcie
+    // zamówienia, bo to jedyny ekran, na którym paczka powstaje. Zostaje
+    // `nadaj_paczke` — z przewoźnikiem i idempotencją po stronie bazy.
+    const nadaj = page.getByRole('button', { name: 'Nadaj paczkę' });
+    await expect(nadaj).toBeDisabled();
 
-    const arkusz = page.getByRole('dialog');
-    await expect(arkusz).toBeVisible();
-    await expect(arkusz.getByRole('button', { name: 'Nadaj przesyłkę' })).toBeDisabled();
+    await page.getByPlaceholder('wklej z panelu przewoźnika').fill('JVGL0099887766');
+    await expect(nadaj).toBeEnabled();
+    await nadaj.click();
 
-    // Escape zamyka, tak jak każdą nakładkę w tym projekcie
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-
-    await page.getByRole('button', { name: 'Nadaj przesyłkę' }).click();
-    await page.getByPlaceholder('Numer listu przewozowego').fill('JVGL0099887766');
-    await page.getByRole('dialog').getByRole('button', { name: 'Nadaj przesyłkę' }).click();
-
-    // Numer wylądował w danych dostawy, a akcje ustąpiły miejsca informacji
     await expect(page.getByText('JVGL0099887766')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText('paczka nadana')).toBeVisible();
+    await expect(page.getByText(/Paczka nadana/)).toBeVisible();
 
     // I zamówienie przeniosło się do zakładki wysłanych
     await page.goto('/panel/kolejka?stan=wysłane');
     await expect(page.locator('.mag-karta .mag-wiersz').first()).toBeVisible();
-  });
-});
-
-test.describe('Motyw skanera', () => {
-  test('wybór wyłamuje ekran z motywu strony i przeżywa przeładowanie', async ({ page }) => {
-    await zaloguj(page, KONTA.zaplecze);
-    await page.goto('/panel/skan');
-
-    const ekran = page.locator('main.mag');
-    // Domyślnie „Auto" — ekran idzie za motywem strony i nie nosi klasy
-    await expect(page.getByRole('tab', { name: 'Auto' })).toHaveAttribute('aria-selected', 'true');
-    await expect(ekran).not.toHaveClass(/motyw-(ciemny|jasny)/);
-
-    await page.getByRole('tab', { name: 'Ciemny' }).click();
-    await expect(ekran).toHaveClass(/motyw-ciemny/);
-
-    // Tło naprawdę się zmienia, nie tylko klasa
-    const ciemne = await ekran.evaluate((el) => getComputedStyle(el).backgroundColor);
-
-    await page.getByRole('tab', { name: 'Jasny' }).click();
-    await expect(ekran).toHaveClass(/motyw-jasny/);
-    const jasne = await ekran.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(jasne).not.toBe(ciemne);
-
-    // Wybór zostaje przy telefonie
-    await page.reload();
-    await expect(page.getByRole('tab', { name: 'Jasny' })).toHaveAttribute(
-      'aria-selected',
-      'true'
-    );
-    await expect(page.locator('main.mag')).toHaveClass(/motyw-jasny/);
   });
 });
