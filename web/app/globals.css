@@ -24,21 +24,26 @@
      Kontrast każdej pary pilnuje `npm run kontrast`.
      --------------------------------------------------------------------- */
 
-  /* powierzchnie — ciepły beż, od najjaśniejszej do najgłębszej.
-     Zero bieli: nawet `--surface` jest lekko kremowy (Apple HIG + Aesop). */
-  --surface: #f5f1e8;
-  --bg: #efe9de;
-  --panel: #e7e0d2;
+  /* powierzchnie — ciepły greige/papier z makiety „dwie głowy" (17.09.2026).
+     Odejście od beżu w stronę neutralnej ciepłej szarości: grunt to papier,
+     karty-kadry to wyraźnie chłodniejsza greige, `--surface` prawie biała, ale
+     wciąż ciepła. Biel dozwolona (makieta jej używa na plakietkach i polach). */
+  --surface: #f4f1ea;
+  --bg: #ece9e1;
+  /* Panel niesie tekst (pasmo obietnic, newsletter, zaplecze), więc jest
+     o stopień jaśniejszy niż szare kadry makiety — te siedzą w `--img`.
+     Przy wspólnym odcieniu `--ink-3` schodził na panelu do 3,47:1. */
+  --panel: #e3dfd5;
 
   /* tekst — trzy stopnie ciepłego atramentu. `--ink-3` trzymany nad progiem
      AA na tle strony (`npm run kontrast` pilnuje). */
-  --ink: #1c1917;
-  --ink-2: #57514a;
-  --ink-3: #665f54;
+  --ink: #1c1a17;
+  --ink-2: #5e594f;
+  --ink-3: #666055;
 
   /* Hairline przezroczystością na ciepłym atramencie — działa na każdej
      z beżowych powierzchni bez własnego szarego. */
-  --line: rgba(28, 25, 23, .12);
+  --line: rgba(28, 26, 23, .12);
 
   /* ---------------------------------------------------------------------
      Akcent = grafit (Apple HIG, minimal). Kolor wnoszą wyłącznie zdjęcia
@@ -47,24 +52,24 @@
      `--accent` to plama (tło przycisku, kropka, pasek), `--accent-ink` niesie
      litery na jasnym tle — oba grafitowe, kontrast pilnuje `npm run kontrast`.
      --------------------------------------------------------------------- */
-  --accent: #1c1917;
-  --accent-ink: #1c1917;
-  --accent-soft: rgba(28, 25, 23, .08);
+  --accent: #1c1a17;
+  --accent-ink: #1c1a17;
+  --accent-soft: rgba(28, 26, 23, .08);
 
   /* Znacznik przy danych w panelu (kafel zwrotów) — ciepła neutralna szarość,
      nigdy pod literami. */
-  --accent-2: #8a8178;
+  --accent-2: #8b857a;
 
   /* Przycisk główny: pełny grafit, ledwie zauważalny gradient dla głębi.
      Token, bo powtarza się na przycisku, pasku zakupu i zakładce panelu. */
-  --akcent-gradient: linear-gradient(135deg, #1c1917 0%, #2a2622 100%);
+  --akcent-gradient: linear-gradient(135deg, #1c1a17 0%, #2b2823 100%);
 
-  --btn-bg: #1c1917;
-  --btn-ink: #f5f1e8;
-  --na-akcencie: #f5f1e8;
+  --btn-bg: #1c1a17;
+  --btn-ink: #f4f1ea;
+  --na-akcencie: #f4f1ea;
 
-  --img: #e7e0d2;
-  --img-line: rgba(28, 25, 23, .14);
+  --img: #dbd7cd;
+  --img-line: rgba(28, 26, 23, .14);
 
   /* Kolory znaczące zostają — KokonutUI też trzyma osobny zestaw dla stanów
      (success #00c758, warning #f99c00, error #fb2c36). Bierzemy ich rodzinę,
@@ -92,8 +97,8 @@
   /* KokonutUI stoi na `--radius:.5rem` i schodzi/rośnie stopniami:
      sm 6 · lg 8 · xl 12 · 2xl 16 · 3xl 24 · full. Zerowy narożnik
      z poprzedniej rundy znika — w tej bibliotece nie ma ani jednego. */
-  --radius: 8px;
-  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-sm: 8px;
   /* Hero z makiety ma narożnik wyraźnie większy niż karty — to jedna plama
      na całą szerokość strony, a nie element listy, więc 8 px czytałoby się
      jak niedopatrzenie. */
@@ -118,33 +123,33 @@
 .motyw-ciemny {
   color-scheme: dark;
 
-  --surface: #26221e;
-  --bg: #1f1d1a;
-  --panel: #2e2a25;
+  --surface: #252220;
+  --bg: #1b1917;
+  --panel: #2e2b26;
 
-  --ink: #ede7db;
-  --ink-2: #ada79b;
-  --ink-3: #a29b8a;
+  --ink: #ede9de;
+  --ink-2: #a9a49a;
+  --ink-3: #9a9489;
 
-  --line: rgba(237, 231, 219, .14);
+  --line: rgba(237, 233, 222, .14);
 
   /* W ciemności role akcentu się odwracają: plama jest jasna (grafit
      rozjaśniony do ciepłej kości słoniowej) i ten sam ton niesie litery.
      Przycisk główny: jasny na ciemnym, napis grafitowy. Bez błękitu. */
-  --accent: #ede7db;
-  --accent-ink: #ede7db;
-  --accent-soft: rgba(237, 231, 219, .12);
+  --accent: #ede9de;
+  --accent-ink: #ede9de;
+  --accent-soft: rgba(237, 233, 222, .12);
 
-  --accent-2: #98907f;
+  --accent-2: #948d80;
 
-  --akcent-gradient: linear-gradient(135deg, #ede7db 0%, #cfc8b8 100%);
+  --akcent-gradient: linear-gradient(135deg, #ede9de 0%, #d0c9bb 100%);
 
-  --btn-bg: #ede7db;
-  --btn-ink: #1f1d1a;
-  --na-akcencie: #1f1d1a;
+  --btn-bg: #ede9de;
+  --btn-ink: #1b1917;
+  --na-akcencie: #1b1917;
 
-  --img: #2e2a25;
-  --img-line: rgba(237, 231, 219, .14);
+  --img: #2e2b26;
+  --img-line: rgba(237, 233, 222, .14);
 
   --radius-hero: 24px;
 
@@ -172,8 +177,8 @@
   /* KokonutUI stoi na `--radius:.5rem` i schodzi/rośnie stopniami:
      sm 6 · lg 8 · xl 12 · 2xl 16 · 3xl 24 · full. Zerowy narożnik
      z poprzedniej rundy znika — w tej bibliotece nie ma ani jednego. */
-  --radius: 8px;
-  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-sm: 8px;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 18px 40px -24px rgba(0, 0, 0, .9);
 }
@@ -281,8 +286,12 @@
      sam rodzaj co interfejs (SF Pro Display pod duże stopnie), `--mono` idzie
      wyłącznie pod liczby stojące w kolumnie. `--font-*` definiujemy tutaj, bo
      next/font już ich nie wstrzykuje. */
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  /* Makieta „dwie głowy" stoi na ciężkim grotesku — nie na SF. Najbliższy
+     krój, który jest już w systemie, to Helvetica Neue; na maszynach Apple
+     trafia 1:1, poza nimi schodzi na Arial/Segoe/Roboto i nic nie pobiera.
+     Zero Google Fonts zostaje w mocy. */
+  --font-sans: "Helvetica Neue", Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: "Helvetica Neue", Helvetica, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   /* ---------------------------------------------------------------------
      Skala typograficzna z makiety (24.08.2026):
@@ -299,6 +308,10 @@
      Stopnie bez ramp (`h3`, small, caption) zostają stałe: przy 20 px i niżej
      płynna skala nie ma czego zmieniać, a wprowadza rozjazd między ekranami.
      --------------------------------------------------------------------- */
+  /* Hasło hero z makiety: trzy linie ciężkiego grotesku, ciasny interlinia
+     i tracking. Własny stopień, bo H1 katalogu ma zostać przy 32 px — tu
+     chodzi o jedną plamę na wysokość ekranu. */
+  --t-hero: clamp(2.5rem, 1rem + 7vw, 5.25rem);
   --t-h1: clamp(1.625rem, 1.35rem + 1.4vw, 2rem);
   --t-h2: clamp(1.25rem, 1.1rem + .75vw, 1.5rem);
   --t-h3: 1.25rem;
@@ -318,12 +331,12 @@
   --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-:root { --bg-sunken: #e5e5e5; }
-.dark { --bg-sunken: #2a2a2a; }
+:root { --bg-sunken: #cfcabd; }
+.dark { --bg-sunken: #343029; }
 /* Obrys przycisku ghost i innych elementów, które mają być widoczne, ale nie
    krzyczeć — mocniejszy stopień tej samej przezroczystości co `--line`. */
-:root { --line-strong: rgba(10, 10, 10, .28); }
-.dark { --line-strong: rgba(255, 255, 255, .28); }
+:root { --line-strong: rgba(28, 26, 23, .28); }
+.dark { --line-strong: rgba(237, 233, 222, .28); }
 
 /* Obwódka pola formularza. Osobny token, bo `--line` ma wobec tła kontrast
    1,29:1 — dla kreski rozdzielającej to w zupełności dość, ale pole tekstowe
@@ -333,8 +346,8 @@
 
      jasny  #8a8377 → bg 3,57  surface 3,75  panel 3,22
      ciemny #726b61 → bg 3,58  surface 3,34  panel 3,16 */
-:root { --line-pole: #737373; }
-.dark { --line-pole: #7a7a7a; }
+:root { --line-pole: #7a746a; }
+.dark { --line-pole: #807a6e; }
 
 /* Nadtytuł sekcji — jaśniejszy niż tekst drugorzędny, zdjęty z makiet.
    W ciemnym motywie makiet nie ma, więc trzyma tam dotychczasową rolę
