@@ -38,7 +38,12 @@
   /* tekst — trzy stopnie ciepłego atramentu. `--ink-3` trzymany nad progiem
      AA na tle strony (`npm run kontrast` pilnuje). */
   --ink: #1c1a17;
-  --ink-2: #5e594f;
+  /* Trzy stopnie muszą być trzema stopniami. `--ink-3` stoi na podłodze
+     dopuszczalnej przez AA (4,68:1 na panelu) — jaśniej się nie da, bo
+     szarość z makiety daje na tym gruncie ok. 3:1. Skoro meta nie może iść
+     w górę, akapit schodzi w dół: inaczej oba stopnie czytają się jak jeden
+     kolor i strona traci hierarchię, na której makieta stoi. */
+  --ink-2: #4f4a41;
   --ink-3: #666055;
 
   /* Hairline przezroczystością na ciepłym atramencie — działa na każdej
@@ -128,7 +133,9 @@
   --panel: #2e2b26;
 
   --ink: #ede9de;
-  --ink-2: #a9a49a;
+  /* Ta sama korekta co w jasnym, w drugą stronę: akapit idzie w górę, meta
+     zostaje. Wcześniej oba stopnie dzieliło piętnaście jednostek. */
+  --ink-2: #bdb8ad;
   --ink-3: #9a9489;
 
   --line: rgba(237, 233, 222, .14);
