@@ -1016,6 +1016,30 @@ p:last-child { margin-bottom: 0; }
   color: var(--ink-2);
 }
 
+/* ---------- Bento kategorii (strona główna) ----------
+   Asymetryczna siatka 2026: pierwszy dział duży (2×2), drugi szeroki (2×1),
+   reszta zwykła. Kafle tracą stały wymiar 4:5 — o wysokości decyduje rząd
+   siatki, nie proporcja. */
+.categories.bento {
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 220px;
+  gap: 16px;
+}
+.categories.bento .category { aspect-ratio: auto; height: 100%; }
+.categories.bento .cat-big { grid-column: span 2; grid-row: span 2; }
+.categories.bento .cat-big strong { font-size: 1.6rem; }
+.categories.bento .cat-wide { grid-column: span 2; }
+@media (max-width: 860px) {
+  .categories.bento { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 180px; }
+  .categories.bento .cat-big { grid-row: span 2; }
+}
+@media (max-width: 560px) {
+  .categories.bento { grid-template-columns: 1fr; }
+  .categories.bento .cat-big,
+  .categories.bento .cat-wide { grid-column: span 1; grid-row: auto; }
+  .categories.bento .cat-big strong { font-size: 1.25rem; }
+}
+
 /* ---------- Toolbar ---------- */
 .toolbar {
   display: flex;
