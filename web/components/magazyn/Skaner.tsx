@@ -221,7 +221,7 @@ export function Skaner() {
 
           {blad && <p className="mag-blad" style={{ marginTop: 10 }}>{blad}</p>}
 
-          <Link className="mag-btn mag-btn-link" href={`/magazyn/stany/${stan.produkt.id}`}>
+          <Link className="mag-btn mag-btn-link" href={`/panel/stany/${stan.produkt.id}`}>
             Otwórz kartę produktu
           </Link>
 
@@ -262,7 +262,7 @@ export function Skaner() {
           </button>
           {/* Bez aparatu skaner jest ślepy, ale magazyn działa dalej —
               wyjście stąd musi istnieć, inaczej zostaje czarny prostokąt. */}
-          <Link className="mag-btn mag-btn-link" href="/magazyn/stany">
+          <Link className="mag-btn mag-btn-link" href="/panel/stany">
             Przejdź do listy magazynu
           </Link>
         </div>
@@ -275,7 +275,7 @@ export function Skaner() {
           <button type="button" className="mag-btn" style={{ marginTop: 12 }} onClick={start}>
             Spróbuj ponownie
           </button>
-          <Link className="mag-btn mag-btn-link" href="/magazyn/stany">
+          <Link className="mag-btn mag-btn-link" href="/panel/stany">
             Przejdź do listy magazynu
           </Link>
         </div>

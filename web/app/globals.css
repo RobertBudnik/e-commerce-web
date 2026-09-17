@@ -3431,101 +3431,20 @@ code {
    Ekran dla kogoś, kto zalogował się w aplikacji magazynowej kontem klienta.
    Wyśrodkowany w pionie, bo nie ma tu nic do przewijania — to komunikat,
    nie widok roboczy. */
-.mag-brak {
-  display: grid;
-  place-items: center;
-  min-height: 100dvh;
-  padding-inline: var(--gutter);
-  text-align: center;
-}
-.mag-brak-srodek { max-width: 34ch; }
-
 /* Znak zamiast ikony w wierszu: koło z tarczą, tej samej wielkości co koło
    kłódki na ekranie blokady w makiecie (88 px). */
-.mag-brak-znak {
-  display: grid;
-  place-items: center;
-  width: 88px;
-  height: 88px;
-  margin: 0 auto 22px;
-  border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--ink-2);
-}
-.mag-brak-znak svg { width: 34px; height: 34px; }
-
-.mag-brak h1 {
-  margin: 0 0 12px;
-  font-size: var(--t-karta);
-  font-weight: 700;
-  letter-spacing: -.026em;
-}
-.mag-brak-tresc {
-  margin: 0 0 14px;
-  font-size: var(--t-pomoc);
-  line-height: 1.5;
-  color: var(--ink-2);
-}
 /* Adres konta w pigułce — ten sam wzorzec co na ekranie blokady w makiecie.
    Pokazujemy go, bo najczęstsza przyczyna to zalogowanie się nie tym kontem,
    a wtedy sam adres rozwiązuje sprawę bez czytania reszty. */
-.mag-brak-konto {
-  display: inline-block;
-  margin: 0 0 18px;
-  padding: 6px 14px;
-  border-radius: var(--r-pill);
-  background: var(--accent-soft);
-  font-size: var(--t-podpis);
-  font-variant-numeric: tabular-nums;
-}
-.mag-brak-akcje { display: grid; gap: 14px; margin-top: 8px; }
-.mag-brak-link { font-size: var(--t-pomoc); color: var(--accent); }
-
 /* ---------- Przycisk przytrzymania ----------
    Wymiary i kolory ze specyfikacji makiety: radius 14, min 50 px, tło akcentu.
    `touch-action: none` jest konieczne — bez niego przeglądarka na telefonie
    uzna przytrzymanie za początek przewijania i zabierze zdarzenia wskaźnika
    w połowie biegu. `overflow: hidden` przycina pasek do zaokrąglenia. */
-.mag-trzymaj {
-  position: relative;
-  overflow: hidden;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  display: block;
-  width: 100%;
-  min-height: 50px;
-  padding-inline: 18px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--accent);
-  color: #ffffff;
-  font-size: var(--t-wiersz);
-  font-weight: 600;
-  letter-spacing: -.02em;
-  cursor: pointer;
-}
-.mag-trzymaj:disabled { cursor: default; }
-
 /* Warstwa postępu. Rośnie od lewej, więc `transform-origin` musi być
    jawne — domyślny środek dawałby pasek rozchodzący się na boki. */
-.mag-trzymaj-pasek {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, .28);
-  transform: scaleX(0);
-  transform-origin: left;
-  pointer-events: none;
-}
-.mag-trzymaj-tresc { position: relative; z-index: 1; }
-
 /* Po sukcesie przycisk przestaje być przyciskiem: zielone tło, kursor
    domyślny, żadnego zaproszenia do drugiego dotknięcia. */
-.mag-trzymaj[data-zrobione] {
-  background: var(--ok);
-  cursor: default;
-}
-
 .mag-sekcja {
   margin: 26px 0 7px;
   padding-inline: calc(var(--gutter) + 4px);

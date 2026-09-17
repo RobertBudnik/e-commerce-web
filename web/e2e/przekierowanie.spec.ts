@@ -25,7 +25,7 @@ test.describe('Ścieżka powrotu', () => {
     });
   }
 
-  const WLASNE = ['/konto', '/panel/zamowienia', '/magazyn/stany?stan=nowe', '/produkt/laptop-nova-14-pro'];
+  const WLASNE = ['/konto', '/panel/zamowienia', '/panel/stany?stan=nowe', '/produkt/laptop-nova-14-pro'];
 
   for (const wartosc of WLASNE) {
     test(`przepuszcza ${wartosc}`, () => {

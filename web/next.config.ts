@@ -55,6 +55,35 @@ const nextConfig: NextConfig = {
   },
 
   /**
+   * Magazyn przestał być osobnym serwisem i wsiąkł w `/panel`. Adresy zostają
+   * jako przekierowania, bo żyły w zakładkach telefonu magazyniera i na
+   * kartkach przy regale — nagły czterysta cztery wyglądałby jak awaria
+   * wdrożenia, a nie jak zmiana układu.
+   *
+   * Przeglądowi i kolejce magazynu odpowiada dziś kolejka pakowania: to
+   * pierwszy ekran, który po scaleniu widzi `staff`, a to on te zakładki
+   * zapisywał.
+   */
+  async redirects() {
+    return [
+      { source: '/magazyn', destination: '/panel/kolejka', permanent: true },
+      { source: '/magazyn/zamowienia', destination: '/panel/kolejka', permanent: true },
+      {
+        source: '/magazyn/zamowienia/:numer',
+        destination: '/panel/zamowienia/:numer',
+        permanent: true,
+      },
+      { source: '/magazyn/stany', destination: '/panel/stany', permanent: true },
+      { source: '/magazyn/stany/:id', destination: '/panel/stany/:id', permanent: true },
+      { source: '/magazyn/zwroty', destination: '/panel/zwroty', permanent: true },
+      { source: '/magazyn/skan', destination: '/panel/skan', permanent: true },
+      // Ekran odmowy zniknął: przy zakładkach filtrowanych rolą nie ma jak
+      // trafić tam, gdzie się nie wolno.
+      { source: '/magazyn/brak-dostepu', destination: '/konto', permanent: true },
+    ];
+  },
+
+  /**
    * Nagłówki bezpieczeństwa. Nie zastępują RLS, ale ograniczają szkody:
    * treść sklepu nie ma powodu jechać w cudzej ramce ani wysyłać pełnego
    * adresu strony do zewnętrznych hostów.

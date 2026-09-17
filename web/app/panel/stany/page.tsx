@@ -4,7 +4,8 @@ import { Suspense } from 'react';
 import { SzukajStanow } from '@/components/magazyn/SzukajStanow';
 import { SegmentyStanow } from '@/components/magazyn/SegmentyStanow';
 import { wymagajZaplecza } from '@/lib/panel-dostep';
-import { getLicznikiMagazynu, getStanyMagazynu } from '@/lib/queries';
+import { getLicznikiMagazynu, getOstatnieRuchy, getStanyMagazynu } from '@/lib/queries';
+import { zeZnakiem } from '@/lib/format';
 import { ile, POZYCJE } from '@/lib/odmiana';
 
 export const metadata: Metadata = {
@@ -13,6 +14,8 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
+
+const GODZINA = new Intl.DateTimeFormat('pl-PL', { hour: '2-digit', minute: '2-digit' });
 
 const SEGMENTY = [
   { klucz: 'wszystko', etykieta: 'Wszystko' },
@@ -27,16 +30,17 @@ export default async function Stany({
 }: {
   searchParams: Promise<{ szukaj?: string; segment?: string }>;
 }) {
-  await wymagajZaplecza('/magazyn/stany');
+  await wymagajZaplecza('/panel/stany');
 
   const { szukaj = '', segment: segmentZUrl } = await searchParams;
   const segment: Segment = SEGMENTY.some((s) => s.klucz === segmentZUrl)
     ? (segmentZUrl as Segment)
     : 'wszystko';
 
-  const [produkty, liczniki] = await Promise.all([
+  const [produkty, liczniki, ruchy] = await Promise.all([
     getStanyMagazynu(szukaj, segment),
     getLicznikiMagazynu(),
+    getOstatnieRuchy(),
   ]);
 
   const parametry = (nowy: Segment) => {
@@ -44,7 +48,7 @@ export default async function Stany({
     if (szukaj.trim()) p.set('szukaj', szukaj.trim());
     if (nowy !== 'wszystko') p.set('segment', nowy);
     const q = p.toString();
-    return q ? `/magazyn/stany?${q}` : '/magazyn/stany';
+    return q ? `/panel/stany?${q}` : '/panel/stany';
   };
 
   const pustyKomunikat =
@@ -85,7 +89,7 @@ export default async function Stany({
             const zero = p.stock === 0;
             const przyProgu = !zero && p.progNiski > 0 && p.stock <= p.progNiski;
             return (
-              <Link key={p.id} className="mag-wiersz" href={`/magazyn/stany/${p.id}`}>
+              <Link key={p.id} className="mag-wiersz" href={`/panel/stany/${p.id}`}>
                 <span
                   className={`mag-dioda${zero ? ' mag-dioda-brak' : przyProgu ? ' mag-dioda-uwaga' : ''}`}
                   aria-hidden="true"
@@ -108,6 +112,38 @@ export default async function Stany({
             );
           })}
         </div>
+      )}
+
+      {/* Historia przyjechała tu z przeglądu magazynu, który po scaleniu zniknął.
+          Stany są jej naturalnym miejscem: liczba bez historii jest tylko
+          liczbą, a magazynier czyta ją, żeby wiedzieć, skąd się wzięła
+          i czy to on ją ruszył. */}
+      {ruchy.length > 0 && (
+        <>
+          <h2 className="mag-sekcja">Ostatnie ruchy</h2>
+          <div className="mag-karta">
+            {ruchy.map((ruch) => (
+              <Link
+                key={ruch.id}
+                className="mag-wiersz"
+                href={`/panel/stany/${ruch.produktId}`}
+              >
+                <span className="mag-tresc">
+                  <span className="mag-nazwa">{ruch.produkt}</span>
+                  <span className="mag-meta">
+                    {ruch.powod} · {GODZINA.format(new Date(ruch.czas))}
+                  </span>
+                </span>
+                <span
+                  className={`mag-delta ${ruch.delta > 0 ? 'mag-delta-plus' : 'mag-delta-minus'}`}
+                >
+                  {zeZnakiem(ruch.delta)}
+                  <span className="mag-delta-jednostka"> szt.</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </>
       )}
 
       <div className="mag-zapas" />
