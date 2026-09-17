@@ -1,63 +1,27 @@
 import { expect, test } from '@playwright/test';
-import { JAK_TO_DZIALA, MARKA, OBIETNICE } from '../lib/dane-sklepu';
+import { JAK_TO_DZIALA, MARKA } from '../lib/dane-sklepu';
 
 /**
- * Zaawansowany ruch — sekcja z `.claude/skills/nordo-design`.
+ * Ruch, który został na stronie głównej po przebudowie wg makiety „dwie głowy".
  *
- * Testy sprawdzają zachowanie, nie wygląd: czy strzępka jedzie dalej po
- * puszczeniu, czy sekcja przypięta zmienia krok wraz z przewijaniem i czy
- * wszystko znika przy `prefers-reduced-motion`. Tego ostatniego nie da się
- * sprawdzić okiem, a jest to warunek, na którym cała ta warstwa stoi.
+ * Przeciągana taśma, pole cząstek i marquee zeszły razem ze starym układem —
+ * ich testy odeszły z nimi. Sekcja przypięta została, bo właściciel chciał ją
+ * zatrzymać, więc jej zachowanie dalej jest pilnowane: czy krok zmienia się
+ * wraz z przewijaniem i czy przy `prefers-reduced-motion` sekcja rozwija się
+ * w zwykłą listę, zamiast przejmować przewijanie.
  *
- * Teksty biorą się z `web/lib/dane-sklepu.ts`, a nie z literałów w teście:
- * sklep jest szablonem, więc każdy wdrażający podmienia hasła na własne.
- * Test przypięty do konkretnego hasła padałby po każdym rebrandingu, choć
- * sprawdzana zachowanie ani drgnie.
+ * Teksty biorą się z `web/lib/dane-sklepu.ts`, a nie z literałów: sklep jest
+ * szablonem, więc test przypięty do konkretnego hasła padałby po każdym
+ * rebrandingu, choć sprawdzane zachowanie ani drgnie.
  */
-test.describe('Zaawansowany ruch', () => {
-  test('strzępka jedzie dalej po puszczeniu i nie otwiera karty po przeciągnięciu', async ({
-    page,
-  }) => {
-    await page.goto('/');
-    const strzepka = page.locator('.strzepka');
-    // Bez przewinięcia strzępka leży pod ekranem, a mysz Playwrighta celuje
-    // wtedy poza widok i żaden uchwyt wskaźnika się nie odpala.
-    await strzepka.scrollIntoViewIfNeeded();
-    await expect(strzepka).toBeVisible();
-
-    // Bez zapasu do przewijania nie ma czego testować — przy zbyt szerokim
-    // oknie karty mieszczą się w kontenerze.
-    const zapas = await strzepka.evaluate((el) => el.scrollWidth - el.clientWidth);
-    expect(zapas).toBeGreaterThan(200);
-
-    const p = (await strzepka.boundingBox())!;
-    const y = p.y + 60;
-
-    await page.mouse.move(p.x + 500, y);
-    await page.mouse.down();
-    // Kilka kroków, bo prędkość liczy się z ostatniej klatki gestu
-    for (const x of [460, 420, 380, 340]) {
-      await page.mouse.move(p.x + x, y);
-    }
-    const wTrakcie = await strzepka.evaluate((el) => el.scrollLeft);
-    await page.mouse.up();
-
-    // Wybieg dokłada drogę już po puszczeniu przycisku
-    await expect
-      .poll(async () => strzepka.evaluate((el) => el.scrollLeft), { timeout: 2000 })
-      .toBeGreaterThan(wTrakcie);
-
-    // Adres się nie zmienił — przeciągnięcie po karcie nie jest kliknięciem
-    expect(new URL(page.url()).pathname).toBe('/');
-  });
-
+test.describe('Ruch na stronie głównej', () => {
   test('sekcja przypięta zmienia krok wraz z przewijaniem', async ({ page }) => {
     await page.goto('/');
     const blok = page.locator('.przypieta');
     await blok.scrollIntoViewIfNeeded();
 
     const kropki = page.locator('.przypieta-kropki li');
-    await expect(kropki).toHaveCount(3);
+    await expect(kropki).toHaveCount(JAK_TO_DZIALA.length);
 
     // Pozycje liczone z geometrii bloku, nie stałym przewinięciem o 900 px.
     // Krok to `droga / liczba kroków`, a droga zależy od wysokości okna —
@@ -70,27 +34,22 @@ test.describe('Zaawansowany ruch', () => {
     });
     const droga = geo.wysokosc - geo.okno;
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < JAK_TO_DZIALA.length; i++) {
       // Środek kroku, żeby nie stać na granicy zaokrąglenia
-      const y = geo.gora + (droga * (i + 0.5)) / 3;
+      const y = geo.gora + (droga * (i + 0.5)) / JAK_TO_DZIALA.length;
       await page.evaluate((doY) => window.scrollTo(0, doY), y);
       await expect(kropki.nth(i)).toHaveAttribute('aria-current', 'step');
     }
   });
 
-  test('przy ograniczonym ruchu efekty znikają, a treść zostaje', async ({ browser }) => {
+  test('przy ograniczonym ruchu sekcja rozwija się w listę, a treść zostaje', async ({
+    browser,
+  }) => {
     const kontekst = await browser.newContext({ reducedMotion: 'reduce' });
     const page = await kontekst.newPage();
     await page.goto('/');
 
-    // Cząsteczki nie powstają w ogóle
-    await expect(page.locator('.pole-czastek')).toHaveCount(0);
-
-    // Marquee stoi, ale hasła są na stronie
-    await expect(page.locator('.marquee-stoi')).toBeVisible();
-    await expect(page.getByText(OBIETNICE[0].tytul).first()).toBeVisible();
-
-    // Sekcja przypięta rozwija się w zwykłą listę — nie przejmuje przewijania
+    // Sekcja przypięta nie przejmuje przewijania — zostaje zwykła lista kroków
     await expect(page.locator('.przypieta-ekran')).toHaveCount(0);
     await expect(page.getByRole('heading', { name: JAK_TO_DZIALA[0].tytul })).toBeVisible();
 

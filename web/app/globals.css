@@ -24,21 +24,34 @@
      Kontrast każdej pary pilnuje `npm run kontrast`.
      --------------------------------------------------------------------- */
 
-  /* powierzchnie — ciepły beż, od najjaśniejszej do najgłębszej.
-     Zero bieli: nawet `--surface` jest lekko kremowy (Apple HIG + Aesop). */
-  --surface: #f5f1e8;
-  --bg: #efe9de;
-  --panel: #e7e0d2;
+  /* powierzchnie — ciepły greige/papier z makiety „dwie głowy" (17.09.2026).
+     Odejście od beżu w stronę neutralnej ciepłej szarości: grunt to papier,
+     karty-kadry to wyraźnie chłodniejsza greige, `--surface` prawie biała, ale
+     wciąż ciepła. Biel dozwolona (makieta jej używa na plakietkach i polach). */
+  --surface: #f4f1ea;
+  --bg: #ece9e1;
+  /* Panel niesie tekst (pasmo obietnic, newsletter, zaplecze), więc jest
+     o stopień jaśniejszy niż szare kadry makiety — te siedzą w `--img`.
+     Przy wspólnym odcieniu `--ink-3` schodził na panelu do 3,47:1. */
+  --panel: #e3dfd5;
 
   /* tekst — trzy stopnie ciepłego atramentu. `--ink-3` trzymany nad progiem
      AA na tle strony (`npm run kontrast` pilnuje). */
-  --ink: #1c1917;
-  --ink-2: #57514a;
-  --ink-3: #665f54;
+  --ink: #1c1a17;
+  /* Trzy stopnie muszą być trzema stopniami. `--ink-3` stoi na podłodze
+     dopuszczalnej przez AA (4,68:1 na panelu) — jaśniej się nie da, bo
+     szarość z makiety daje na tym gruncie ok. 3:1. Skoro meta nie może iść
+     w górę, akapit schodzi w dół: inaczej oba stopnie czytają się jak jeden
+     kolor i strona traci hierarchię, na której makieta stoi. */
+  /* Akapit jest średnim stopniem, nie ciemnym: hierarchię na górze strony
+     buduje teraz ciemny nadtytuł, więc `--ink-2` nie musi go zastępować.
+     Od `--ink-3` dzieli go tyle, żeby meta faktycznie odstawało. */
+  --ink-2: #544f46;
+  --ink-3: #666055;
 
   /* Hairline przezroczystością na ciepłym atramencie — działa na każdej
      z beżowych powierzchni bez własnego szarego. */
-  --line: rgba(28, 25, 23, .12);
+  --line: rgba(28, 26, 23, .12);
 
   /* ---------------------------------------------------------------------
      Akcent = grafit (Apple HIG, minimal). Kolor wnoszą wyłącznie zdjęcia
@@ -47,24 +60,24 @@
      `--accent` to plama (tło przycisku, kropka, pasek), `--accent-ink` niesie
      litery na jasnym tle — oba grafitowe, kontrast pilnuje `npm run kontrast`.
      --------------------------------------------------------------------- */
-  --accent: #1c1917;
-  --accent-ink: #1c1917;
-  --accent-soft: rgba(28, 25, 23, .08);
+  --accent: #1c1a17;
+  --accent-ink: #1c1a17;
+  --accent-soft: rgba(28, 26, 23, .08);
 
   /* Znacznik przy danych w panelu (kafel zwrotów) — ciepła neutralna szarość,
      nigdy pod literami. */
-  --accent-2: #8a8178;
+  --accent-2: #8b857a;
 
   /* Przycisk główny: pełny grafit, ledwie zauważalny gradient dla głębi.
      Token, bo powtarza się na przycisku, pasku zakupu i zakładce panelu. */
-  --akcent-gradient: linear-gradient(135deg, #1c1917 0%, #2a2622 100%);
+  --akcent-gradient: linear-gradient(135deg, #1c1a17 0%, #2b2823 100%);
 
-  --btn-bg: #1c1917;
-  --btn-ink: #f5f1e8;
-  --na-akcencie: #f5f1e8;
+  --btn-bg: #1c1a17;
+  --btn-ink: #f4f1ea;
+  --na-akcencie: #f4f1ea;
 
-  --img: #e7e0d2;
-  --img-line: rgba(28, 25, 23, .14);
+  --img: #dbd7cd;
+  --img-line: rgba(28, 26, 23, .14);
 
   /* Kolory znaczące zostają — KokonutUI też trzyma osobny zestaw dla stanów
      (success #00c758, warning #f99c00, error #fb2c36). Bierzemy ich rodzinę,
@@ -92,8 +105,8 @@
   /* KokonutUI stoi na `--radius:.5rem` i schodzi/rośnie stopniami:
      sm 6 · lg 8 · xl 12 · 2xl 16 · 3xl 24 · full. Zerowy narożnik
      z poprzedniej rundy znika — w tej bibliotece nie ma ani jednego. */
-  --radius: 8px;
-  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-sm: 8px;
   /* Hero z makiety ma narożnik wyraźnie większy niż karty — to jedna plama
      na całą szerokość strony, a nie element listy, więc 8 px czytałoby się
      jak niedopatrzenie. */
@@ -118,33 +131,35 @@
 .motyw-ciemny {
   color-scheme: dark;
 
-  --surface: #26221e;
-  --bg: #1f1d1a;
-  --panel: #2e2a25;
+  --surface: #252220;
+  --bg: #1b1917;
+  --panel: #2e2b26;
 
-  --ink: #ede7db;
-  --ink-2: #ada79b;
-  --ink-3: #a29b8a;
+  --ink: #ede9de;
+  /* Ta sama korekta co w jasnym, w drugą stronę: akapit idzie w górę, meta
+     zostaje. Wcześniej oba stopnie dzieliło piętnaście jednostek. */
+  --ink-2: #b4afa4;
+  --ink-3: #9a9489;
 
-  --line: rgba(237, 231, 219, .14);
+  --line: rgba(237, 233, 222, .14);
 
   /* W ciemności role akcentu się odwracają: plama jest jasna (grafit
      rozjaśniony do ciepłej kości słoniowej) i ten sam ton niesie litery.
      Przycisk główny: jasny na ciemnym, napis grafitowy. Bez błękitu. */
-  --accent: #ede7db;
-  --accent-ink: #ede7db;
-  --accent-soft: rgba(237, 231, 219, .12);
+  --accent: #ede9de;
+  --accent-ink: #ede9de;
+  --accent-soft: rgba(237, 233, 222, .12);
 
-  --accent-2: #98907f;
+  --accent-2: #948d80;
 
-  --akcent-gradient: linear-gradient(135deg, #ede7db 0%, #cfc8b8 100%);
+  --akcent-gradient: linear-gradient(135deg, #ede9de 0%, #d0c9bb 100%);
 
-  --btn-bg: #ede7db;
-  --btn-ink: #1f1d1a;
-  --na-akcencie: #1f1d1a;
+  --btn-bg: #ede9de;
+  --btn-ink: #1b1917;
+  --na-akcencie: #1b1917;
 
-  --img: #2e2a25;
-  --img-line: rgba(237, 231, 219, .14);
+  --img: #2e2b26;
+  --img-line: rgba(237, 233, 222, .14);
 
   --radius-hero: 24px;
 
@@ -172,8 +187,8 @@
   /* KokonutUI stoi na `--radius:.5rem` i schodzi/rośnie stopniami:
      sm 6 · lg 8 · xl 12 · 2xl 16 · 3xl 24 · full. Zerowy narożnik
      z poprzedniej rundy znika — w tej bibliotece nie ma ani jednego. */
-  --radius: 8px;
-  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-sm: 8px;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 18px 40px -24px rgba(0, 0, 0, .9);
 }
@@ -281,8 +296,12 @@
      sam rodzaj co interfejs (SF Pro Display pod duże stopnie), `--mono` idzie
      wyłącznie pod liczby stojące w kolumnie. `--font-*` definiujemy tutaj, bo
      next/font już ich nie wstrzykuje. */
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  /* Makieta „dwie głowy" stoi na ciężkim grotesku — nie na SF. Najbliższy
+     krój, który jest już w systemie, to Helvetica Neue; na maszynach Apple
+     trafia 1:1, poza nimi schodzi na Arial/Segoe/Roboto i nic nie pobiera.
+     Zero Google Fonts zostaje w mocy. */
+  --font-sans: "Helvetica Neue", Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: "Helvetica Neue", Helvetica, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   /* ---------------------------------------------------------------------
      Skala typograficzna z makiety (24.08.2026):
@@ -299,6 +318,10 @@
      Stopnie bez ramp (`h3`, small, caption) zostają stałe: przy 20 px i niżej
      płynna skala nie ma czego zmieniać, a wprowadza rozjazd między ekranami.
      --------------------------------------------------------------------- */
+  /* Hasło hero z makiety: trzy linie ciężkiego grotesku, ciasny interlinia
+     i tracking. Własny stopień, bo H1 katalogu ma zostać przy 32 px — tu
+     chodzi o jedną plamę na wysokość ekranu. */
+  --t-hero: clamp(2.5rem, 1rem + 7vw, 5.25rem);
   --t-h1: clamp(1.625rem, 1.35rem + 1.4vw, 2rem);
   --t-h2: clamp(1.25rem, 1.1rem + .75vw, 1.5rem);
   --t-h3: 1.25rem;
@@ -318,12 +341,12 @@
   --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-:root { --bg-sunken: #e5e5e5; }
-.dark { --bg-sunken: #2a2a2a; }
+:root { --bg-sunken: #cfcabd; }
+.dark { --bg-sunken: #343029; }
 /* Obrys przycisku ghost i innych elementów, które mają być widoczne, ale nie
    krzyczeć — mocniejszy stopień tej samej przezroczystości co `--line`. */
-:root { --line-strong: rgba(10, 10, 10, .28); }
-.dark { --line-strong: rgba(255, 255, 255, .28); }
+:root { --line-strong: rgba(28, 26, 23, .28); }
+.dark { --line-strong: rgba(237, 233, 222, .28); }
 
 /* Obwódka pola formularza. Osobny token, bo `--line` ma wobec tła kontrast
    1,29:1 — dla kreski rozdzielającej to w zupełności dość, ale pole tekstowe
@@ -333,8 +356,8 @@
 
      jasny  #8a8377 → bg 3,57  surface 3,75  panel 3,22
      ciemny #726b61 → bg 3,58  surface 3,34  panel 3,16 */
-:root { --line-pole: #737373; }
-.dark { --line-pole: #7a7a7a; }
+:root { --line-pole: #7a746a; }
+.dark { --line-pole: #807a6e; }
 
 /* Nadtytuł sekcji — jaśniejszy niż tekst drugorzędny, zdjęty z makiet.
    W ciemnym motywie makiet nie ma, więc trzyma tam dotychczasową rolę
@@ -4760,14 +4783,21 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
   margin-bottom: 4px;
 }
 .pw-znak svg { width: 17px; height: 17px; }
-.pw-znak-utarg { background: var(--accent-soft); color: var(--accent-ink); }
-.pw-znak-wysylka { background: color-mix(in srgb, #4a7dff 14%, transparent); color: #3b63cc; }
-.pw-znak-stany { background: color-mix(in srgb, #f99c00 18%, transparent); color: #8a5800; }
-.pw-znak-zwroty { background: color-mix(in srgb, var(--accent-2) 18%, transparent); color: #00697f; }
+/* Barwy tych kafli zostały po poprzedniej palecie (błękit #4a7dff, cyjan
+   #00697f). Odchodzą razem z nią: w tym serwisie realny kolor wnoszą
+   wyłącznie zdjęcia produktów, a błękit jest wykluczony wprost. Rozróżnienie
+   i tak niosły etykieta i liczba, nie odcień — ikona jest `aria-hidden`.
 
-.dark .pw-znak-wysylka { color: #9db6ff; }
-.dark .pw-znak-stany { color: #f2b95c; }
-.dark .pw-znak-zwroty { color: #6fdcf2; }
+   Zostaje jeden wyjątek: „niskie stany" to próg, czyli stan, a nie kategoria.
+   Bierze więc rodzinę ostrzeżenia z tokenów, która jest na to przewidziana
+   i sama obsługuje oba motywy. */
+.pw-znak-utarg { background: var(--accent-soft); color: var(--accent-ink); }
+.pw-znak-wysylka { background: var(--accent-soft); color: var(--accent-ink); }
+.pw-znak-stany { background: var(--uwaga-soft); color: var(--uwaga-ink); }
+.pw-znak-zwroty {
+  background: color-mix(in srgb, var(--accent-2) 18%, transparent);
+  color: var(--ink-2);
+}
 
 .pw-liczba {
   font-size: 1.75rem;
@@ -5107,4 +5137,385 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
 
 @media (prefers-reduced-motion: reduce) {
   .kurtyna { display: none; }
+}
+
+/* ==========================================================================
+   Strona główna wg makiety „dwie głowy" (Claude Design, 17.09.2026)
+
+   Własny prefiks `dg-`, bo to osobna narracja, a nie wariant kart katalogu:
+   sekcje mają numer w nadtytule, kadry są duże i puste z założenia (zdjęcia
+   dochodzą później), a rytm pionowy jest rzadszy niż w sklepie. Reguły
+   katalogu zostają nietknięte — ta strona ich po prostu nie używa.
+   ========================================================================== */
+
+.dg {
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  padding-block: clamp(28px, 5vw, 56px) clamp(64px, 10vw, 128px);
+}
+
+/* Nadtytuł: wersaliki na rozstrzelonym tracking. Ten sam stopień niesie
+   nadtytuł hero, numer sekcji i dział wpisu w dzienniku. */
+/* Nadtytuł jest w makiecie ciemny i mocny, a akapit pod nim jaśniejszy —
+   nie odwrotnie. Bierze `--etykieta`, czyli token zrobiony dokładnie na
+   nadtytuły sekcji: niesie treść („01 — WYBÓR", „JESIENNY STÓŁ"), więc nie
+   ma prawa być bladym szarym. Meta i daty zostają przy `--ink-3`. */
+.dg-nadtytul,
+.dg-numer {
+  display: block;
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--etykieta);
+}
+
+/* ---------- Hero ---------- */
+
+.dg-haslo {
+  margin: clamp(18px, 3vw, 32px) 0 0;
+  font-family: var(--display);
+  font-size: var(--t-hero);
+  font-weight: 800;
+  line-height: .95;
+  letter-spacing: -.035em;
+  color: var(--ink);
+  /* Łamanie niesie treść (trzy linie z makiety), więc bierzemy je z danych. */
+  white-space: pre-line;
+  text-wrap: balance;
+}
+
+.dg-hero-dol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(20px, 3vw, 40px);
+  margin-top: clamp(24px, 3vw, 40px);
+}
+
+.dg-lede {
+  max-width: 44ch;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.dg-hero-akcje { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.dg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Cel dotykowy ponad 44 px także przy krótkiej etykiecie — WCAG 2.5.8. */
+  min-height: 46px;
+  padding: 12px 26px;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  font-size: .9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--ruch-kolor) var(--krzywa-detal),
+              color var(--ruch-kolor) var(--krzywa-detal),
+              border-color var(--ruch-kolor) var(--krzywa-detal);
+}
+
+.dg-btn:hover { background: var(--accent-ink); }
+
+.dg-btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-pole);
+}
+
+.dg-btn-ghost:hover { background: var(--bg-soft); border-color: var(--ink); }
+
+.dg-hero-kadr {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin-top: clamp(24px, 4vw, 44px);
+  min-height: clamp(240px, 40vw, 420px);
+  border-radius: var(--radius-hero);
+  background: var(--img);
+}
+
+.dg-kadr-znak { display: grid; place-items: center; color: var(--ink-3); opacity: .55; }
+.dg-kadr-znak svg { width: 28px; height: 28px; }
+
+/* ---------- Pasek obietnic ---------- */
+
+.dg-pasek {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(18px, 4vw, 52px);
+  margin: clamp(28px, 4vw, 44px) 0 0;
+  padding: 0 0 22px;
+  border-bottom: 1px solid var(--line);
+  list-style: none;
+}
+
+.dg-pasek li {
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ---------- Sekcja: nadtytuł z numerem, nagłówek, odsyłacz ---------- */
+
+.dg-sekcja { margin-top: clamp(56px, 9vw, 104px); }
+
+.dg-glowa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: clamp(14px, 2.5vw, 28px);
+  margin-bottom: clamp(18px, 2.5vw, 28px);
+}
+
+.dg-numer { flex: 0 0 auto; }
+
+.dg-glowa h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(1.5rem, 1rem + 2.2vw, 2.25rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+  color: var(--ink);
+}
+
+.dg-link {
+  margin-left: auto;
+  font-size: .8125rem;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.dg-link:hover { color: var(--ink); text-decoration: underline; }
+
+/* ---------- Siatka kadrów (produkty i pokoje) ---------- */
+
+.dg-siatka {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 20px);
+}
+
+.dg-karta { display: block; text-decoration: none; color: inherit; }
+
+.dg-karta-kadr {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  aspect-ratio: 1 / 1.08;
+  border-radius: var(--r-lg);
+  background: var(--img);
+  transition: background var(--ruch-tlo) var(--krzywa-detal);
+}
+
+.dg-karta:hover .dg-karta-kadr { background: var(--bg-sunken); }
+
+/* Ikona zastępcza z `ProductMedia` — przy braku zdjęcia zostaje sam znak. */
+.dg-karta-kadr > svg { width: 28px; height: 28px; color: var(--ink-3); opacity: .55; }
+
+.dg-karta-wiersz {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.dg-karta-nazwa { font-size: .9375rem; font-weight: 700; color: var(--ink); }
+.dg-karta-cena { font-size: .9375rem; font-weight: 600; color: var(--ink); }
+.dg-karta-opis { display: block; margin-top: 3px; font-size: .8125rem; color: var(--ink-3); }
+
+/* ---------- Pokoje: podpis leży na kadrze ---------- */
+
+.dg-pokoj {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  text-decoration: none;
+  color: inherit;
+}
+
+.dg-pokoj .dg-karta-kadr { aspect-ratio: 1 / 1.12; border-radius: var(--r-lg); }
+
+.dg-pokoj-podpis {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: grid;
+  gap: 2px;
+  padding: 16px;
+  /* Przyciemnienie, nie krycie: podpis ma zostać czytelny także wtedy, gdy
+     pod spód wejdzie jasne zdjęcie. */
+  background: linear-gradient(to top, rgba(28, 26, 23, .78), rgba(28, 26, 23, 0));
+  color: #f4f1ea;
+}
+
+.dg-pokoj-podpis strong { font-size: .9375rem; font-weight: 700; }
+.dg-pokoj-podpis span { font-size: .75rem; opacity: .82; }
+
+/* ---------- Pracownia: ciemny blok w środku jasnej strony ---------- */
+
+.dg-pracownia {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+  margin-top: clamp(56px, 9vw, 104px);
+  padding: clamp(26px, 4vw, 56px);
+  border-radius: var(--radius-hero);
+  /* Blok jest ciemny w obu motywach — to plama w narracji, nie powierzchnia
+     motywu, więc barwy stoją wprost, a nie przez tokeny. */
+  background: #1c1a17;
+  color: #ede9de;
+}
+
+.dg-pracownia .dg-numer { color: rgba(237, 233, 222, .62); }
+
+.dg-pracownia h2 {
+  max-width: 26ch;
+  margin: 14px 0 0;
+  font-family: var(--display);
+  font-size: clamp(1.375rem, 1rem + 1.8vw, 2rem);
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: -.02em;
+}
+
+.dg-liczby {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(20px, 4vw, 52px);
+  margin: clamp(22px, 3vw, 32px) 0 0;
+}
+
+.dg-liczby div { display: grid; gap: 4px; }
+
+.dg-liczby dt {
+  font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.25rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dg-liczby dd { margin: 0; font-size: .75rem; color: rgba(237, 233, 222, .62); }
+
+.dg-btn-ciemny {
+  margin-top: clamp(22px, 3vw, 32px);
+  color: #ede9de;
+  border-color: rgba(237, 233, 222, .32);
+  background: transparent;
+}
+
+.dg-btn-ciemny:hover {
+  background: rgba(237, 233, 222, .1);
+  border-color: rgba(237, 233, 222, .6);
+}
+
+.dg-pracownia-kadry {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dg-kadr-ciemny {
+  display: grid;
+  place-items: center;
+  min-height: 148px;
+  border-radius: var(--r-lg);
+  background: #262320;
+  color: rgba(237, 233, 222, .38);
+}
+
+.dg-kadr-ciemny svg { width: 26px; height: 26px; }
+.dg-kadr-wysoki { grid-row: span 2; }
+
+/* ---------- Dziennik ---------- */
+
+.dg-dziennik { margin: 0; padding: 0; list-style: none; }
+
+.dg-wpis {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2vw, 24px);
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.dg-wpis-kadr {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 56px;
+  border-radius: var(--radius);
+  background: var(--img);
+  color: var(--ink-3);
+}
+
+.dg-wpis-kadr svg { width: 20px; height: 20px; opacity: .55; }
+
+.dg-wpis-tresc { flex: 1 1 auto; min-width: 0; display: grid; gap: 4px; }
+
+/* Dział wpisu to nie nadtytuł sekcji — w makiecie jest szary, słabszy od
+   tytułu, który stoi pod nim. Stąd wyjątek od ciemnej `--etykieta`. */
+.dg-wpis-tresc .dg-nadtytul { color: var(--ink-3); }
+.dg-wpis-tresc strong { font-size: 1rem; font-weight: 700; color: var(--ink); }
+.dg-wpis-opis { font-size: .8125rem; color: var(--ink-3); }
+.dg-wpis-data { flex: 0 0 auto; font-size: .75rem; color: var(--ink-3); }
+
+/* ---------- Schodzenie na węższe ekrany ---------- */
+
+@media (max-width: 1000px) {
+  .dg-siatka { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dg-pracownia { grid-template-columns: 1fr; align-items: start; }
+}
+
+@media (max-width: 620px) {
+  .dg-siatka { grid-template-columns: 1fr; }
+  .dg-hero-akcje { width: 100%; }
+  .dg-btn { flex: 1 1 auto; }
+  .dg-wpis { align-items: flex-start; flex-wrap: wrap; }
+  .dg-wpis-data { width: 100%; padding-left: calc(64px + clamp(14px, 2vw, 24px)); }
+}
+
+/* ---------- Nagłówek i przyciski pod makietę „dwie głowy" ----------
+   Makieta jest pigułkowa: marka ciężkim groteskiem, nawigacja cicha,
+   a każdy przycisk ma pełne zaokrąglenie. Zmiana siedzi tu, a nie
+   w komponentach — `.btn` obsługuje warianty własnościami `--b-*`,
+   więc wystarczy podmienić je punktowo. */
+
+.logo {
+  font-family: var(--display);
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.nav a { font-size: .875rem; }
+
+.btn { border-radius: var(--r-pill); }
+
+/* Koszyk z makiety to wypełniona pigułka, nie przycisk-duch. */
+.cart-btn {
+  --b-bg: var(--btn-bg);
+  --b-fg: var(--btn-ink);
+  --b-bd: transparent;
+}
+
+.cart-btn:hover {
+  --b-bg: var(--accent-ink);
+  --b-fg: var(--btn-ink);
+  --b-bd: transparent;
 }

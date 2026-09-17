@@ -1,173 +1,201 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
-import { Marquee } from '@/components/ruch/Marquee';
-import { TekstDekodujacy } from '@/components/ruch/TekstDekodujacy';
-import { Licznik } from '@/components/ruch/Licznik';
-import { PrzyciskMagnetyczny } from '@/components/ruch/PrzyciskMagnetyczny';
-import { PoleCzastek } from '@/components/ruch/PoleCzastek';
 import { SekcjaPrzypieta } from '@/components/ruch/SekcjaPrzypieta';
-import { KadrZoom } from '@/components/ruch/KadrZoom';
-import { StrzepkaPrzeciagana } from '@/components/ruch/StrzepkaPrzeciagana';
-import { ProductCard } from '@/components/product/ProductCard';
-import { RecentlyViewed } from '@/components/product/RecentlyViewed';
+import { ProductMedia } from '@/components/product/ProductMedia';
 import { getCategories, getProducts } from '@/lib/queries';
+import { money } from '@/lib/format';
 import { ile, PRODUKTY } from '@/lib/odmiana';
-import { JAK_TO_DZIALA, MARKA, OBIETNICE, STATYSTYKI, WARUNKI } from '@/lib/dane-sklepu';
+import {
+  DZIENNIK,
+  JAK_TO_DZIALA,
+  MARKA,
+  OBIETNICE,
+  PRACOWNIA,
+  STATYSTYKI,
+} from '@/lib/dane-sklepu';
 
 /** Katalog zmienia się rzadko — strona główna może stać w cache przez minutę. */
 export const revalidate = 60;
 
+/**
+ * Strona główna wg makiety „dwie głowy" (Claude Design, 17.09.2026).
+ *
+ * Narracja jedzie numerowanymi sekcjami, bo to naprawdę jest kolejność, a nie
+ * ozdoba: najpierw wybór rzeczy, potem pokoje, w które trafiają, potem ludzie,
+ * którzy je robią, na końcu notatki z pracowni. Numer w nadtytule niesie tę
+ * kolejność i dlatego stoi w treści, a nie w CSS.
+ *
+ * Sekcje czytają dane z `lib/dane-sklepu.ts` i znikają, gdy tablica jest pusta.
+ * Ta zasada zostaje z poprzedniej rundy: pusty dziennik albo pasek bez pokrycia
+ * wygląda na awarię, a hasło bez pokrycia wiąże sklep wobec kupującego.
+ */
 export default async function HomePage() {
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
-  // Cały asortyment w przeciąganej taśmie — przegląd bez skakania po stronach.
-  const featured = [...products].sort((a, b) => b.rating - a.rating);
 
-  // Bento: pierwszy dział duży (2×2), drugi szeroki (2×1), reszta zwykła.
-  // Asymetria robi rytm; przy trzech kategoriach (audio/komputery/foto) układ
-  // domyka się w jeden ekran bez pustych pól.
-  const bento = (i: number) =>
-    i === 0 ? 'category cat-big' : i === 1 ? 'category cat-wide' : 'category';
+  // Dwa rzędy po cztery — tyle, ile makieta pokazuje w jednym geście,
+  // bez zamiany strony głównej w drugi katalog.
+  const wybor = [...products].sort((a, b) => b.rating - a.rating).slice(0, 8);
 
   return (
-    <main>
-      {/* Pasek niesie wyłącznie obietnice z `web/lib/dane-sklepu.ts`. Pusto =
-          nie ma czego przewijać, więc paska nie ma — zamiast haseł z szablonu,
-          którymi sklep byłby związany wobec kupującego. */}
-      {OBIETNICE.length > 0 && <Marquee hasla={OBIETNICE.map((o) => o.tytul)} />}
+    <main className="dg">
+      <section className="dg-hero">
+        <span className="dg-nadtytul">{MARKA.nadtytulHero}</span>
 
-      {/* Hero: nadtytuł, hasło dosypujące się literami, akapit, dwa wejścia
-          w sklep, statystyki i kadr produktu po prawej. */}
-      <section className="hero">
-        <PoleCzastek />
-        <div className="hero-inner">
-          <div>
-            <span className="label">{MARKA.nadtytulHero}</span>
-            <h1>
-              <TekstDekodujacy tekst={MARKA.hasloHero} />
-            </h1>
-            <p className="lede">{MARKA.podtytulHero}</p>
-            <div className="hero-actions">
-              <PrzyciskMagnetyczny href="/sklep">Przeglądaj sklep</PrzyciskMagnetyczny>
-              <Link className="btn btn-ghost" href="/sklep?sort=rating">
-                Zobacz bestsellery
-              </Link>
-            </div>
-            {STATYSTYKI.length > 0 && (
-              <div className="hero-stats">
-                {STATYSTYKI.map((s) => (
-                  <div key={s.etykieta}>
-                    <strong className="num">
-                      <Licznik do={s.do} ulamek={s.ulamek} sufiks={s.sufiks} etykieta={s.etykieta} />
-                    </strong>
-                    <span>{s.opis}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Hasło łamie się w miejscach z danych, nie automatycznie: makieta ma
+            trzy linie o wyrównanej długości i to ten rytm niesie całą górę
+            strony. `white-space: pre-line` w arkuszu robi resztę. */}
+        <h1 className="dg-haslo">{MARKA.hasloHero}</h1>
+
+        <div className="dg-hero-dol">
+          <p className="dg-lede">{MARKA.podtytulHero}</p>
+          <div className="dg-hero-akcje">
+            <Link className="dg-btn" href="/sklep">
+              Zobacz wybór
+            </Link>
+            <Link className="dg-btn dg-btn-ghost" href={PRACOWNIA.przyciskHref}>
+              {PRACOWNIA.przyciskEtykieta}
+            </Link>
           </div>
-          <KadrZoom className="hero-media">
-            <div role="img" aria-label="Ilustracja produktu">
-              <Icon name="headphones" />
-            </div>
-          </KadrZoom>
+        </div>
+
+        <div className="dg-hero-kadr">
+          <span className="dg-kadr-znak" aria-hidden="true">
+            <Icon name="box" />
+          </span>
         </div>
       </section>
 
       {OBIETNICE.length > 0 && (
-        <div className="band">
-          <div className="features-wrap">
-            <div className="features">
-              {OBIETNICE.map((o) => (
-                <div className="feature" key={o.tytul}>
-                  <strong>{o.tytul}</strong>
-                  <span>{o.opis}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <ul className="dg-pasek">
+          {OBIETNICE.map((o) => (
+            <li key={o.tytul}>{o.tytul}</li>
+          ))}
+        </ul>
       )}
 
-      <section className="section container">
-        <div className="section-head">
-          <div>
-            <span className="label">Asortyment</span>
-            <h2>Kategorie</h2>
-          </div>
-          <Link className="arrow-link" href="/sklep">
-            Zobacz wszystko
-          </Link>
-        </div>
-        <div className="categories bento">
-          {categories.map((c, i) => (
-            <Link className={bento(i)} href={`/sklep?kategoria=${c.id}`} key={c.id}>
-              <Icon name={c.icon} />
-              <strong>{c.name}</strong>
-              <span>{c.desc}</span>
-              <span className="muted">
-                {ile(products.filter((p) => p.category === c.id).length, PRODUKTY)}
-              </span>
+      {wybor.length > 0 && (
+        <section className="dg-sekcja">
+          <header className="dg-glowa">
+            <span className="dg-numer">01 — Wybór</span>
+            <h2>Rzeczy na cichy stół</h2>
+            <Link className="dg-link" href="/sklep">
+              Zobacz wszystkie <span aria-hidden="true">→</span>
             </Link>
-          ))}
-        </div>
-      </section>
+          </header>
 
-      <hr className="rule" />
-
-      <section className="section container">
-        <div className="section-head">
-          <div>
-            <span className="label">Wybór redakcji</span>
-            <h2>Polecane produkty</h2>
+          <div className="dg-siatka">
+            {wybor.map((p) => (
+              <Link className="dg-karta" href={`/produkt/${p.slug}`} key={p.id}>
+                <span className="dg-karta-kadr">
+                  <ProductMedia product={p} sizes="(max-width: 700px) 92vw, 300px" />
+                </span>
+                <span className="dg-karta-wiersz">
+                  <span className="dg-karta-nazwa">{p.name}</span>
+                  <span className="dg-karta-cena num">{money(p.price)}</span>
+                </span>
+                {p.short && <span className="dg-karta-opis">{p.short}</span>}
+              </Link>
+            ))}
           </div>
-          <Link className="arrow-link" href="/sklep">
-            Wszystkie produkty
-          </Link>
-        </div>
-        <StrzepkaPrzeciagana>
-          {featured.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              categoryName={categories.find((c) => c.id === product.category)?.name ?? product.category}
-              delay={0}
-            />
-          ))}
-        </StrzepkaPrzeciagana>
-      </section>
+        </section>
+      )}
 
+      {categories.length > 0 && (
+        <section className="dg-sekcja">
+          <header className="dg-glowa">
+            <span className="dg-numer">02 — Pokoje</span>
+            <h2>Jeden język, każdy pokój</h2>
+          </header>
+
+          <div className="dg-siatka">
+            {categories.map((c) => (
+              <Link className="dg-pokoj" href={`/sklep?kategoria=${c.id}`} key={c.id}>
+                <span className="dg-karta-kadr">
+                  <span className="dg-kadr-znak" aria-hidden="true">
+                    <Icon name={c.icon} />
+                  </span>
+                </span>
+                {/* Podpis leży na kadrze pod przyciemnieniem — jak w makiecie.
+                    Gradient jest w arkuszu, żeby nazwa zostawała czytelna także
+                    wtedy, gdy pod spód wejdzie jasne zdjęcie. */}
+                <span className="dg-pokoj-podpis">
+                  <strong>{c.name}</strong>
+                  <span>{ile(products.filter((p) => p.category === c.id).length, PRODUKTY)}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* „Jak to działa" zostaje na stronie głównej — jeden krok na wysokość
+          ekranu, przypięty przy przewijaniu. Nie dostaje numeru z narracji
+          makiety (01–04), bo nie jest jej działem: to przerywnik między
+          asortymentem a ludźmi, którzy go robią. */}
       {JAK_TO_DZIALA.length > 0 && <SekcjaPrzypieta kroki={[...JAK_TO_DZIALA]} />}
 
-      <RecentlyViewed categories={categories} className="section container" />
+      <section className="dg-pracownia">
+        <div className="dg-pracownia-tresc">
+          <span className="dg-numer">03 — {PRACOWNIA.nadtytul}</span>
+          <h2>{PRACOWNIA.haslo}</h2>
 
-      {/* Newsletter pokazuje się dopiero po wpisaniu rabatu w `dane-sklepu.ts`
-          i po podpięciu formularza do prawdziwej listy. Zgoda marketingowa musi
-          być uprzednia i odrębna, stąd osobny checkbox — nie wolno jej wyprowadzać
-          z samego wpisania adresu. Dopóki `action` jest puste, sekcja przyjmuje
-          adres i go gubi, co jest gorsze niż jej brak. */}
-      {WARUNKI.rabatNewsletter && (
-        <section className="newsletter">
-          <div className="container newsletter-inner">
-            <div>
-              <h2>Newsletter</h2>
-              <p>{WARUNKI.rabatNewsletter}</p>
-            </div>
-            <form>
-              <label className="sr-only" htmlFor="nl-email">
-                Adres e-mail
-              </label>
-              <input id="nl-email" type="email" required placeholder="twoj@email.pl" />
-              <button className="btn" type="submit">
-                Zapisz się
-              </button>
-              <label className="nl-zgoda">
-                <input type="checkbox" name="zgoda" required />
-                Chcę dostawać informacje handlowe na podany adres. Zgodę mogę wycofać
-                w każdej chwili — zasady w{' '}
-                <Link href="/informacje/polityka-prywatnosci">polityce prywatności</Link>.
-              </label>
-            </form>
-          </div>
+          {STATYSTYKI.length > 0 && (
+            <dl className="dg-liczby">
+              {STATYSTYKI.map((s) => (
+                <div key={s.etykieta}>
+                  <dt className="num">
+                    {s.do}
+                    {s.sufiks ?? ''}
+                  </dt>
+                  <dd>{s.opis}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
+          <Link className="dg-btn dg-btn-ghost dg-btn-ciemny" href={PRACOWNIA.przyciskHref}>
+            {PRACOWNIA.przyciskEtykieta}
+          </Link>
+        </div>
+
+        <div className="dg-pracownia-kadry" aria-hidden="true">
+          <span className="dg-kadr-ciemny dg-kadr-wysoki">
+            <Icon name="box" />
+          </span>
+          <span className="dg-kadr-ciemny">
+            <Icon name="grid" />
+          </span>
+          <span className="dg-kadr-ciemny">
+            <Icon name="shield" />
+          </span>
+        </div>
+      </section>
+
+      {DZIENNIK.length > 0 && (
+        <section className="dg-sekcja">
+          <header className="dg-glowa">
+            <span className="dg-numer">04 — Dziennik</span>
+            <h2>Notatki od pieca</h2>
+          </header>
+
+          {/* Bez odsyłacza „wszystkie wpisy": osobnej strony dziennika w tym
+              serwisie nie ma, a przycisk kończący się czterysta czwórką jest
+              gorszy niż jego brak. Dojdzie razem z tą stroną. */}
+          <ul className="dg-dziennik">
+            {DZIENNIK.map((w) => (
+              <li className="dg-wpis" key={w.tytul}>
+                <span className="dg-wpis-kadr" aria-hidden="true">
+                  <Icon name="box" />
+                </span>
+                <span className="dg-wpis-tresc">
+                  <span className="dg-nadtytul">{w.dzial}</span>
+                  <strong>{w.tytul}</strong>
+                  <span className="dg-wpis-opis">{w.opis}</span>
+                </span>
+                <span className="dg-wpis-data">{w.data}</span>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
     </main>

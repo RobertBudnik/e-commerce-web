@@ -17,15 +17,15 @@ test.describe('Katalog', () => {
     // wdrażający je podmienia, a dowodem na SSR jest obecność treści w HTML-u,
     // nie jej brzmienie.
     expect(html).toContain(MARKA.hasloHero);
-    expect(html).toMatch(/Kategorie/);
+    expect(html).toMatch(/Pokoje/);
     // Nazwa produktu w surowym HTML dowodzi, że siatka nie czeka na klienta
-    expect(html).toMatch(/card-title/);
+    expect(html).toMatch(/dg-karta-nazwa/);
 
-    await expect(page.locator('.category')).toHaveCount(4);
-    // Strzępka na stronie głównej pokazuje cały asortyment, nie cztery
-    // wybrane pozycje: przy czterech kartach lista mieści się w kontenerze
-    // na szerokim ekranie i nie ma czego przeciągać.
-    await expect(page.locator('.strzepka .card')).toHaveCount(8);
+    // Sekcja „02 — Pokoje" wystawia jeden kadr na kategorię.
+    await expect(page.locator('.dg-pokoj')).toHaveCount(4);
+    // Wybór na stronie głównej to dwa rzędy po cztery — tyle, ile makieta
+    // pokazuje w jednym geście, bez zamiany strony głównej w drugi katalog.
+    await expect(page.locator('.dg-karta')).toHaveCount(8);
   });
 
   test('sklep filtruje po kategorii i sortuje po cenie', async ({ page }) => {
