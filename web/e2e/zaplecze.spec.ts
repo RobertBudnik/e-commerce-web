@@ -232,8 +232,13 @@ test.describe('Nadanie paczki', () => {
     await expect(nadaj).toBeEnabled();
     await nadaj.click();
 
-    await expect(page.getByText('JVGL0099887766')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/Paczka nadana/)).toBeVisible();
+    // Jedna asercja zamiast dwóch: po zapisie formularz ustępuje miejsca
+    // potwierdzeniu, które samo niesie numer. Pytanie o sam numer trafiało
+    // w cztery miejsca naraz — potwierdzenie, dane dostawy i ślad zdarzeń —
+    // i wywracało się na trybie ścisłym.
+    await expect(
+      page.locator('#tresc').getByText(/Paczka nadana — list JVGL0099887766/)
+    ).toBeVisible({ timeout: 15_000 });
 
     // I zamówienie przeniosło się do zakładki wysłanych
     await page.goto('/panel/kolejka?stan=wysłane');
