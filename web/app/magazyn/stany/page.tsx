@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { SzukajStanow } from '@/components/magazyn/SzukajStanow';
 import { SegmentyStanow } from '@/components/magazyn/SegmentyStanow';
-import { wymagajZaplecza } from '@/lib/magazyn-dostep';
+import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getLicznikiMagazynu, getStanyMagazynu } from '@/lib/queries';
 import { ile, POZYCJE } from '@/lib/odmiana';
 

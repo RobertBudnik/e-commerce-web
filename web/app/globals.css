@@ -4708,7 +4708,28 @@ code {
 }
 
 .pw-zakladka:hover { background: var(--panel); color: var(--ink); }
-.pw-zakladka-obok { margin-left: auto; color: var(--ink-3); }
+
+/* Otwarta zakładka jest wypełniona, nie podkreślona: pasek potrafi zawinąć
+   się na dwa rzędy, a podkreślenie w drugim rzędzie czyta się jak linia
+   oddzielająca, nie jak stan. */
+.pw-zakladka[aria-current="page"] {
+  background: var(--accent);
+  color: var(--na-akcencie);
+}
+
+/* Slot istnieje po to, żeby kreska grupy stała w jednym rytmie z zakładką,
+   także po zawinięciu paska. */
+.pw-zakladka-slot { display: inline-flex; align-items: center; }
+
+/* Granica między pracą przy regale a biurkiem. Rysowana tylko wtedy, gdy po
+   obu stronach coś stoi — przy samym `staff` widać jedną grupę. */
+.pw-rozdzielacz {
+  width: 1px;
+  align-self: stretch;
+  min-height: 20px;
+  margin: 4px 6px;
+  background: var(--line-strong);
+}
 
 /* Kafle pulpitu z makiety: osobne karty z własną obwódką i odstępem, nie
    jedna wspólna płyta pocięta liniami na 1 px. Różnica nie jest kosmetyczna —

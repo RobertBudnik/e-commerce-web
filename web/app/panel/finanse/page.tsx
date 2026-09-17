@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { wymagajPanelu } from '@/lib/panel-dostep';
+import { wymagajBiura } from '@/lib/panel-dostep';
 import { getFinanse } from '@/lib/queries';
 import { money } from '@/lib/format';
 
@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 const DZIEN = new Intl.DateTimeFormat('pl-PL', { day: 'numeric', month: 'short' });
 
 export default async function Finanse() {
-  await wymagajPanelu('/panel/finanse');
+  await wymagajBiura('/panel/finanse');
 
   const f = await getFinanse(30);
   const maks = Math.max(1, ...f.dni.map((d) => d.przychod));

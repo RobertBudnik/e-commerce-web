@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { wymagajZaplecza } from '@/lib/magazyn-dostep';
+import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getPrzeglad } from '@/lib/queries';
 import { zeZnakiem } from '@/lib/format';
 import { MotywAplikacji } from '@/components/magazyn/MotywAplikacji';

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AkcjeZamowienia } from '@/components/panel/AkcjeZamowienia';
-import { wymagajPanelu } from '@/lib/panel-dostep';
+import { wymagajBiura } from '@/lib/panel-dostep';
 import { getZamowieniePanelu } from '@/lib/queries';
 import { money } from '@/lib/format';
 
@@ -25,7 +25,7 @@ export default async function SzczegolyZamowienia({
 }: {
   params: Promise<{ numer: string }>;
 }) {
-  await wymagajPanelu('/panel/zamowienia');
+  await wymagajBiura('/panel/zamowienia');
 
   const { numer } = await params;
   const dane = await getZamowieniePanelu(decodeURIComponent(numer));

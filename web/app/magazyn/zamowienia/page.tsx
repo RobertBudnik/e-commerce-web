@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { wymagajZaplecza } from '@/lib/magazyn-dostep';
+import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getKolejkaZamowien, getLicznikiZamowien } from '@/lib/queries';
 import { ile, POZYCJE } from '@/lib/odmiana';
 export const metadata: Metadata = {

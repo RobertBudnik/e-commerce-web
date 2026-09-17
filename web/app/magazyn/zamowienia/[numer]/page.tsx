@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AkcjeZamowienia } from '@/components/magazyn/AkcjeZamowienia';
-import { wymagajZaplecza } from '@/lib/magazyn-dostep';
+import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getZamowienieZPokryciem } from '@/lib/queries';
 import { money } from '@/lib/format';
 

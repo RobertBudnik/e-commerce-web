@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { wymagajPanelu } from '@/lib/panel-dostep';
+import { wymagajBiura } from '@/lib/panel-dostep';
 import { getDziennik, getFinanse, getPrzeglad } from '@/lib/queries';
 import { money } from '@/lib/format';
 import { Icon } from '@/components/Icon';
@@ -21,7 +21,7 @@ const CZAS = new Intl.DateTimeFormat('pl-PL', {
 });
 
 export default async function Pulpit() {
-  const user = await wymagajPanelu('/panel');
+  const user = await wymagajBiura('/panel');
 
   const [przeglad, finanse, dziennik] = await Promise.all([
     getPrzeglad(),

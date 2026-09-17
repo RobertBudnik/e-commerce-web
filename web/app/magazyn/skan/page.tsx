@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { EkranSkanera } from '@/components/magazyn/EkranSkanera';
-import { wymagajZaplecza } from '@/lib/magazyn-dostep';
+import { wymagajZaplecza } from '@/lib/panel-dostep';
 
 export const metadata: Metadata = {
   title: 'Skaner',

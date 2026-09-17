@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PrzyjmijZwrot } from '@/components/magazyn/PrzyjmijZwrot';
-import { wymagajZaplecza } from '@/lib/magazyn-dostep';
+import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getZwroty } from '@/lib/queries';
 import { ile, ZWROTY } from '@/lib/odmiana';
 

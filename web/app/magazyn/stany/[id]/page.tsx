@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { KorektaStanu } from '@/components/magazyn/KorektaStanu';
-import { wymagajZaplecza } from '@/lib/magazyn-dostep';
+import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getProduktPoId } from '@/lib/queries';
 
 export const metadata: Metadata = {
