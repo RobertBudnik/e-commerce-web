@@ -4780,14 +4780,21 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
   margin-bottom: 4px;
 }
 .pw-znak svg { width: 17px; height: 17px; }
-.pw-znak-utarg { background: var(--accent-soft); color: var(--accent-ink); }
-.pw-znak-wysylka { background: color-mix(in srgb, #4a7dff 14%, transparent); color: #3b63cc; }
-.pw-znak-stany { background: color-mix(in srgb, #f99c00 18%, transparent); color: #8a5800; }
-.pw-znak-zwroty { background: color-mix(in srgb, var(--accent-2) 18%, transparent); color: #00697f; }
+/* Barwy tych kafli zostały po poprzedniej palecie (błękit #4a7dff, cyjan
+   #00697f). Odchodzą razem z nią: w tym serwisie realny kolor wnoszą
+   wyłącznie zdjęcia produktów, a błękit jest wykluczony wprost. Rozróżnienie
+   i tak niosły etykieta i liczba, nie odcień — ikona jest `aria-hidden`.
 
-.dark .pw-znak-wysylka { color: #9db6ff; }
-.dark .pw-znak-stany { color: #f2b95c; }
-.dark .pw-znak-zwroty { color: #6fdcf2; }
+   Zostaje jeden wyjątek: „niskie stany" to próg, czyli stan, a nie kategoria.
+   Bierze więc rodzinę ostrzeżenia z tokenów, która jest na to przewidziana
+   i sama obsługuje oba motywy. */
+.pw-znak-utarg { background: var(--accent-soft); color: var(--accent-ink); }
+.pw-znak-wysylka { background: var(--accent-soft); color: var(--accent-ink); }
+.pw-znak-stany { background: var(--uwaga-soft); color: var(--uwaga-ink); }
+.pw-znak-zwroty {
+  background: color-mix(in srgb, var(--accent-2) 18%, transparent);
+  color: var(--ink-2);
+}
 
 .pw-liczba {
   font-size: 1.75rem;

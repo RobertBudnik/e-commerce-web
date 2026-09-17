@@ -73,8 +73,10 @@ export const metadata: Metadata = {
  */
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#efe9de' },
-    { media: '(prefers-color-scheme: dark)', color: '#1f1d1a' },
+    // Trzymaj zgodnie z `--bg` w `globals.css` — te dwie wartości są jedynym
+    // miejscem, gdzie tło strony powtarza się poza arkuszem.
+    { media: '(prefers-color-scheme: light)', color: '#ece9e1' },
+    { media: '(prefers-color-scheme: dark)', color: '#1b1917' },
   ],
   // Blokada powiększania szczypaniem byłaby wygodna przy skanowaniu, ale
   // odbiera możliwość powiększenia komuś, kto tego potrzebuje.
