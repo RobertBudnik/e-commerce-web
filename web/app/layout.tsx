@@ -74,8 +74,8 @@ export const viewport: Viewport = {
   themeColor: [
     // Trzymaj zgodnie z `--bg` w `globals.css` — te dwie wartości są jedynym
     // miejscem, gdzie tło strony powtarza się poza arkuszem.
-    { media: '(prefers-color-scheme: light)', color: '#ece9e1' },
-    { media: '(prefers-color-scheme: dark)', color: '#1b1917' },
+    { media: '(prefers-color-scheme: light)', color: '#f0e9dc' },
+    { media: '(prefers-color-scheme: dark)', color: '#191310' },
   ],
   // Blokada powiększania szczypaniem byłaby wygodna przy skanowaniu, ale
   // odbiera możliwość powiększenia komuś, kto tego potrzebuje.
