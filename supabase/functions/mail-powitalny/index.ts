@@ -82,7 +82,7 @@ function html(imie: string): string {
         <span class="ink" style="font-family:${KROJ};font-size:15px;font-weight:700;letter-spacing:.02em;color:#1c1a17;">dwie głowy</span>
       </td></tr>
 
-      <tr><td class="karta" style="background-color:#f4f1ea;border:1px solid #dbd7cd;border-radius:12px;padding:32px;">
+      <tr><td class="karta" style="background-color:#fbf7ee;border:1px solid #dbd3c2;border-radius:12px;padding:32px;">
         <h1 class="ink" style="margin:0 0 16px;font-family:${KROJ};font-size:22px;line-height:1.3;font-weight:700;color:#1c1a17;">Konto gotowe</h1>
 
         <p class="ink2" style="margin:0 0 16px;font-family:${KROJ};font-size:15px;line-height:1.6;color:#544f46;">${powitanie}</p>

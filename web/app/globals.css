@@ -25,15 +25,29 @@
      --------------------------------------------------------------------- */
 
   /* powierzchnie — ciepły greige/papier z makiety „dwie głowy" (17.09.2026).
-     Odejście od beżu w stronę neutralnej ciepłej szarości: grunt to papier,
-     karty-kadry to wyraźnie chłodniejsza greige, `--surface` prawie biała, ale
-     wciąż ciepła. Biel dozwolona (makieta jej używa na plakietkach i polach). */
-  --surface: #f4f1ea;
+     Grunt `--bg` zostaje bez zmian: to znak rozpoznawczy marki.
+
+     Poprawka 18.09.2026 dotyczy pozostałych trzech stopni. Drabina traciła
+     barwę przy ciemnieniu — chroma (rozstęp kanałów RGB) szła 10 · 14 · 14
+     w dół, więc im głębsza powierzchnia, tym bardziej szara. Stąd wrażenie
+     brudnego greige: kadry produktów, największa plama na stronie głównej,
+     czytały się jak szarość, a nie jak papier.
+
+     Teraz chroma rośnie razem z głębią: 11 (grunt) · 13 · 24 · 25. Ten sam
+     odcień (H ≈ 40–41) na całej drabinie, ciemniejszy stopień = cieplejszy.
+
+     Drugi mierzony brak: karta nie odrywała się od gruntu. `--surface` wobec
+     `--bg` dawał 1,076:1 — poniżej progu, przy którym krawędź w ogóle widać
+     bez obwódki, przez co kwadracik na stronie głównej nie czytał się jak
+     karta. Ciemny motyw miał w tym samym miejscu 1,109:1 i działał. Nowe
+     `--surface` daje 1,135:1. */
+  --surface: #fbf7ee;
   --bg: #ece9e1;
-  /* Panel niesie tekst (pasmo obietnic, newsletter, zaplecze), więc jest
-     o stopień jaśniejszy niż szare kadry makiety — te siedzą w `--img`.
-     Przy wspólnym odcieniu `--ink-3` schodził na panelu do 3,47:1. */
-  --panel: #e3dfd5;
+  /* Panel niesie tekst (pasmo obietnic, newsletter, zaplecze), więc jego
+     jasność wyznacza próg AA dla `--ink-3`, nie gust. Schodzi o stopień
+     (odstęp od gruntu 1,097 → 1,113) i bierze chromę 14 → 24; `--ink-3`
+     trzyma na nim 4,62:1, obwódka pola 3,43:1. Głębiej się nie da. */
+  --panel: #e5ddcd;
 
   /* tekst — trzy stopnie ciepłego atramentu. `--ink-3` trzymany nad progiem
      AA na tle strony (`npm run kontrast` pilnuje). */
@@ -76,7 +90,12 @@
   --btn-ink: #f4f1ea;
   --na-akcencie: #f4f1ea;
 
-  --img: #dbd7cd;
+  /* Kadr zdjęcia — najgłębszy stopień i największa plama na stronie głównej
+     (cztery kafle kategorii, siatka produktów). Nie niesie liter, więc bramka
+     kontrastu go nie pilnuje i to on najbardziej zszarzał: chroma 14 przy
+     jasności 83%. Teraz ciepły owies, chroma 25, odstęp od gruntu
+     1,184 → 1,227 — głębiej niż najgłębszy stopień ciemnego motywu. */
+  --img: #dbd3c2;
   --img-line: rgba(28, 26, 23, .14);
 
   /* Kolory znaczące zostają — KokonutUI też trzyma osobny zestaw dla stanów
@@ -120,7 +139,14 @@
     rgba(138, 129, 120, .06) 100%
   );
 
-  --shadow: 0 1px 2px rgba(74, 48, 32, .06), 0 18px 40px -24px rgba(74, 48, 32, .28);
+  /* Cień w cieple brązu, nie w czerni — na beżu czarny cień sinieje.
+     Doszedł środkowy stopień: sam daleki rozmyty cień nie unosił karty,
+     która wobec gruntu ma 1,135:1. Trzy stopnie to zasięg bliski (krawędź),
+     średni (odklejenie) i daleki (głębia). */
+  --shadow:
+    0 1px 2px rgba(74, 48, 32, .07),
+    0 3px 8px -3px rgba(74, 48, 32, .07),
+    0 22px 46px -26px rgba(74, 48, 32, .34);
 }
 
 /* ---------- Tokeny bazowe: motyw ciemny ----------
@@ -341,7 +367,7 @@
   --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-:root { --bg-sunken: #cfcabd; }
+:root { --bg-sunken: #d4cbb9; }
 .dark { --bg-sunken: #343029; }
 /* Obrys przycisku ghost i innych elementów, które mają być widoczne, ale nie
    krzyczeć — mocniejszy stopień tej samej przezroczystości co `--line`. */
