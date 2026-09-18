@@ -1905,6 +1905,97 @@ select {
 .auth-perks li { display: flex; gap: 12px; align-items: flex-start; font-size: .9375rem; color: var(--ink-soft); }
 .auth-perks svg { width: 17px; height: 17px; flex: none; margin-top: 3px; color: var(--ink); }
 
+/* ---------- Ekrany poczty: potwierdzenie, błąd linku, nowe hasło ----------
+
+   Te strony mają jedną kolumnę, nie dwie. Kolumna z zachętami ma sens przy
+   logowaniu, gdzie ktoś jeszcze się zastanawia; tutaj człowiek jest w środku
+   zadania — czeka na maila albo ustawia hasło — i wszystko poza treścią
+   zadania tylko odciąga wzrok. */
+.auth-jedna {
+  grid-template-columns: 1fr;
+  align-content: center;
+}
+.auth-jedna .auth-form { justify-content: center; }
+.auth-jedna .auth-form > div { max-width: 460px; }
+
+/* Znak nad nagłówkiem zamiast ilustracji: kadr jest pusty z założenia,
+   więc niesie go sam kształt i tło panelu. */
+.auth-znak {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 20px;
+  border-radius: var(--r-sm);
+  background: var(--panel);
+  color: var(--ink);
+}
+.auth-znak svg { width: 20px; height: 20px; }
+.auth-znak-uwaga { background: var(--uwaga-soft); color: var(--uwaga-ink); }
+
+/* Adres własnym krojem: to jedyna rzecz na ekranie, którą czytelnik ma
+   sprawdzić znak po znaku. */
+.auth-adres {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.auth-wymogi {
+  margin: 0 0 18px;
+  font-size: .8125rem;
+  color: var(--ink-soft);
+}
+
+.auth-wskazowki {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.auth-wskazowki li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: .875rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.auth-wskazowki svg { width: 16px; height: 16px; flex: none; margin-top: 3px; color: var(--ink-faint); }
+
+.auth-ponownie { margin-top: 28px; display: grid; gap: 12px; justify-items: start; }
+
+.auth-komunikat {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-soft);
+  font-size: .875rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.auth-blad {
+  margin: 0;
+  font-size: .875rem;
+  line-height: 1.5;
+  color: var(--blad);
+}
+
+.auth-pod-polem { margin: 12px 0 0; font-size: .8125rem; }
+.auth-stopka { margin: 28px 0 0; font-size: .875rem; color: var(--ink-soft); }
+.auth-podpis {
+  margin: 0 0 clamp(24px, 4vw, 48px);
+  text-align: center;
+  font-size: .8125rem;
+  color: var(--ink-faint);
+}
+
+@media (max-width: 720px) {
+  .auth-jedna .auth-form { padding-inline: var(--gutter); }
+}
+
 .notice {
   display: flex;
   gap: 10px;

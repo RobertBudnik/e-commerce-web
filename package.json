@@ -14,7 +14,8 @@
     "db:test": "node scripts/test-schema.mjs",
     "db:seed": "node scripts/gen-seed.mjs > supabase/seed.sql",
     "test:e2e": "npm --prefix web run test:e2e",
-    "test:smoke": "npm --prefix web run test:smoke"
+    "test:smoke": "npm --prefix web run test:smoke",
+    "poczta:szablony": "node scripts/szablony-poczty.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.2.17",

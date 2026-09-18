@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
@@ -108,6 +109,13 @@ export function AuthTabs({ defaultTab, back }: { defaultTab: 'login' | 'register
               required
             />
           </div>
+          <p className="auth-pod-polem">
+            <Link href="/haslo/reset">Nie pamiętasz hasła?</Link>
+            {' · '}
+            <Link href={`/logowanie/link?powrot=${encodeURIComponent(back)}`}>
+              Zaloguj się linkiem
+            </Link>
+          </p>
           <Submit label="Zaloguj się" />
         </form>
       ) : (
@@ -127,10 +135,10 @@ export function AuthTabs({ defaultTab, back }: { defaultTab: 'login' | 'register
               name="password"
               type="password"
               autoComplete="new-password"
-              minLength={6}
+              minLength={8}
               required
             />
-            <p className="field-hint">Minimum 6 znaków.</p>
+            <p className="field-hint">Co najmniej osiem znaków, w tym mała litera, wielka i cyfra.</p>
           </div>
           <Submit label="Załóż konto" />
         </form>

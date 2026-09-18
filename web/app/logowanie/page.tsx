@@ -3,11 +3,12 @@ import { redirect } from 'next/navigation';
 import { AuthTabs } from '@/components/auth/AuthTabs';
 import { Icon } from '@/components/Icon';
 import { getSessionUser } from '@/lib/queries';
+import { MARKA } from '@/lib/dane-sklepu';
 import { sciezkaPowrotu } from '@/lib/sciezka-powrotu';
 
 export const metadata: Metadata = {
   title: 'Logowanie',
-  description: 'Zaloguj się do konta Nordo albo załóż nowe.',
+  description: 'Zaloguj się do swojego konta albo załóż nowe.',
 };
 
 export default async function LoginPage({
@@ -45,7 +46,7 @@ export default async function LoginPage({
       <aside className="auth-aside">
         <div>
           <blockquote>Zamówienia, adresy i lista życzeń czekają na koncie — także po zmianie urządzenia.</blockquote>
-          <cite>Nordo</cite>
+          <cite>{MARKA.nazwa}</cite>
           <ul className="auth-perks">
             <li>
               <Icon name="box" /> Historia zamówień i status wysyłki
