@@ -111,6 +111,10 @@ export function AuthTabs({ defaultTab, back }: { defaultTab: 'login' | 'register
           </div>
           <p className="auth-pod-polem">
             <Link href="/haslo/reset">Nie pamiętasz hasła?</Link>
+            {' · '}
+            <Link href={`/logowanie/link?powrot=${encodeURIComponent(back)}`}>
+              Zaloguj się linkiem
+            </Link>
           </p>
           <Submit label="Zaloguj się" />
         </form>
