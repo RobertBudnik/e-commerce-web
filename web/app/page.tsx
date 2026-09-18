@@ -2,9 +2,11 @@ import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { Kwadracik } from '@/components/home/Kwadracik';
 import { SekcjaPrzypieta } from '@/components/ruch/SekcjaPrzypieta';
+import { UjawnianieStrony } from '@/components/ruch/UjawnianieStrony';
 import { ProductCard } from '@/components/product/ProductCard';
 import { getCategories, getProducts } from '@/lib/queries';
 import { money } from '@/lib/format';
+import { opoznienieKaskady } from '@/lib/kaskada';
 import { ile, PRODUKTY } from '@/lib/odmiana';
 import {
   KATEGORIE_ZAPASOWE,
@@ -53,7 +55,15 @@ export default async function HomePage() {
 
   return (
     <main className="dg">
-      {/* ---------- Hero ---------- */}
+      {/* Obserwator odsłaniania dla całej strony. Bez niego reguła
+          `[data-reveal]` zostawia elementy na `opacity: 0` na zawsze —
+          dotyczy to również `ProductCard` w sekcji „02 — Wybór". */}
+      <UjawnianieStrony />
+
+      {/* ---------- Hero ----------
+          Hero nie ma `data-reveal`: stoi nad zgięciem i jest pierwszą
+          klatką, jaką widzi wchodzący. Odsłanianie tego, co i tak jest
+          na ekranie, to opóźnienie treści, nie animacja. */}
       <section className="dg-hero">
         <div className="dg-hero-slowo">
           <span className="dg-nadtytul">{MARKA.nadtytulHero}</span>
@@ -87,7 +97,7 @@ export default async function HomePage() {
       </section>
 
       {OBIETNICE.length > 0 && (
-        <ul className="dg-pasek">
+        <ul className="dg-pasek" data-reveal="">
           {OBIETNICE.map((o) => (
             <li key={o.tytul}>{o.tytul}</li>
           ))}
@@ -97,7 +107,7 @@ export default async function HomePage() {
       {/* ---------- 01 Pokoje ---------- */}
       {kafelki.length > 0 && (
         <section className="dg-sekcja">
-          <header className="dg-glowa">
+          <header className="dg-glowa" data-reveal="">
             <span className="dg-numer">01 — Pokoje</span>
             <h2>Jeden język, każdy pokój</h2>
             <Link className="dg-link" href="/sklep">
@@ -106,8 +116,14 @@ export default async function HomePage() {
           </header>
 
           <div className="dg-pokoje">
-            {kafelki.map((k) => (
-              <Link className="dg-pokoj" href={`/sklep?kategoria=${k.id}`} key={k.id}>
+            {kafelki.map((k, i) => (
+              <Link
+                className="dg-pokoj"
+                href={`/sklep?kategoria=${k.id}`}
+                key={k.id}
+                data-reveal=""
+                style={{ ['--reveal-delay' as string]: `${opoznienieKaskady(i)}ms` }}
+              >
                 <span className="dg-pokoj-kadr" aria-hidden="true">
                   <Icon name={k.ikona} />
                 </span>
@@ -126,7 +142,7 @@ export default async function HomePage() {
 
       {/* ---------- 02 Wybór ---------- */}
       <section className="dg-sekcja">
-        <header className="dg-glowa">
+        <header className="dg-glowa" data-reveal="">
           <span className="dg-numer">02 — Wybór</span>
           <h2>Rzeczy na cichy stół</h2>
           {!katalogPusty && (
@@ -139,7 +155,7 @@ export default async function HomePage() {
         {wybor.length > 0 ? (
           <>
             {katalogPusty && (
-              <p className="dg-adnotacja">
+              <p className="dg-adnotacja" data-reveal="">
                 Pozycje poglądowe — katalog jest jeszcze pusty, więc nie da się ich kupić.
               </p>
             )}
@@ -160,13 +176,18 @@ export default async function HomePage() {
                       categoryName={
                         kafelki.find((k) => k.id === produkt.category)?.nazwa ?? ''
                       }
-                      delay={i}
+                      delay={opoznienieKaskady(i)}
                     />
                   );
                 }
 
                 return (
-                  <article className="dg-karta" key={p.id}>
+                  <article
+                    className="dg-karta"
+                    key={p.id}
+                    data-reveal=""
+                    style={{ ['--reveal-delay' as string]: `${opoznienieKaskady(i)}ms` }}
+                  >
                     <span className="dg-karta-kadr">
                       <span className="dg-kadr-znak" aria-hidden="true">
                         <Icon name="box" />
@@ -191,7 +212,7 @@ export default async function HomePage() {
         ) : (
           /* Uczciwy stan pusty. Siatka z wymyślonym towarem byłaby wygodniejsza
              wizualnie i nieuczciwa wobec kupującego. */
-          <div className="dg-pusto">
+          <div className="dg-pusto" data-reveal="">
             <span className="dg-pusto-znak" aria-hidden="true">
               <Icon name="box" />
             </span>
@@ -212,7 +233,7 @@ export default async function HomePage() {
       {JAK_TO_DZIALA.length > 0 && <SekcjaPrzypieta kroki={[...JAK_TO_DZIALA]} />}
 
       {/* ---------- Manifest ---------- */}
-      <section className="dg-manifest" id="manifest">
+      <section className="dg-manifest" id="manifest" data-reveal="">
         <span className="dg-numer">{MANIFEST.nadtytul}</span>
         <blockquote className="dg-manifest-zdanie">{MANIFEST.zdanie}</blockquote>
         <p className="dg-manifest-akapit">{MANIFEST.akapit}</p>
@@ -222,14 +243,19 @@ export default async function HomePage() {
       {/* ---------- 03 Dziennik ---------- */}
       {DZIENNIK.length > 0 && (
         <section className="dg-sekcja">
-          <header className="dg-glowa">
+          <header className="dg-glowa" data-reveal="">
             <span className="dg-numer">03 — Dziennik</span>
             <h2>Notatki od pieca</h2>
           </header>
 
           <ul className="dg-dziennik">
-            {DZIENNIK.map((w) => (
-              <li className="dg-wpis" key={w.tytul}>
+            {DZIENNIK.map((w, i) => (
+              <li
+                className="dg-wpis"
+                key={w.tytul}
+                data-reveal=""
+                style={{ ['--reveal-delay' as string]: `${opoznienieKaskady(i)}ms` }}
+              >
                 <span className="dg-wpis-kadr" aria-hidden="true">
                   <Icon name="box" />
                 </span>

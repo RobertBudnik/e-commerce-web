@@ -2400,10 +2400,13 @@ code {
      elementu przez ekran — przy większym skoku ruch zaczyna sam być treścią. */
   translate: 0 20px;
   scale: .985;
+  /* Czasy przez zmienne, żeby pojedyncza sekcja mogła je skrócić bez
+     powtarzania całego skrótu `transition` i bez wojny o swoistość
+     z regułą `.is-in`. Domyślne wartości są te, co były. */
   transition:
-    opacity .5s ease var(--reveal-delay, 0ms),
-    translate var(--ruch-odsloniecie) var(--krzywa) var(--reveal-delay, 0ms),
-    scale var(--ruch-odsloniecie) var(--krzywa) var(--reveal-delay, 0ms),
+    opacity var(--czas-wejscia, .5s) ease var(--reveal-delay, 0ms),
+    translate var(--czas-wejscia-ruch, var(--ruch-odsloniecie)) var(--krzywa) var(--reveal-delay, 0ms),
+    scale var(--czas-wejscia-ruch, var(--ruch-odsloniecie)) var(--krzywa) var(--reveal-delay, 0ms),
     transform var(--ruch-tlo) var(--krzywa-detal);
   will-change: opacity, translate, scale;
 }
@@ -4960,6 +4963,13 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
   margin-inline: auto;
   padding-inline: var(--gutter);
   padding-block: clamp(28px, 5vw, 56px) clamp(64px, 10vw, 128px);
+
+  /* Wejście krótsze niż w siatce sklepu. Tam kafelków bywa dwadzieścia
+     i kaskada ma prawo się rozłożyć; tutaj sekcji jest pięć i każda zajmuje
+     ekran, więc 800 ms czuć jako ociąganie się strony przy przewijaniu.
+     Poniżej progu 500 ms ruch czyta się jako odpowiedź, nie jako czekanie. */
+  --czas-wejscia: .38s;
+  --czas-wejscia-ruch: .42s;
 }
 
 /* Nadtytuł: wersaliki na rozstrzelonym tracking. Ten sam stopień niesie
@@ -5033,6 +5043,12 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
   .dg-hero { grid-template-columns: 1fr; gap: clamp(28px, 6vw, 40px); }
   /* Jedna kolumna znaczy pełną szerokość, więc hasło może urosnąć z powrotem. */
   .dg-haslo { font-size: clamp(2.25rem, 1rem + 6.4vw, 4rem); }
+  /* Bryła przestaje gonić szerokość strony. Zmierzone na tablecie 768 px:
+     bez ograniczenia wychodziła 707 × 530 i zajmowała cały pierwszy ekran
+     pod hasłem, więc „01 — Pokoje" zaczynało się dopiero po dwóch
+     przewinięciach. Limit jest stały, nie procentowy — chodzi o wielkość
+     rzeczy na ekranie, a nie o jej udział w szerokości. */
+  .dg-hero-kwadrat { max-width: 560px; }
 }
 
 
@@ -5164,8 +5180,35 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
 .dg-pokoj-podpis strong { font-size: .9375rem; font-weight: 700; color: var(--ink); }
 .dg-pokoj-podpis span { font-size: .8125rem; line-height: 1.45; color: var(--ink-3); }
 
-@media (max-width: 860px) {
+/* Kafelek pokoju to kwadrat, więc jego bok rośnie razem z kolumną. Przy
+   dwóch kolumnach na tablecie bok wychodził 346 px — wielki pusty kwadrat
+   z ikoną 26 px w środku.
+
+   Liczby kolumn nie ruszamy: kategorie to krótka, zamknięta lista nawigacji
+   (zapas ma cztery pozycje, prawdziwych bywa podobnie), a trzy kolumny przy
+   czterech kafelkach zostawiają jeden sam w drugim rzędzie obok dwóch dziur.
+   Zmierzone na tablecie: 3 + 1 wygląda gorzej niż duży kwadrat. Dwie kolumny
+   dają czysty układ 2 × 2 przy najczęstszej liczbie kategorii.
+
+   Zmienia się więc kształt kadru, nie siatka. Przy dwóch kolumnach na
+   szerokim ekranie kadr przestaje być kwadratem i kładzie się poziomo —
+   346 × 216 zamiast 346 × 346. Zdjęcia wnętrz i tak są poziome, więc to
+   nie jest ustępstwo, tylko właściwy kadr dla tej szerokości.
+
+   Próg stoi na 900 px, czyli tam, gdzie hero schodzi do jednej kolumny.
+   To jedyne miejsce, w którym strona naprawdę zmienia tryb, więc siatka
+   kategorii zmienia się razem z nią, a nie sto pikseli dalej z własnego
+   powodu. Wcześniejsze 1000 px dawało przy 1000 kafelek 458 px, który
+   sekundę później skakał na 219 — skok w środku pasma, nie na jego progu. */
+@media (max-width: 900px) {
   .dg-pokoje { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dg-pokoj-kadr { aspect-ratio: 16 / 10; }
+}
+
+/* Poniżej dwóch kolumn kafelek jest już mały (166 px przy 375), więc kwadrat
+   wraca — kadr poziomy w tej skali robi się paskiem. */
+@media (max-width: 560px) {
+  .dg-pokoj-kadr { aspect-ratio: 1 / 1; }
 }
 
 /* ---------- Wybor: adnotacje i stan pusty ---------- */
@@ -5277,9 +5320,77 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
 .dg-wpis-opis { font-size: .8125rem; color: var(--ink-3); }
 .dg-wpis-data { flex: 0 0 auto; font-size: .75rem; color: var(--ink-3); }
 
+/* ---------- Mikrointerakcje: uniesienie i oddech kadru ----------
+
+   Ten sam język co kafelek katalogu (`.card` wyżej): karta odchodzi od
+   siatki o cztery piksele, a zawartość kadru dobiera skalę wolniej niż
+   unosi się sama karta. Wrażenie masy bierze się z różnicy czasów, nie
+   z odległości.
+
+   Wyłącznie `transform`. Uniesienie zrobione marginesem albo `top`
+   przeliczałoby układ całej siatki przy każdej klatce najazdu; `transform`
+   zostaje na warstwie kompozytora i nie rusza sąsiadów. Barwy (tło kadru,
+   obwódka) zmieniają się dalej — to malowanie, nie układ, i bez nich
+   najazd przestałby cokolwiek komunikować.
+
+   Globalna reguła `prefers-reduced-motion` wyżej w pliku ścina te czasy
+   do zera, więc osobnego wyjątku tutaj nie ma. */
+
+.dg-pokoj,
+.dg-karta {
+  transition: transform var(--ruch-tlo) var(--krzywa-detal);
+}
+
+.dg-pokoj:hover,
+.dg-karta:hover {
+  transform: translateY(-4px);
+}
+
+/* Znak w kadrze dochodzi wolniej od samej karty. Skala w granicach
+   z dokumentu ruchu (karta najwyżej 1.03, znak w kadrze do 1.06) — przy
+   większej widać już kadrowanie ikony, a nie głębię. */
+.dg-pokoj-kadr svg,
+.dg-karta .dg-kadr-znak {
+  transition: transform var(--ruch-kadr) var(--krzywa);
+}
+
+.dg-pokoj:hover .dg-pokoj-kadr svg,
+.dg-karta:hover .dg-kadr-znak {
+  transform: scale(1.06);
+}
+
+/* Wpis dziennika nie jest kartą i nie ma się unosić — to wiersz listy.
+   Dostaje przesunięcie w bok, czyli ten sam ruch co strzałka w odsyłaczu. */
+.dg-wpis {
+  transition: transform var(--ruch-tlo) var(--krzywa-detal);
+}
+.dg-wpis:hover { transform: translateX(3px); }
+
+/* Odsyłacz „Zobacz wszystkie": strzałka odjeżdża, napis stoi. Strzałka jest
+   osobnym `<span aria-hidden>`, więc da się ją ruszyć bez ruszania tekstu. */
+.dg-link span { display: inline-block; transition: transform var(--ruch-tlo) var(--krzywa-detal); }
+.dg-link:hover span { transform: translateX(4px); }
+
+/* Przyciski hero: ta sama skala co w dokumencie ruchu (1.02). */
+.dg-hero-akcje .dg-btn {
+  transition: transform var(--ruch-tlo) var(--krzywa-detal),
+              background var(--ruch-tlo) var(--krzywa-detal),
+              border-color var(--ruch-kolor) var(--krzywa-detal),
+              color var(--ruch-kolor) var(--krzywa-detal);
+}
+.dg-hero-akcje .dg-btn:hover { transform: scale(1.02); }
+.dg-hero-akcje .dg-btn:active { transform: scale(.99); }
+
 /* ---------- Schodzenie na węższe ekrany ---------- */
 
-@media (max-width: 1000px) {
+/* Cztery kolumny zjeżdżały na kartę 228 px dokładnie przy 1024 px, czyli
+   na najczęstszym laptopie. Pasmo trzech kolumn daje tam ~310 px i nazwa
+   z ceną przestają się zderzać w jednym wierszu. */
+@media (max-width: 1200px) {
+  .dg-siatka { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 860px) {
   .dg-siatka { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
@@ -5478,6 +5589,15 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
   border-color: var(--accent);
   color: var(--na-akcencie);
 }
+
+/* Obietnica dla kompozytora składana wyłącznie wtedy, gdy przechył
+   naprawdę chodzi. `will-change` na stałe kosztuje pamięć warstwy przez
+   cały czas życia strony, a bryła stoi w hero, czyli zawsze. Selektor
+   z `:not([data-bez-ruchu])` znika razem z myszą i z ograniczonym ruchem. */
+.kw-scena:not([data-bez-ruchu]) .kw-bryla { will-change: transform; }
+.kw-scena:not([data-bez-ruchu]) .kw-tlo,
+.kw-scena:not([data-bez-ruchu]) .kw-znak,
+.kw-scena:not([data-bez-ruchu]) .kw-tresc { will-change: translate; }
 
 /* Bez myszy przechył nie ma czego śledzić, a pod palcem tylko przeszkadza
    w trafieniu w bryłę. Zmienne zostają zerowe, więc wystarczy zdjąć cień
