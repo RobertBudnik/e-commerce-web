@@ -17,8 +17,6 @@ import {
   JAK_TO_DZIALA,
   MARKA,
   OBIETNICE,
-  PRACOWNIA,
-  STATYSTYKI,
 } from '@/lib/dane-sklepu';
 
 /** Katalog zmienia się rzadko — strona główna może stać w cache przez minutę. */
@@ -69,9 +67,10 @@ export default async function HomePage() {
 
           <div className="dg-hero-akcje">
             {/* Kotwica, nie osobna strona: `/informacje/o-nas` nie istnieje,
-                a sekcja „Pracownia" niżej jest dokładnie tą treścią. Przycisk
-                kończący się czterysta czwórką jest gorszy niż jego brak. */}
-            <Link className="dg-btn" href="#pracownia">
+                a manifest niżej jest najbliższą rzeczą „o nas", jaka została
+                na stronie — razem z podpisem pracowni. Przycisk kończący się
+                czterysta czwórką jest gorszy niż jego brak. */}
+            <Link className="dg-btn" href="#manifest">
               O nas
             </Link>
             <Link className="dg-btn dg-btn-ghost" href="/sklep">
@@ -213,56 +212,18 @@ export default async function HomePage() {
       {JAK_TO_DZIALA.length > 0 && <SekcjaPrzypieta kroki={[...JAK_TO_DZIALA]} />}
 
       {/* ---------- Manifest ---------- */}
-      <section className="dg-manifest">
+      <section className="dg-manifest" id="manifest">
         <span className="dg-numer">{MANIFEST.nadtytul}</span>
         <blockquote className="dg-manifest-zdanie">{MANIFEST.zdanie}</blockquote>
         <p className="dg-manifest-akapit">{MANIFEST.akapit}</p>
         <cite className="dg-manifest-podpis">{MANIFEST.podpis}</cite>
       </section>
 
-      {/* ---------- 03 Pracownia ---------- */}
-      <section className="dg-pracownia" id="pracownia">
-        <div className="dg-pracownia-tresc">
-          <span className="dg-numer">03 — {PRACOWNIA.nadtytul}</span>
-          <h2>{PRACOWNIA.haslo}</h2>
-
-          {STATYSTYKI.length > 0 && (
-            <dl className="dg-liczby">
-              {STATYSTYKI.map((s) => (
-                <div key={s.etykieta}>
-                  <dt className="num">
-                    {s.do}
-                    {s.sufiks ?? ''}
-                  </dt>
-                  <dd>{s.opis}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-
-          <Link className="dg-btn dg-btn-ghost dg-btn-ciemny" href={PRACOWNIA.przyciskHref}>
-            {PRACOWNIA.przyciskEtykieta}
-          </Link>
-        </div>
-
-        <div className="dg-pracownia-kadry" aria-hidden="true">
-          <span className="dg-kadr-ciemny dg-kadr-wysoki">
-            <Icon name="box" />
-          </span>
-          <span className="dg-kadr-ciemny">
-            <Icon name="grid" />
-          </span>
-          <span className="dg-kadr-ciemny">
-            <Icon name="shield" />
-          </span>
-        </div>
-      </section>
-
-      {/* ---------- 04 Dziennik ---------- */}
+      {/* ---------- 03 Dziennik ---------- */}
       {DZIENNIK.length > 0 && (
         <section className="dg-sekcja">
           <header className="dg-glowa">
-            <span className="dg-numer">04 — Dziennik</span>
+            <span className="dg-numer">03 — Dziennik</span>
             <h2>Notatki od pieca</h2>
           </header>
 

@@ -5126,84 +5126,6 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
 .dg-manifest-podpis { font-style: normal; font-size: .8125rem; color: var(--ink-3); }
 
 
-/* ---------- Pracownia: ciemny blok w środku jasnej strony ---------- */
-
-.dg-pracownia {
-  display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  align-items: center;
-  gap: clamp(24px, 4vw, 56px);
-  margin-top: clamp(56px, 9vw, 104px);
-  padding: clamp(26px, 4vw, 56px);
-  border-radius: var(--radius-hero);
-  /* Blok jest ciemny w obu motywach — to plama w narracji, nie powierzchnia
-     motywu, więc barwy stoją wprost, a nie przez tokeny. */
-  background: #1f1711;
-  color: #f2e9da;
-}
-
-.dg-pracownia .dg-numer { color: rgba(220, 194, 154, .92); }
-
-.dg-pracownia h2 {
-  max-width: 26ch;
-  margin: 14px 0 0;
-  font-family: var(--display);
-  font-size: clamp(1.375rem, 1rem + 1.8vw, 2rem);
-  font-weight: 800;
-  line-height: 1.22;
-  letter-spacing: -.02em;
-}
-
-.dg-liczby {
-  display: flex;
-  flex-wrap: wrap;
-  gap: clamp(20px, 4vw, 52px);
-  margin: clamp(22px, 3vw, 32px) 0 0;
-}
-
-.dg-liczby div { display: grid; gap: 4px; }
-
-.dg-liczby dt {
-  font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.25rem);
-  font-weight: 800;
-  line-height: 1;
-}
-
-.dg-liczby dd { margin: 0; font-size: .75rem; color: rgba(242, 233, 218, .7); }
-
-.dg-btn-ciemny {
-  margin-top: clamp(22px, 3vw, 32px);
-  color: #f2e9da;
-  /* Obrys na 0,55 krycia daje 3,98:1 wobec tła bloku. Przy .32 wychodziło
-     2,61:1 — poniżej progu 3:1 dla obrysu kontrolki, a bramka kontrastu
-     tego nie widzi, bo barwa jest wpisana liczbą, nie tokenem. Zmierzone. */
-  border-color: rgba(220, 194, 154, .55);
-  background: transparent;
-}
-
-.dg-btn-ciemny:hover {
-  background: rgba(220, 194, 154, .14);
-  border-color: rgba(220, 194, 154, .82);
-}
-
-.dg-pracownia-kadry {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.dg-kadr-ciemny {
-  display: grid;
-  place-items: center;
-  min-height: 148px;
-  border-radius: var(--r-lg);
-  background: #2b2119;
-  color: rgba(220, 194, 154, .5);
-}
-
-.dg-kadr-ciemny svg { width: 26px; height: 26px; }
-.dg-kadr-wysoki { grid-row: span 2; }
-
 /* ---------- Dziennik ---------- */
 
 .dg-dziennik { margin: 0; padding: 0; list-style: none; }
@@ -5242,7 +5164,6 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
 
 @media (max-width: 1000px) {
   .dg-siatka { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dg-pracownia { grid-template-columns: 1fr; align-items: start; }
 }
 
 @media (max-width: 620px) {
