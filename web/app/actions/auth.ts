@@ -88,12 +88,26 @@ export async function signUpAction(_prev: AuthState, formData: FormData): Promis
   // Błąd hasła musi dojść do człowieka — inaczej formularz milczy, a konto
   // nie powstaje. Reszta błędów idzie w jedno zdanie, żeby nie zdradzić,
   // czy adres jest zajęty.
+  /**
+   * Obie drogi muszą wyglądać tak samo z zewnątrz.
+   *
+   * Pierwsza wersja zwracała tu komunikat, a przy nowym adresie przekierowywała
+   * na „sprawdź skrzynkę". Różnica była widoczna gołym okiem — inny adres
+   * strony, inny ekran — więc formularz odpowiadał wprost na pytanie „czy ten
+   * człowiek ma tu konto". Złapał to własny test tego zachowania.
+   *
+   * Osobno wychodzą tylko dwa błędy, które mówią o **wpisanych danych**, a nie
+   * o istnieniu konta: za słabe hasło i przekroczony limit. Oba dotyczą tak
+   * samo adresu nowego i zajętego, więc niczego nie zdradzają.
+   */
   if (error) {
     if (/password/i.test(error.message)) return { error: wymogiHasla() };
     if (/rate limit|too many/i.test(error.message)) {
       return { error: 'Za dużo prób. Spróbuj za chwilę.' };
     }
-    return { notice: ZAWSZE_TO_SAMO };
+    // Log zostaje na serwerze, człowiek dostaje tę samą drogę co przy sukcesie.
+    console.error('Rejestracja odrzucona przez Auth:', error.message);
+    redirect(`/rejestracja/sprawdz-skrzynke?adres=${encodeURIComponent(email)}`);
   }
 
   // Przy włączonym potwierdzeniu Supabase nie zwraca sesji — konto czeka na
