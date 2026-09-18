@@ -161,9 +161,6 @@ test.describe('Zwroty', () => {
     await page.getByRole('button', { name: 'Potwierdź doręczenie' }).click();
     await expect(page.getByText('Oznaczono jako doręczone')).toBeVisible();
 
-    // Zwrotów do przyjęcia przed zgłoszeniem
-    await page.goto('/panel/zwroty');
-    const przed = await tresc(page).locator('.mag-karta').count();
 
     await page.goto('/');
     await wyloguj(page);
@@ -187,10 +184,20 @@ test.describe('Zwroty', () => {
 
     await zaloguj(page, KONTA.zaplecze);
     await page.goto('/panel/zwroty');
-    await expect(tresc(page).locator('.mag-karta')).toHaveCount(przed + 1);
 
-    await page.getByRole('button', { name: /Przyjmij zwrot/ }).first().click();
-    await expect(tresc(page).locator('.mag-karta')).toHaveCount(przed);
+    // Karta TEGO zamówienia, nie „którakolwiek na ekranie”. Liczenie
+    // wszystkich kart było pytaniem o stan całej bazy: wystarczyło, że inny
+    // test zostawił własny zwrot, i przyjęcie liczyło się na cudzej pozycji.
+    // Numer zamówienia jest tu jedyną rzeczą, która należy wyłącznie do tego
+    // przebiegu.
+    const karta = tresc(page).locator('.mag-karta').filter({ hasText: numer });
+    await expect(karta).toHaveCount(1);
+
+    await karta.getByRole('button', { name: /Przyjmij zwrot/ }).click();
+
+    // Po przyjęciu karta znika z listy oczekujących — to jest cała teza tego
+    // kroku i da się ją sprawdzić bez liczenia czegokolwiek innego.
+    await expect(karta).toHaveCount(0);
 
     // Sztuki wróciły na stan przez historię magazynu, widoczną pod Stanami
     await page.goto('/panel/stany');
