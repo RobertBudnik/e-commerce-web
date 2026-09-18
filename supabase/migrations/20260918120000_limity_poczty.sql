@@ -33,20 +33,30 @@ alter table public.limity_poczty enable row level security;
 create index limity_poczty_okno_idx
   on public.limity_poczty (klucz, rodzaj, kiedy desc);
 
+-- Sprzątanie w funkcji niżej kasuje po samym czasie, bez klucza. Indeks
+-- złożony wyżej nie odpowie na takie pytanie, więc bez tego każde wywołanie
+-- limitu przeglądałoby całą tabelę.
+create index limity_poczty_kiedy_idx on public.limity_poczty (kiedy);
+
 comment on table public.limity_poczty is
   'Okno przesuwne wysyłek poczty. Klucz to adres IP albo skrót SHA-256 adresu e-mail.';
 
 -- ---------------------------------------------------------------------------
 -- Skrót adresu — jedno miejsce, żeby aplikacja i baza liczyły go tak samo
 -- ---------------------------------------------------------------------------
+-- `sha256()` z rdzenia Postgresa, nie `digest()` z pgcrypto. Powód jest
+-- praktyczny: pgcrypto siedzi w innej schemie lokalnie (public) niż na
+-- hostowanym Supabase (extensions), więc każde odwołanie z nazwą schemy
+-- działa dokładnie w jednym z tych dwóch miejsc. Funkcja wbudowana nie ma
+-- tego problemu i nie wymaga żadnego rozszerzenia.
 create or replace function public.skrot_adresu(p_email text)
 returns text
 language sql
 immutable
-set search_path = public, extensions
+set search_path = public
 as $$
   -- Małe litery i obcięte spacje, bo „Jan@X.pl " i „jan@x.pl" to jedna skrzynka.
-  select encode(extensions.digest(lower(btrim(p_email)), 'sha256'), 'hex');
+  select encode(sha256(convert_to(lower(btrim(p_email)), 'UTF8')), 'hex');
 $$;
 
 -- ---------------------------------------------------------------------------

@@ -14,9 +14,20 @@
 -- =============================================================================
 
 -- pg_net ma w pliku kontrolnym ustaloną schemę `net` i nie jest przenoszalne,
--- więc `with schema …` wysypałoby migrację. Stąd goły `create extension`
--- i `net.` przed wywołaniem niżej.
-create extension if not exists pg_net;
+-- więc `with schema …` wysypałoby migrację.
+--
+-- Instalacja warunkowa, bo lokalny obraz Supabase nie zawsze niesie to
+-- rozszerzenie, a migracja nie może się wywrócić tylko dlatego, że ktoś
+-- odtwarza bazę na laptopie. Bez pg_net wyzwalacz niżej po prostu milczy —
+-- powitanie jest miłe, ale nie jest częścią zakładania konta.
+do $$
+begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_net') then
+    create extension if not exists pg_net;
+  else
+    raise notice 'pg_net niedostępne — mail powitalny nie będzie wysyłany w tym środowisku.';
+  end if;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- Konfiguracja wysyłki
@@ -60,7 +71,7 @@ create or replace function public.zglos_powitanie()
 returns trigger
 language plpgsql
 security definer
-set search_path = public, net
+set search_path = public
 as $$
 declare
   adres_funkcji text;
@@ -91,22 +102,35 @@ begin
     return new;
   end if;
 
+  -- Bez pg_net nie ma czym zawołać funkcji. Sprawdzamy schemę, a nie samą
+  -- funkcję, bo `to_regproc` przy przeciążonej nazwie zwraca null i wyglądałoby
+  -- to jak brak rozszerzenia, choć jest.
+  if to_regnamespace('net') is null then
+    return new;
+  end if;
+
+  -- Wywołanie przez EXECUTE, nie wprost. Ciało funkcji plpgsql jest sprawdzane
+  -- przy tworzeniu, więc odwołanie do `net.http_post` wysypałoby całą migrację
+  -- wszędzie tam, gdzie pg_net nie ma. Dynamiczne wiązanie odkłada to pytanie
+  -- na moment, w którym naprawdę wysyłamy.
+  --
   -- `net.http_post` jest asynchroniczne: wpis ląduje w kolejce pg_net,
   -- a transakcja potwierdzenia konta kończy się natychmiast. Gdyby to było
   -- wywołanie synchroniczne, awaria dostawcy poczty blokowałaby logowanie.
-  perform net.http_post(
-    url := adres_funkcji,
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'x-sekret-powitania', sekret
-    ),
-    body := jsonb_build_object(
+  execute 'select net.http_post($1, $2, $3, $4, $5)'
+  using
+    adres_funkcji,
+    jsonb_build_object(
       'user_id', new.id,
       'email', new.email,
       'imie', coalesce(new.raw_user_meta_data ->> 'full_name', '')
     ),
-    timeout_milliseconds := 5000
-  );
+    '{}'::jsonb,
+    jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-sekret-powitania', sekret
+    ),
+    5000;
 
   return new;
 exception
