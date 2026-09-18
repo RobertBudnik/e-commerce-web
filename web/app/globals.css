@@ -28,16 +28,16 @@
      Odejście od beżu w stronę neutralnej ciepłej szarości: grunt to papier,
      karty-kadry to wyraźnie chłodniejsza greige, `--surface` prawie biała, ale
      wciąż ciepła. Biel dozwolona (makieta jej używa na plakietkach i polach). */
-  --surface: #f8f3ea;
-  --bg: #f0e9dc;
+  --surface: #f4f1ea;
+  --bg: #ece9e1;
   /* Panel niesie tekst (pasmo obietnic, newsletter, zaplecze), więc jest
      o stopień jaśniejszy niż szare kadry makiety — te siedzą w `--img`.
      Przy wspólnym odcieniu `--ink-3` schodził na panelu do 3,47:1. */
-  --panel: #e7dccb;
+  --panel: #e3dfd5;
 
   /* tekst — trzy stopnie ciepłego atramentu. `--ink-3` trzymany nad progiem
      AA na tle strony (`npm run kontrast` pilnuje). */
-  --ink: #211a14;
+  --ink: #1c1a17;
   /* Trzy stopnie muszą być trzema stopniami. `--ink-3` stoi na podłodze
      dopuszczalnej przez AA (4,68:1 na panelu) — jaśniej się nie da, bo
      szarość z makiety daje na tym gruncie ok. 3:1. Skoro meta nie może iść
@@ -46,12 +46,12 @@
   /* Akapit jest średnim stopniem, nie ciemnym: hierarchię na górze strony
      buduje teraz ciemny nadtytuł, więc `--ink-2` nie musi go zastępować.
      Od `--ink-3` dzieli go tyle, żeby meta faktycznie odstawało. */
-  --ink-2: #574b3e;
-  --ink-3: #6a5c4c;
+  --ink-2: #544f46;
+  --ink-3: #666055;
 
   /* Hairline przezroczystością na ciepłym atramencie — działa na każdej
      z beżowych powierzchni bez własnego szarego. */
-  --line: rgba(33, 26, 20, .12);
+  --line: rgba(28, 26, 23, .12);
 
   /* ---------------------------------------------------------------------
      Akcent = grafit (Apple HIG, minimal). Kolor wnoszą wyłącznie zdjęcia
@@ -60,24 +60,24 @@
      `--accent` to plama (tło przycisku, kropka, pasek), `--accent-ink` niesie
      litery na jasnym tle — oba grafitowe, kontrast pilnuje `npm run kontrast`.
      --------------------------------------------------------------------- */
-  --accent: #7a5c3a;
-  --accent-ink: #6b4f30;
-  --accent-soft: rgba(122, 92, 58, .12);
+  --accent: #1c1a17;
+  --accent-ink: #1c1a17;
+  --accent-soft: rgba(28, 26, 23, .08);
 
   /* Znacznik przy danych w panelu (kafel zwrotów) — ciepła neutralna szarość,
      nigdy pod literami. */
-  --accent-2: #8a7a63;
+  --accent-2: #8b857a;
 
   /* Przycisk główny: pełny grafit, ledwie zauważalny gradient dla głębi.
      Token, bo powtarza się na przycisku, pasku zakupu i zakładce panelu. */
-  --akcent-gradient: linear-gradient(135deg, #241c15 0%, #3a2c1e 100%);
+  --akcent-gradient: linear-gradient(135deg, #1c1a17 0%, #2b2823 100%);
 
-  --btn-bg: #241c15;
-  --btn-ink: #f8f3ea;
-  --na-akcencie: #f8f3ea;
+  --btn-bg: #1c1a17;
+  --btn-ink: #f4f1ea;
+  --na-akcencie: #f4f1ea;
 
-  --img: #e0d4c0;
-  --img-line: rgba(33, 26, 20, .14);
+  --img: #dbd7cd;
+  --img-line: rgba(28, 26, 23, .14);
 
   /* Kolory znaczące zostają — KokonutUI też trzyma osobny zestaw dla stanów
      (success #00c758, warning #f99c00, error #fb2c36). Bierzemy ich rodzinę,
@@ -131,35 +131,35 @@
 .motyw-ciemny {
   color-scheme: dark;
 
-  --surface: #241b15;
-  --bg: #191310;
-  --panel: #2f241b;
+  --surface: #252220;
+  --bg: #1b1917;
+  --panel: #2e2b26;
 
-  --ink: #f2e9da;
+  --ink: #ede9de;
   /* Ta sama korekta co w jasnym, w drugą stronę: akapit idzie w górę, meta
      zostaje. Wcześniej oba stopnie dzieliło piętnaście jednostek. */
-  --ink-2: #c0b2a0;
-  --ink-3: #a8998a;
+  --ink-2: #b4afa4;
+  --ink-3: #9a9489;
 
-  --line: rgba(242, 233, 218, .14);
+  --line: rgba(237, 233, 222, .14);
 
   /* W ciemności role akcentu się odwracają: plama jest jasna (grafit
      rozjaśniony do ciepłej kości słoniowej) i ten sam ton niesie litery.
      Przycisk główny: jasny na ciemnym, napis grafitowy. Bez błękitu. */
-  --accent: #dcc29a;
-  --accent-ink: #dcc29a;
-  --accent-soft: rgba(220, 194, 154, .14);
+  --accent: #ede9de;
+  --accent-ink: #ede9de;
+  --accent-soft: rgba(237, 233, 222, .12);
 
-  --accent-2: #9c8b76;
+  --accent-2: #948d80;
 
-  --akcent-gradient: linear-gradient(135deg, #dcc29a 0%, #c0a37a 100%);
+  --akcent-gradient: linear-gradient(135deg, #ede9de 0%, #d0c9bb 100%);
 
-  --btn-bg: #dcc29a;
-  --btn-ink: #191310;
-  --na-akcencie: #191310;
+  --btn-bg: #ede9de;
+  --btn-ink: #1b1917;
+  --na-akcencie: #1b1917;
 
-  --img: #2f241b;
-  --img-line: rgba(242, 233, 218, .14);
+  --img: #2e2b26;
+  --img-line: rgba(237, 233, 222, .14);
 
   --radius-hero: 24px;
 
@@ -345,8 +345,8 @@
 .dark { --bg-sunken: #343029; }
 /* Obrys przycisku ghost i innych elementów, które mają być widoczne, ale nie
    krzyczeć — mocniejszy stopień tej samej przezroczystości co `--line`. */
-:root { --line-strong: rgba(33, 26, 20, .28); }
-.dark { --line-strong: rgba(242, 233, 218, .28); }
+:root { --line-strong: rgba(28, 26, 23, .28); }
+.dark { --line-strong: rgba(237, 233, 222, .28); }
 
 /* Obwódka pola formularza. Osobny token, bo `--line` ma wobec tła kontrast
    1,29:1 — dla kreski rozdzielającej to w zupełności dość, ale pole tekstowe
@@ -356,8 +356,8 @@
 
      jasny  #8a8377 → bg 3,57  surface 3,75  panel 3,22
      ciemny #726b61 → bg 3,58  surface 3,34  panel 3,16 */
-:root { --line-pole: #7d6d58; }
-.dark { --line-pole: #8a7a66; }
+:root { --line-pole: #7a746a; }
+.dark { --line-pole: #807a6e; }
 
 /* Nadtytuł sekcji — jaśniejszy niż tekst drugorzędny, zdjęty z makiet.
    W ciemnym motywie makiet nie ma, więc trzyma tam dotychczasową rolę
