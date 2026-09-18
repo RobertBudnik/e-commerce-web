@@ -18,14 +18,18 @@ test.describe('Katalog', () => {
     // nie jej brzmienie.
     expect(html).toContain(MARKA.hasloHero);
     expect(html).toMatch(/Pokoje/);
-    // Nazwa produktu w surowym HTML dowodzi, że siatka nie czeka na klienta
-    expect(html).toMatch(/dg-karta-nazwa/);
+    // Nazwa produktu w surowym HTML dowodzi, że siatka nie czeka na klienta.
+    // `card-title`, nie `dg-karta-nazwa`: prawdziwy towar jedzie tą samą
+    // kartą co w sklepie, żeby koszyk i znacznik przeceny nie istniały
+    // w dwóch rozjeżdżających się wersjach. `dg-karta` została wyłącznie
+    // dla pozycji poglądowych, których na produkcji nie ma.
+    expect(html).toMatch(/card-title/);
 
-    // Sekcja „02 — Pokoje" wystawia jeden kadr na kategorię.
+    // Sekcja „01 — Pokoje" wystawia jeden kafelek na kategorię.
     await expect(page.locator('.dg-pokoj')).toHaveCount(4);
     // Wybór na stronie głównej to dwa rzędy po cztery — tyle, ile makieta
     // pokazuje w jednym geście, bez zamiany strony głównej w drugi katalog.
-    await expect(page.locator('.dg-karta')).toHaveCount(8);
+    await expect(page.locator('.dg-siatka .card')).toHaveCount(8);
   });
 
   test('sklep filtruje po kategorii i sortuje po cenie', async ({ page }) => {
