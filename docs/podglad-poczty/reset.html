@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>Ustaw nowe hasło</title>
+<style>
+  /* Tryb ciemny. Gmail i tak potrafi odwrócić barwy sam, ale wtedy robi to
+     na ślepo — ciemny atrament na ciemnym tle. Podanie własnych wartości
+     odbiera mu zgadywanie. Klient, który tego bloku nie przeczyta, zostaje
+     przy wersji jasnej i nic się nie psuje. */
+  @media (prefers-color-scheme: dark) {
+    .tlo { background-color: #1b1917 !important; }
+    .karta { background-color: #232120 !important; border-color: #3a3632 !important; }
+    .ink { color: #ede9de !important; }
+    .ink2, .ink3 { color: #b4afa4 !important; }
+    .btn { background-color: #ede9de !important; }
+    .btn a { color: #1b1917 !important; }
+    .linia { border-color: #3a3632 !important; }
+  }
+</style>
+</head>
+<body class="tlo" style="margin:0;padding:0;background-color:#ece9e1;">
+
+<!-- Podgląd na liście wiadomości. Bez niego Gmail bierze pierwsze słowa
+     z treści, czyli zwykle powitanie — a to nie mówi, po co ten mail. -->
+<div style="display:none;font-size:1px;color:#ece9e1;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Link do zmiany hasła, ważny godzinę.</div>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="tlo" style="background-color:#ece9e1;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:100%;">
+
+        <tr>
+          <td style="padding:0 0 24px;">
+            <span class="ink" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-size:15px;font-weight:700;letter-spacing:.02em;color:#1c1a17;">dwie głowy</span>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="karta linia" style="background-color:#f4f1ea;border:1px solid #dbd7cd;border-radius:12px;padding:32px;">
+
+            <h1 class="ink" style="margin:0 0 16px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-size:22px;line-height:1.3;font-weight:700;color:#1c1a17;">Ustaw nowe hasło</h1>
+
+            <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#544f46;">Ktoś poprosił o zmianę hasła do konta na ten adres. Jeśli to byłeś Ty, kliknij poniżej.</p>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#544f46;">Link jest ważny godzinę i działa jeden raz. Dopóki go nie użyjesz, stare hasło działa bez zmian.</p>
+            </div>
+
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;">
+              <tr>
+                <td class="btn" style="background-color:#1c1a17;border-radius:8px;">
+                  <a href="https://nordo-one.vercel.app/auth/callback?token_hash=pkce_2f1a9c4e8b7d3a6f5e0c1b8a9d7e6f5c4b3a2918&type=recovery&next=%2Fhaslo%2Fnowe" style="display:inline-block;padding:13px 28px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-size:15px;font-weight:600;color:#f4f1ea;text-decoration:none;">Ustaw nowe hasło</a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Adres wypisany słowami, bo przycisk bywa wycinany przez
+                 filtry firmowe, a niektórzy czytają pocztę bez HTML-a. -->
+            <p class="ink3" style="margin:0;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-size:12px;line-height:1.6;color:#666055;">
+              Przycisk nie działa? Skopiuj ten adres do przeglądarki:<br>
+              <span style="word-break:break-all;">https://nordo-one.vercel.app/auth/callback?token_hash=pkce_2f1a9c4e8b7d3a6f5e0c1b8a9d7e6f5c4b3a2918&type=recovery&next=%2Fhaslo%2Fnowe</span>
+            </p>
+
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:24px 4px 0;">
+            <p class="ink3" style="margin:0;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-size:12px;line-height:1.6;color:#666055;">To nie Ty prosiłeś o zmianę? Zignoruj tę wiadomość — hasło zostaje takie, jakie było. Jeśli takich wiadomości jest więcej, zmień hasło i daj nam znać.</p>
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

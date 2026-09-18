@@ -268,6 +268,36 @@ otp_expiry = 3600
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
 
+# ---------------------------------------------------------------------------
+# Szablony wiadomości
+#
+# Pliki generuje `npm run poczta:szablony` z jednej skorupy — nie edytuj ich
+# ręcznie, bo kolejne uruchomienie skryptu je nadpisze. Źródło:
+# scripts/szablony-poczty.mjs
+#
+# Każdy szablon kieruje na `/auth/callback?token_hash=…`, nie na domyślny
+# adres Supabase. Powód siedzi w web/app/auth/callback/route.ts: `token_hash`
+# działa w dowolnej przeglądarce, a PKCE tylko w tej, w której zaczęto.
+#
+# Te same pliki trzeba wkleić w dashboardzie produkcyjnego projektu —
+# config.toml dotyczy wyłącznie lokalnego Supabase.
+# ---------------------------------------------------------------------------
+[auth.email.template.confirmation]
+subject = "Potwierdź adres e-mail"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Ustaw nowe hasło"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.magic_link]
+subject = "Twój link do logowania"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.email_change]
+subject = "Potwierdź zmianę adresu"
+content_path = "./supabase/templates/email_change.html"
+
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
 # enabled = true

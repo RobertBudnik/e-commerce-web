@@ -174,3 +174,64 @@ z hashem, więc bez wzorca link z maila wysłanego z podglądu odbije.
 
 Limit Supabase jest **po adresie IP**. Limit po adresie e-mail robimy sami
 w bazie — patrz migracja `limity_poczty`.
+
+## Mail powitalny — konfiguracja
+
+Powitanie wysyła Edge Function `mail-powitalny`, wołana **przez bazę**, a nie
+przez kod strony. Wyzwalaczem jest przejście `email_confirmed_at` z pustego na
+wypełnione w `auth.users`.
+
+Dlaczego tak, a nie z route handlera: potwierdzenie bywa klikane na innym
+urządzeniu i godzinę później, gdy żądania z Next.js dawno nie ma. Baza widzi
+każdą drogę potwierdzenia — także tę przez Admin API i tę z panelu Supabase.
+
+### Wdrożenie
+
+```bash
+supabase functions deploy mail-powitalny --no-verify-jwt
+```
+
+`--no-verify-jwt` jest konieczne: funkcję woła baza, która nie nosi tokenu
+użytkownika. Bezpieczeństwa pilnuje wspólny sekret w nagłówku, porównywany
+w stałym czasie.
+
+### Sekrety funkcji
+
+```bash
+supabase secrets set \
+  RESEND_API_KEY=re_… \
+  RESEND_FROM='dwie głowy <konto@mail.twojadomena.pl>' \
+  RESEND_REPLY_TO=kontakt@twojadomena.pl \
+  SEKRET_POWITANIA="$(openssl rand -hex 32)" \
+  PUBLICZNY_ADRES=https://nordo-one.vercel.app
+```
+
+### Wskazanie funkcji bazie
+
+Ten sam sekret i adres funkcji muszą trafić do tabeli `konfiguracja_poczty` —
+wyzwalacz nie ma dostępu do zmiennych środowiskowych. Tabela ma włączone RLS
+i **zero polityk**, więc czyta ją wyłącznie funkcja wyzwalacza; wpis trzeba
+zrobić z SQL Editora w dashboardzie (rola `service_role` pomija RLS):
+
+```sql
+insert into public.konfiguracja_poczty (klucz, wartosc) values
+  ('adres_powitania', 'https://dziislgqexclvgdzxnqi.supabase.co/functions/v1/mail-powitalny'),
+  ('sekret_powitania', 'TEN_SAM_CIAG_CO_W_SEKRET_POWITANIA')
+on conflict (klucz) do update set wartosc = excluded.wartosc, zmieniono = now();
+```
+
+Brak wpisu **nie wywraca rejestracji** — wyzwalacz wtedy po prostu nic nie
+wysyła. Powitanie jest miłe, ale nie jest częścią zakładania konta.
+
+## Czego ten system nie robi
+
+Uczciwa lista ograniczeń, żeby nie odkrywać ich przy pierwszej awarii:
+
+- **Wiadomości Auth idą wyłącznie w HTML.** Supabase nie przyjmuje wersji
+  `text/plain` obok szablonu — ma jedno pole na treść. Wersję tekstową ma
+  tylko mail powitalny, bo tamtego wysyłamy sami przez Resend, a Resend
+  przyjmuje `html` i `text` naraz.
+- **Jeden czas życia na wszystkie linki.** Supabase trzyma jedną wartość
+  `OTP expiry`, nie rozdziela jej na potwierdzenie, reset i magic link.
+- **Bounce i skargi nie są zbierane.** Webhook Resend to osobna praca, sensowna
+  dopiero z własną domeną.
