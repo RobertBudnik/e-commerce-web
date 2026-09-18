@@ -127,3 +127,50 @@ Gdy domena wejdzie, dołóż w Resend webhook na `email.bounced`
 i `email.complained`. Bez tego adresy, które odbijają, zostają na liście
 i reputacja domeny osuwa się po cichu — zobaczysz to dopiero wtedy, gdy poczta
 zacznie masowo lądować w spamie. To osobna praca, poza tą fazą.
+
+## Ustawienia Auth na produkcji — do wyklikania w dashboardzie
+
+`supabase/config.toml` rządzi **wyłącznie lokalnym** Supabase. Projekt hostowany
+(`dziislgqexclvgdzxnqi`) czyta własne ustawienia, więc poniższe trzeba ustawić
+ręcznie. Wartości dobrane pod ten sklep.
+
+### Authentication → URL Configuration
+
+| pole | wartość |
+| :--- | :--- |
+| Site URL | `https://nordo-one.vercel.app` |
+
+Redirect URLs — **wszystkie trzy**, brak którejkolwiek to najczęstsza przyczyna
+„link nie działa":
+
+```
+https://nordo-one.vercel.app/**
+https://*-robertbudniks-projects.vercel.app/**
+http://localhost:3000/**
+```
+
+Drugi wpis obejmuje wdrożenia podglądowe Vercela — każdy PR dostaje własny host
+z hashem, więc bez wzorca link z maila wysłanego z podglądu odbije.
+
+### Authentication → Providers → Email
+
+| pole | wartość | dlaczego |
+| :--- | :--- | :--- |
+| Confirm email | **OFF** na razie | patrz tryb przejściowy wyżej; ON dopiero po wejściu domeny i czystych testach |
+| Secure email change | ON | zmiana adresu potwierdzana na starym i nowym |
+| Minimum password length | `8` | |
+| Password requirements | małe + wielkie litery + cyfry | |
+| Leaked password protection | **ON** | HaveIBeenPwned; wisiało jako zalecenie z audytu bezpieczeństwa |
+| Email OTP expiration | `3600` | jedna wartość na potwierdzenie, reset i magic link — Supabase nie rozdziela tego per szablon |
+
+### Authentication → Rate Limits
+
+| pole | wartość | dlaczego |
+| :--- | :--- | :--- |
+| Emails per hour | `30` | sklep tej wielkości nie wysyła więcej; wyżej tylko podnosi szkody przy nadużyciu |
+| Minimum interval between emails | `60s` | zgrane z blokadą 60 s w interfejsie „wyślij ponownie" |
+| Sign up / sign in per 5 min | `30` | domyślne, wystarcza |
+| Token verifications per 5 min | `30` | domyślne |
+
+Limit Supabase jest **po adresie IP**. Limit po adresie e-mail robimy sami
+w bazie — patrz migracja `limity_poczty`.
