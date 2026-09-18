@@ -76,7 +76,7 @@ function html(imie: string): string {
 
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="tlo" style="background-color:#ece9e1;">
   <tr><td align="center" style="padding:32px 16px;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:100%;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;max-width:600px;">
 
       <tr><td style="padding:0 0 24px;">
         <span class="ink" style="font-family:${KROJ};font-size:15px;font-weight:700;letter-spacing:.02em;color:#1c1a17;">dwie głowy</span>

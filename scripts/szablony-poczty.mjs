@@ -92,7 +92,11 @@ function skorupa({ tytul, preheader, naglowek, akapity, przyciskEtykieta, przyci
   <tr>
     <td align="center" style="padding:32px 16px;">
 
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:100%;">
+      <!-- width:100% + max-width:600px, NIE width:600px. Sztywna szerokość
+           rozpycha tabelę nadrzędną do 632 px i na telefonie treść wychodzi
+           poza ekran — samo max-width:100% jej nie uratuje, bo rodzic już urósł
+           do zawartości. Zmierzone, nie zgadnięte. -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;max-width:600px;">
 
         <tr>
           <td style="padding:0 0 24px;">
