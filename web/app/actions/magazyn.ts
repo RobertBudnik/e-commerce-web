@@ -47,7 +47,7 @@ export async function korygujStanAction(
 
   revalidatePath('/panel/stany');
   revalidatePath('/panel');
-  revalidatePath('/sklep');
+  odswiezSklep();
 
   return { ok: true, stan: Number(data) };
 }
@@ -71,7 +71,25 @@ export async function przyjmijZwrotAction(zwrotId: string): Promise<ZwrotWynik> 
   revalidatePath('/panel/zwroty');
   revalidatePath('/panel/stany');
   revalidatePath('/panel');
-  revalidatePath('/sklep');
+  odswiezSklep();
 
   return { ok: true, sztuk: Number(data) };
+}
+
+/**
+ * Odświeżenie stron, które pokazują stan magazynowy klientowi.
+ *
+ * Wcześniej stała tu sama `/sklep`. To za mało: karta produktu i strona
+ * główna mają `revalidate = 60`, więc po zejściu ostatniej sztuki przez
+ * minutę dalej mówiły „dostępny". Klient zdąży w tym czasie wejść do kasy
+ * i dostać odmowę z bazy — a to jest gorsze niż zobaczyć „niedostępny"
+ * od razu.
+ *
+ * `/produkt` z trybem `layout` obejmuje wszystkie karty produktów naraz,
+ * bez wyliczania sluga zmienionej pozycji.
+ */
+function odswiezSklep() {
+  revalidatePath('/');
+  revalidatePath('/sklep');
+  revalidatePath('/produkt', 'layout');
 }
