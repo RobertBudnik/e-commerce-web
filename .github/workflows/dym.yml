@@ -36,7 +36,7 @@ jobs:
           # testy mają odpowiadać temu, co faktycznie stoi pod adresem.
           ref: ${{ github.event.deployment_status.deployment.sha }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
