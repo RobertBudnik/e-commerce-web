@@ -1,0 +1,93 @@
+# =============================================================================
+# Wdrożenie migracji na produkcję
+#
+# Dlaczego ten plik powstał: 19.09.2026 produkcja stała **siedem migracji**
+# za repozytorium. Aplikacja wdrażała się sama przy każdym scaleniu (Vercel),
+# migracje nie wdrażały się nigdy — bo nikt tego nie zbudował. CI podnosi
+# świeże Supabase na czas testów i kasuje je po biegu, więc zieleń CI nic
+# nie mówiła o stanie produkcyjnego schematu.
+#
+# Skutek był realny: dwie funkcje wołane przez kod sklepu nie istniały
+# w produkcyjnej bazie, a szukanie kończyło się stroną błędu.
+#
+# ---------------------------------------------------------------------------
+# Dlaczego URUCHAMIANE RĘCZNIE, a nie przy każdym scaleniu do `main`
+# ---------------------------------------------------------------------------
+# Wdrożenie kodu da się wycofać w minutę — poprzednie wdrożenie stoi obok.
+# Migracji nie. `drop column` wykonany automatycznie o drugiej w nocy przy
+# scaleniu, którego nikt nie pilnował, kosztuje przywracanie z kopii.
+#
+# Dlatego bramka jest świadoma: człowiek patrzy na listę oczekujących migracji
+# i naciska przycisk. Przy tempie tego sklepu to kilka kliknięć na miesiąc,
+# a nie codzienna uciążliwość.
+#
+# Gdy kiedyś ma to jeździć samo, warunkiem wstępnym są migracje wstecznie
+# zgodne (wzorzec expand/contract, opisany w docs/wdrozenia.md) — nie sam
+# fakt, że da się usunąć `workflow_dispatch`.
+#
+# ---------------------------------------------------------------------------
+# Czego wymaga (Settings → Secrets and variables → Actions)
+# ---------------------------------------------------------------------------
+#   SUPABASE_ACCESS_TOKEN  — token osobisty z supabase.com/dashboard/account/tokens
+#   SUPABASE_PROJECT_REF   — identyfikator projektu (np. dziislgqexclvgdzxnqi)
+#   SUPABASE_DB_PASSWORD   — hasło bazy z ustawień projektu
+# =============================================================================
+
+name: Migracje na produkcję
+
+on:
+  workflow_dispatch:
+    inputs:
+      potwierdzenie:
+        description: 'Wpisz WDRAZAM, żeby potwierdzić wdrożenie na produkcję'
+        required: true
+        default: ''
+
+jobs:
+  wdroz:
+    name: db push
+    runs-on: ubuntu-latest
+    # Środowisko pozwala dołożyć wymaganą akceptację w ustawieniach repo
+    # (Settings → Environments → produkcja → Required reviewers).
+    environment: produkcja
+
+    steps:
+      - name: Potwierdzenie
+        # Pierwsza bramka: literówka w polu zatrzymuje bieg, zanim cokolwiek
+        # dotknie bazy. Tania, a ratuje przed kliknięciem z rozpędu.
+        run: |
+          if [ "${{ inputs.potwierdzenie }}" != "WDRAZAM" ]; then
+            echo "::error::Wpisz WDRAZAM, żeby potwierdzić. Otrzymano: '${{ inputs.potwierdzenie }}'"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Połącz z projektem
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+
+      - name: Co zostanie wdrożone
+        # Sucha lista PRZED zmianą — ląduje w dzienniku biegu, więc po fakcie
+        # da się odtworzyć, co dokładnie poszło i kiedy.
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase migration list --linked
+
+      - name: Wdróż
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase db push --linked
+
+      - name: Stan po wdrożeniu
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase migration list --linked
