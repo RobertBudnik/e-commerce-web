@@ -55,7 +55,7 @@ export function SiteFooter() {
             <h3>Firma</h3>
             <ul>
               <li>
-                <Link href="/pomoc">Pomoc i kontakt</Link>
+                <Link href="/pomoc">FAQ</Link>
               </li>
               <li>
                 <Link href="/informacje/regulamin">Regulamin</Link>

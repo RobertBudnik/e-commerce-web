@@ -44,6 +44,11 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // AVIF przed WebP. Next wybiera pierwszy format, który przeglądarka
+    // deklaruje w `Accept`, więc kolejność jest tu decyzją, nie listą:
+    // AVIF waży przy tej samej jakości ok. 20-30% mniej od WebP, a WebP
+    // zostaje dla tego, co AVIF-a nie umie. Domyślnie Next oddaje sam WebP.
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
         protocol: supabaseUrl.protocol.replace(':', '') as 'http' | 'https',

@@ -29,6 +29,20 @@ export function ProductCard({
   const out = product.stock === 0;
   const saved = wish.has(product.id);
 
+  // Obniżkę pokazujemy wyłącznie wtedy, gdy mamy komplet: dawną cenę, cenę
+  // najniższą z 30 dni i pewność, że teraz jest taniej niż dawniej. Brak
+  // któregokolwiek z tych trzech elementów oznacza, że nie wolno rysować
+  // przekreślonej ceny — zob. komentarz przy `price-omnibus` niżej.
+  // Trzy warunki naraz, bo Omnibus wymaga kompletu: dawna cena, cena
+  // najniższa z 30 dni i faktyczna obniżka. Liczba jedzie na produkcie
+  // (`zOmnibusem()` w queries.ts), nie propem — dzięki temu trafia wszędzie
+  // tam, gdzie trafia produkt, także do siatek renderowanych po stronie
+  // klienta, których nikt nie musi o nią osobno pytać.
+  const pokazObnizke =
+    typeof product.oldPrice === 'number' &&
+    product.oldPrice > product.price &&
+    typeof product.najnizsza30 === 'number';
+
   return (
     <article className="card" data-reveal="" style={{ ['--reveal-delay' as string]: `${delay}ms` }}>
       <div className="card-media">
@@ -79,8 +93,19 @@ export function ProductCard({
             <span className="price">
               <OdometrCeny cena={product.price} />
             </span>
-            {product.oldPrice && <span className="price-old">{money(product.oldPrice)}</span>}
+            {pokazObnizke && <span className="price-old">{money(product.oldPrice!)}</span>}
           </span>
+          {/* Dyrektywa Omnibus: przy obniżce obok przekreślonej ceny musi stać
+              najniższa cena z 30 dni przed obniżką. Bez niej sama przekreślona
+              cena jest niezgodna z prawem, więc gdy liczby brakuje, znika
+              **przekreślona cena**, a nie ten dopisek — lepiej pokazać mniej
+              niż pokazać obniżkę bez wymaganej informacji. */}
+          {pokazObnizke && (
+            <span className="price-omnibus">
+              Najniższa cena z 30 dni:{' '}
+              <span className="num">{money(product.najnizsza30!)}</span>
+            </span>
+          )}
           <PrzyciskDoKoszyka
             ikona
             etykieta={out ? `${product.name} — niedostępny` : `Do koszyka: ${product.name}`}

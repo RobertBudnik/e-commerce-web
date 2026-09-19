@@ -94,6 +94,31 @@ export async function getProductSlugs(): Promise<string[]> {
   return (data ?? []).map((row) => row.slug as string);
 }
 
+/**
+ * Błąd zapytania do katalogu.
+ *
+ * Do tej pory każde z tych miejsc zwracało pustą tablicę. Wyglądało to
+ * rozsądnie — strona się renderuje, nic nie wybucha — a było najgorszym
+ * z możliwych zachowań sklepu: **awaria bazy, polityki RLS albo sieci
+ * wyglądała dla klienta identycznie jak pusty katalog**. „0 produktów,
+ * brak pozycji spełniających kryteria" to zdanie, które klient czyta jako
+ * „nic tu nie ma" i wychodzi. Właściciel nie dowiadywał się o niczym, bo
+ * nic nie rzucało, więc Sentry nie miał czego złapać.
+ *
+ * Teraz zapytanie, które padło, rzuca. Błąd leci w górę do `error.tsx`,
+ * klient widzi „coś poszło nie tak" zamiast fałszywej pustki, a Sentry
+ * dostaje wpis. Pusty wynik dalej znaczy pusto — bo to prawda.
+ */
+class BladZapytania extends Error {
+  constructor(co: string, przyczyna: { message?: string; code?: string } | null) {
+    super(`Zapytanie „${co}" nie powiodło się: ${przyczyna?.message ?? 'brak szczegółów'}`);
+    this.name = 'BladZapytania';
+    // Kod PostgREST/Postgresa bardzo pomaga przy grupowaniu w Sentry —
+    // inny kod to zwykle zupełnie inna przyczyna.
+    if (przyczyna?.code) this.cause = przyczyna.code;
+  }
+}
+
 export const getCategories = cache(async (): Promise<Category[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -101,8 +126,8 @@ export const getCategories = cache(async (): Promise<Category[]> => {
     .select('id, name, description, icon, position')
     .order('position');
 
-  if (error || !data) return [];
-  return data.map((c) => ({
+  if (error) throw new BladZapytania('lista kategorii', error);
+  return (data ?? []).map((c) => ({
     id: c.id,
     name: c.name,
     desc: c.description ?? '',
@@ -123,8 +148,8 @@ export const getProducts = cache(async (): Promise<Product[]> => {
     .eq('is_active', true)
     .order('created_at');
 
-  if (error || !data) return [];
-  return data.map((row) => toProduct(row as ProductRow, imageUrl));
+  if (error) throw new BladZapytania('katalog produktów', error);
+  return zOmnibusem((data ?? []).map((row) => toProduct(row as ProductRow, imageUrl)));
 });
 
 /** Ile pozycji mieści jedna strona katalogu. */
@@ -144,6 +169,10 @@ const SORTOWANIA: Record<string, { kolumna: string; rosnaco: boolean }> = {
   'price-asc': { kolumna: 'price_cents', rosnaco: true },
   'price-desc': { kolumna: 'price_cents', rosnaco: false },
   rating: { kolumna: 'rating', rosnaco: false },
+  // „Nowości" to czwarte sortowanie z listy Baymarda (cena, ocena,
+  // popularność, nowość) i jedyne, którego tu brakowało. Kolumna już była —
+  // `created_at` znaczy „kiedy produkt wszedł do katalogu".
+  nowosc: { kolumna: 'created_at', rosnaco: false },
   name: { kolumna: 'name', rosnaco: true },
 };
 
@@ -184,12 +213,33 @@ export async function getStronaKatalogu({
     zapytanie = zapytanie.eq('category_id', kategoria);
   }
 
+  // Szukanie ma własną drogę: ranking trafień liczy funkcja w bazie, bo
+  // PostgREST sortuje wyłącznie po kolumnach, a „dokładna nazwa najpierw"
+  // jest wyrażeniem. Ścieżka bez frazy zostaje na PostgREST — działa dobrze.
   const fraza = szukaj.trim();
   if (fraza) {
-    // `%` i `,` rozbijają składnię filtra PostgREST — usuwamy je z frazy,
-    // tak samo jak w szukaniu magazynowym.
-    const czysta = fraza.replace(/[%,]/g, ' ').trim();
-    if (czysta) zapytanie = zapytanie.or(`name.ilike.%${czysta}%,short.ilike.%${czysta}%`);
+    const { data, error } = await supabase.rpc('katalog_szukaj', {
+      p_fraza: fraza,
+      p_kategoria: kategoria && kategoria !== 'all' ? kategoria : null,
+      p_sort: sort,
+      p_od: od,
+      p_ile: NA_STRONE,
+    });
+
+    if (error) throw new BladZapytania('szukanie w katalogu', error);
+
+    const wiersze = (data ?? []) as { produkt: ProductRow; laczna: number }[];
+    // Łączna liczba trafień jedzie w każdym wierszu (to samo `count(*)` dla
+    // całego wyniku), więc wystarczy wziąć ją z pierwszego. Brak wierszy
+    // znaczy zero trafień.
+    const ileTrafien = wiersze.length > 0 ? Number(wiersze[0]!.laczna) : 0;
+
+    return {
+      produkty: await zOmnibusem(wiersze.map((w) => toProduct(w.produkt, imageUrl))),
+      ile: ileTrafien,
+      strona: numer,
+      stron: Math.max(1, Math.ceil(ileTrafien / NA_STRONE)),
+    };
   }
 
   const { data, error, count } = await zapytanie
@@ -199,11 +249,11 @@ export async function getStronaKatalogu({
     .order('id', { ascending: true })
     .range(od, od + NA_STRONE - 1);
 
-  if (error || !data) return { produkty: [], ile: 0, strona: numer, stron: 0 };
+  if (error) throw new BladZapytania('strona katalogu', error);
 
   const ile = count ?? 0;
   return {
-    produkty: data.map((row) => toProduct(row as ProductRow, imageUrl)),
+    produkty: await zOmnibusem(data.map((row) => toProduct(row as ProductRow, imageUrl))),
     ile,
     strona: numer,
     stron: Math.max(1, Math.ceil(ile / NA_STRONE)),
@@ -214,8 +264,14 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.from('products').select('*').eq('slug', slug).maybeSingle();
 
-  if (error || !data) return null;
-  return toProduct(data as ProductRow, imageUrl);
+  // Tu rozróżnienie jest istotne: `maybeSingle()` przy braku wiersza oddaje
+  // `data: null` BEZ błędu, a to znaczy „nie ma takiego produktu" i ma
+  // skończyć się czterysta czwórką. Błąd zapytania to co innego — to awaria
+  // po naszej stronie i nie wolno jej podawać jako nieistniejącego produktu.
+  if (error) throw new BladZapytania(`produkt „${slug}"`, error);
+  if (!data) return null;
+  const produkt = toProduct(data as ProductRow, imageUrl);
+  return (await zOmnibusem([produkt]))[0] ?? produkt;
 }
 
 /** Jedno ujęcie w galerii karty produktu. */
@@ -241,9 +297,9 @@ export async function getGaleriaProduktu(
     .order('position')
     .order('created_at');
 
-  if (error || !data) return [];
+  if (error) throw new BladZapytania('galeria produktu', error);
 
-  return data
+  return (data ?? [])
     .map((row) => ({ url: imageUrl(row.path as string), alt: (row.alt as string) || nazwa }))
     .filter((z): z is ZdjecieGalerii => Boolean(z.url));
 }
@@ -333,8 +389,77 @@ export async function getRelatedProducts(
     .neq('id', excludeId)
     .limit(limit);
 
+  // Jedyne miejsce w tym pliku, które przy błędzie zwraca pustkę zamiast
+  // rzucać — i to jest wybór, nie przeoczenie. „Podobne produkty" to pasek
+  // dodatkowy: gdy go nie ma, karta produktu jest kompletna i nic nie kłamie.
+  // Wywrócenie całej karty produktu przez awarię paska rekomendacji byłoby
+  // gorsze od jego braku. Pozostałe zapytania opisują stan sklepu i tam
+  // cisza wprowadza w błąd.
   if (error || !data) return [];
-  return data.map((row) => toProduct(row as ProductRow, imageUrl));
+  return zOmnibusem(data.map((row) => toProduct(row as ProductRow, imageUrl)));
+}
+
+/**
+ * Najniższa cena z 30 dni dla podanych produktów — w złotych, nie w groszach.
+ *
+ * Liczy baza (`najnizsza_cena_30dni`), bo odpowiedź wymaga historii cen,
+ * a nie samego wiersza produktu, i bo naiwne „minimum z wpisów w oknie"
+ * daje złą liczbę dla produktu, który nie zmieniał ceny od pół roku.
+ *
+ * Jedno zapytanie na całą listę, nie jedno na kafelek: siatka katalogu ma
+ * dwadzieścia pozycji i dwadzieścia zapytań zamieniłoby to w problem N+1.
+ *
+ * Przy błędzie oddaje pustą mapę, a nie rzuca. Powód jest ten sam, co przy
+ * pasku podobnych: brak liczby oznacza tylko tyle, że kafelek nie pokaże
+ * obniżki (`ProductCard` bez niej chowa też przekreśloną cenę), czyli
+ * zachowa się zgodnie z prawem. Wywrócenie katalogu byłoby gorsze.
+ */
+/**
+ * Dokłada najniższą cenę z 30 dni do gotowej listy produktów.
+ *
+ * Jedno zapytanie na listę. Wołane tylko tam, gdzie produkt trafia przed oczy
+ * kupującego — magazyn i skaner tej liczby nie potrzebują, a zapytanie
+ * kosztuje.
+ *
+ * Optymalizacja, która nie jest przedwczesna: pytamy wyłącznie o produkty
+ * z ustawioną dawną ceną. Bez obniżki nie ma czego pokazywać, a w katalogu
+ * bez wyprzedaży to znaczy zero zapytań zamiast jednego na każde wejście.
+ */
+async function zOmnibusem(produkty: Product[]): Promise<Product[]> {
+  const zObnizka = produkty.filter((p) => typeof p.oldPrice === 'number' && p.oldPrice > p.price);
+  if (zObnizka.length === 0) return produkty;
+
+  const mapa = await najnizszeCeny30Dni(zObnizka.map((p) => p.id));
+  if (mapa.size === 0) return produkty;
+
+  return produkty.map((p) => {
+    const najnizsza = mapa.get(p.id);
+    return typeof najnizsza === 'number' ? { ...p, najnizsza30: najnizsza } : p;
+  });
+}
+
+export async function najnizszeCeny30Dni(
+  idProduktow: string[]
+): Promise<Map<string, number>> {
+  const mapa = new Map<string, number>();
+  if (idProduktow.length === 0) return mapa;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('najnizsza_cena_30dni', {
+    p_produkty: idProduktow,
+  });
+
+  if (error || !data) {
+    console.error('Nie udało się policzyć najniższych cen z 30 dni:', error?.message);
+    return mapa;
+  }
+
+  for (const wiersz of data as { product_id: string; najnizsza_cents: number }[]) {
+    if (typeof wiersz.najnizsza_cents === 'number') {
+      mapa.set(wiersz.product_id, wiersz.najnizsza_cents / 100);
+    }
+  }
+  return mapa;
 }
 
 export async function getStoreSettings(): Promise<StoreSettings> {
@@ -362,7 +487,7 @@ export async function getOrders(): Promise<Order[]> {
     .select('*, order_items(*)')
     .order('created_at', { ascending: false });
 
-  if (error || !data) return [];
+  if (error) throw new BladZapytania('zamówienia konta', error);
   return data.map((row) => toOrder(row as OrderRow));
 }
 
@@ -381,7 +506,9 @@ export async function getProductByBarcode(barcode: string): Promise<Product | nu
     .eq('barcode', kod)
     .maybeSingle();
 
-  if (error || !data) return null;
+  // Brak wiersza to prawda („nie ma takiego"), błąd zapytania to awaria.
+  if (error) throw new BladZapytania('produkt po kodzie kreskowym', error);
+  if (!data) return null;
   return toProduct(data as ProductRow, imageUrl);
 }
 
@@ -398,7 +525,9 @@ export async function getOrderByNumber(orderNumber: string): Promise<Order | nul
     .eq('order_number', orderNumber)
     .maybeSingle();
 
-  if (error || !data) return null;
+  // Brak wiersza to prawda („nie ma takiego"), błąd zapytania to awaria.
+  if (error) throw new BladZapytania('zamówienie po numerze', error);
+  if (!data) return null;
   return toOrder(data as OrderRow);
 }
 
@@ -410,7 +539,7 @@ export async function getWishlist(): Promise<Product[]> {
     .select('product_id, products(*)')
     .order('created_at', { ascending: false });
 
-  if (error || !data) return [];
+  if (error) throw new BladZapytania('lista życzeń', error);
   // PostgREST zwraca zagnieżdżony produkt; bywa pusty, gdy pozycja zniknęła
   return (data as unknown as { products: ProductRow | null }[])
     .filter((row) => row.products)
@@ -505,7 +634,7 @@ export async function getKolejkaZamowien(
     .order('created_at', { ascending: stan !== 'wysłane' })
     .limit(50);
 
-  if (error || !data) return [];
+  if (error) throw new BladZapytania('kolejka zamówień', error);
 
   const zamowienia = data.map((row) => toOrder(row as OrderRow));
   const stanyMap = await stanyProduktow(
@@ -610,7 +739,7 @@ export async function getStanyMagazynu(
     .order('name', { ascending: true })
     .limit(200);
 
-  if (error || !data) return [];
+  if (error) throw new BladZapytania('stany magazynowe', error);
 
   const produkty = data.map((row) => toProduct(row as ProductRow, imageUrl));
   if (segment !== 'niskie') return produkty;
@@ -654,7 +783,9 @@ export async function getProduktPoId(id: string): Promise<Product | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.from('products').select('*').eq('id', id).maybeSingle();
 
-  if (error || !data) return null;
+  // Brak wiersza to prawda („nie ma takiego"), błąd zapytania to awaria.
+  if (error) throw new BladZapytania('produkt po identyfikatorze', error);
+  if (!data) return null;
   return toProduct(data as ProductRow, imageUrl);
 }
 
@@ -667,7 +798,7 @@ export async function getOstatnieRuchy(limit = 3): Promise<RuchMagazynowy[]> {
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  if (error || !data) return [];
+  if (error) throw new BladZapytania('ostatnie ruchy magazynowe', error);
 
   return (data as unknown as RuchRow[]).map((r) => {
     // PostgREST oddaje dołączony wiersz raz jako obiekt, raz jako tablicę —
@@ -764,7 +895,7 @@ export async function getZwroty(): Promise<ZwrotDoPrzyjecia[]> {
     .order('created_at', { ascending: true })
     .limit(50);
 
-  if (error || !data) return [];
+  if (error) throw new BladZapytania('zwroty', error);
 
   return data.map((z) => {
     // PostgREST oddaje dołączony wiersz raz jako obiekt, raz jako tablicę.
@@ -830,7 +961,7 @@ export async function getZamowieniaPanelu(filtr: FiltrZamowien = {}): Promise<Or
   }
 
   const { data, error } = await zapytanie;
-  if (error || !data) return [];
+  if (error) throw new BladZapytania('zamówienia w panelu', error);
   return data.map((row) => toOrder(row as OrderRow));
 }
 

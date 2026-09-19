@@ -964,13 +964,6 @@ p:last-child { margin-bottom: 0; }
   place-items: center;
   color: var(--line-strong);
 }
-/* Warstwa skalowana przez `KadrZoom`. Mierzony prostokąt (`.hero-media`)
-   musi zostać nieruchomy, więc transformacja siedzi o poziom niżej. */
-.kadr-zoom-warstwa {
-  width: 100%;
-  height: 100%;
-  transform-origin: 50% 50%;
-}
 /* Dopóki w hero nie stoi zdjęcie, ikona jest znakiem miejsca, nie tematem
    kadru — stąd krycie i rozmiar bliżej znaku wodnego. Wyśrodkowana, bo kadr
    nie leży już pod hasłem i nie ma czemu ustępować. */
@@ -2979,74 +2972,6 @@ code {
    `prefers-reduced-motion` i chowanie się przed dotykiem.
    ========================================================================== */
 
-/* ---------- Marquee pod nagłówkiem ---------- */
-.marquee {
-  overflow: hidden;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
-  /* Krawędzie wygaszone, żeby tekst nie ucinał się w pół litery. Maska,
-     nie gradient koloru — reguła o zakazie gradientów mówi o kolorze,
-     a tu chodzi o przezroczystość i działa tak samo w obu motywach. */
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
-}
-
-.marquee-tor {
-  display: flex;
-  width: max-content;
-  animation: marquee-jedzie 38s linear infinite;
-}
-.marquee:hover .marquee-tor { animation-play-state: paused; }
-
-.marquee-lista {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.marquee-lista li {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  padding: 10px 0;
-  padding-right: 28px;
-  white-space: nowrap;
-  font-family: var(--mono);
-  font-size: .75rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-.marquee-kropka { color: var(--accent-ink); }
-
-/* Przesunięcie o dokładnie jedną kopię: następny komplet ląduje tam, gdzie
-   zaczynał poprzedni, więc powrót do zera jest niewidoczny. Dzielnik bierze
-   się z liczby kopii wstawionych przez komponent — przy dwóch było to sztywne
-   -50%, a pasek z krótką treścią pokazywał pustkę, zanim pętla wróciła. */
-@keyframes marquee-jedzie {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(calc(-100% / var(--kopie, 2)), 0, 0); }
-}
-
-.marquee-komplet { display: flex; }
-
-/* Bez ruchu pasek stoi i pokazuje jeden komplet haseł. */
-.marquee-stoi .marquee-tor { animation: none; width: auto; }
-.marquee-stoi .marquee-lista { flex-wrap: wrap; }
-
-/* ---------- Nagłówek dekodujący ---------- */
-/* Cyfry i znaki szumu mają różne szerokości i nagłówek drgałby przy każdej
-   klatce. Krój maszynowy tylko na czas dekodowania byłby jeszcze gorszy —
-   zmieniałby się w połowie. Stąd stała szerokość znaku na całym elemencie. */
-.dekoder { font-variant-numeric: tabular-nums; }
-
-/* Hero układa się warstwami; kanwas cząsteczek, który tu leżał, odszedł
-   razem z resztą efektów kursorowych. */
-.hero { position: relative; }
-.hero-inner { position: relative; z-index: 1; }
-
 /* ---------- Przechył karty ---------- */
 /* Perspektywa na rodzicu, nie na karcie: przy `perspective` na samym kafelku
    każdy ma własny punkt zbiegu i siatka rozsypuje się na osobne pudełka. */
@@ -3068,23 +2993,6 @@ code {
 /* Cyfry o stałej szerokości: bez tego cena skacze w poziomie przy każdej
    klatce i kafelek drga aż do końca animacji. */
 .odometr { font-variant-numeric: tabular-nums; }
-
-/* ---------- Przeciągana strzępka ---------- */
-.strzepka {
-  display: flex;
-  gap: 20px;
-  overflow-x: auto;
-  /* Natywne przewijanie zostaje jako podkład: bez JavaScriptu i przy
-     wyłączonym ruchu lista dalej działa, tylko bez wybiegu. */
-  scrollbar-width: none;
-  cursor: grab;
-  padding-bottom: 4px;
-}
-.strzepka::-webkit-scrollbar { display: none; }
-.strzepka.ciagnie { cursor: grabbing; scroll-behavior: auto; }
-/* Zaznaczanie tekstu w trakcie ciągnięcia zamienia gest w podświetlanie. */
-.strzepka.ciagnie * { user-select: none; }
-.strzepka > * { flex: 0 0 clamp(220px, 26vw, 280px); }
 
 /* ---------- Sekcja przypięta ---------- */
 .przypieta { position: relative; }
@@ -3152,23 +3060,38 @@ code {
   .przypieta-media { display: none; }
 }
 
-/* ---------- Stronicowanie katalogu ---------- */
-.stronicowanie {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  margin-top: 40px;
-  padding-top: 28px;
-  border-top: 1px solid var(--line);
-}
-.stronicowanie button:disabled { opacity: .45; cursor: default; }
+/* ---------- Najniższa cena z 30 dni (Omnibus) ----------
 
-/* Siatka podczas pobierania kolejnej strony: przygasza się, ale nie znika —
-   skok wysokości przy każdej zmianie filtra byłby gorszy niż chwila
-   przygaszenia. Animujemy samą przezroczystość, więc układ stoi. */
-.katalog-siatka { transition: opacity .16s ease; }
-.katalog-siatka[data-oczekuje] { opacity: .55; }
+   Osobny wiersz pod ceną, nie dopisek obok. Powód jest praktyczny: przy
+   czterech kolumnach kafelek ma ~230 px i „Najniższa cena z 30 dni: 89,00 zł"
+   wciśnięte w ten sam wiersz co cena bieżąca i przekreślona łamie się
+   w losowym miejscu.
+
+   Stopień najmniejszy z dostępnych, ale barwa `--ink-3`, nie słabsza:
+   to informacja wymagana prawem, a nie drobny druk do przeoczenia.
+   Kontrastu pilnuje `npm run kontrast` — `--ink-3` przechodzi AA na każdej
+   z trzech powierzchni. */
+.price-omnibus {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--t-caption);
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+/* ---------- Doładowywanie listy katalogu ----------
+   Zastąpiło stronicowanie „Poprzednia / Następna". Przycisk stoi sam
+   w wierszu i na środku — to jedyna akcja w tym miejscu strony. */
+.doladowanie {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(24px, 4vw, 40px);
+}
+
+.doladowanie-podsumowanie {
+  margin-top: 14px;
+  text-align: center;
+}
 
 /* ---------- Opinie na karcie produktu ----------
    Lista bez obwódek: opinie rozdziela hairline, tak jak resztę sekcji
@@ -5094,8 +5017,20 @@ a.pw-kafel:hover { background: var(--panel); border-color: var(--accent); }
   color: var(--ink);
 }
 
+/* Odsyłacz „Zobacz wszystkie". Cel dotykowy ma 24 px wysokości — minimum
+   z WCAG 2.2 AA (kryterium 2.5.8, „Target Size (Minimum)"). Zmierzone przed
+   poprawką: 117 × 19 px, czyli pięć pikseli pod progiem.
+
+   Wysokość robi `min-height` z wyśrodkowaniem, nie `padding`: padding
+   rozepchnąłby wiersz nagłówka sekcji, w którym ten odsyłacz stoi obok
+   nagłówka wyrównanego do linii bazowej. `inline-flex` zostawia go w linii
+   tekstu, a nie stawia w osobnym wierszu. */
 .dg-link {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
   font-size: .8125rem;
   color: var(--ink-2);
   text-decoration: none;
