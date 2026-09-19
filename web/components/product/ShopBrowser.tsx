@@ -9,8 +9,14 @@ import { PlamaWyboru } from '@/components/ruch/PlamaWyboru';
 import type { Category, Product } from '@/lib/types';
 import { ile, PRODUKTY } from '@/lib/odmiana';
 
+/**
+ * Baymard wymienia cztery sortowania, których kupujący szuka: cena, ocena,
+ * popularność i nowość. Brakowało ostatniego — a przy sklepie wypuszczającym
+ * towar partiami to często jedyne, które kogokolwiek obchodzi.
+ */
 const SORT_OPTIONS = [
   { value: 'popular', label: 'Najpopularniejsze' },
+  { value: 'nowosc', label: 'Nowości' },
   { value: 'price-asc', label: 'Cena rosnąco' },
   { value: 'price-desc', label: 'Cena malejąco' },
   { value: 'rating', label: 'Najwyżej oceniane' },
@@ -93,6 +99,44 @@ export function ShopBrowser({
     setFraza(szukaj);
   }, [szukaj]);
 
+  /* --- doładowywanie listy ------------------------------------------------
+   *
+   * Serwer oddaje zawsze jedną stronę wyników — „Pokaż więcej" musi więc
+   * doklejać kolejne do już pokazanych. Zebrane pozycje żyją w stanie,
+   * a nie są liczone w locie, bo pochodzą z kilku odpowiedzi serwera.
+   *
+   * Reset przy zmianie filtra, sortowania albo frazy jest warunkiem
+   * poprawności: bez niego zmiana kategorii dokleiłaby nowe wyniki do
+   * starych i lista pokazałaby produkty z dwóch kategorii naraz.
+   */
+  const [zebrane, setZebrane] = useState<Product[]>(products);
+  const kluczListy = `${kategoria}|${sort}|${szukaj}`;
+  const poprzedniKlucz = useRef(kluczListy);
+
+  useEffect(() => {
+    if (poprzedniKlucz.current !== kluczListy) {
+      poprzedniKlucz.current = kluczListy;
+      setZebrane(products);
+      return;
+    }
+
+    setZebrane((dotychczas) => {
+      // Pierwsza strona zastępuje, kolejne doklejają. Odświeżenie na
+      // stronie trzeciej wchodzi tu od razu z `strona = 3`, więc warunek
+      // patrzy na numer strony, nie na to, czy lista jest pusta.
+      if (strona <= 1) return products;
+
+      const znane = new Set(dotychczas.map((p) => p.id));
+      // Odsiew po identyfikatorze, bo React nie znosi zdublowanych kluczy,
+      // a przy zmianie stanów między zapytaniami ta sama pozycja potrafi
+      // wpaść na dwie sąsiednie strony.
+      return [...dotychczas, ...products.filter((p) => !znane.has(p.id))];
+    });
+  }, [products, strona, kluczListy]);
+
+  const widoczne = zebrane;
+  const jestWiecej = widoczne.length < ileWszystkich && strona < stron;
+
   return (
     <>
       <div className="toolbar">
@@ -143,37 +187,42 @@ export function ShopBrowser({
         </div>
       </div>
 
+      {/* Licznik stoi NAD listą i mówi, ile widać z ilu. Baymard: bez liczby
+          wyników nie da się ocenić, czy warto przeglądać dalej, a przy
+          „Pokaż więcej" dochodzi drugie pytanie — ile jeszcze zostało. */}
       <p className="muted num" style={{ marginBottom: 24 }} aria-live="polite">
         {ile(ileWszystkich, PRODUKTY)}
-        {stron > 1 && ` · strona ${strona} z ${stron}`}
+        {ileWszystkich > widoczne.length && ` · widocznych ${widoczne.length}`}
       </p>
 
       <div data-oczekuje={oczekuje ? '' : undefined} className="katalog-siatka">
-        <ProductGrid products={products} categories={categories} />
+        <ProductGrid products={widoczne} categories={categories} />
       </div>
 
-      {stron > 1 && (
-        <nav className="stronicowanie" aria-label="Strony katalogu">
+      {/* „Pokaż więcej" zamiast stronicowania — reguła Baymarda przyjęta
+          w skillu `wyglad-i-ux`. Stronicowanie każe porównywać pozycje
+          skacząc tam i z powrotem; doładowywanie zostawia wszystko na
+          jednej liście. Adres dalej niesie numer strony, więc odświeżenie
+          i udostępnienie odnośnika działają jak dotąd. */}
+      {jestWiecej && (
+        <div className="doladowanie">
           <button
-            className="btn btn-ghost btn-sm"
+            className="btn btn-ghost"
             type="button"
-            disabled={strona <= 1}
-            onClick={() => przejdz({ strona: strona - 1 })}
-          >
-            Poprzednia
-          </button>
-          <span className="muted num">
-            {strona} / {stron}
-          </span>
-          <button
-            className="btn btn-ghost btn-sm"
-            type="button"
-            disabled={strona >= stron}
+            disabled={oczekuje}
             onClick={() => przejdz({ strona: strona + 1 })}
           >
-            Następna
+            {oczekuje ? 'Wczytuję…' : `Pokaż więcej (${ileWszystkich - widoczne.length})`}
           </button>
-        </nav>
+        </div>
+      )}
+
+      {/* Licznik także POD listą — druga reguła z tej samej rundy badań.
+          Kto doszedł na dół, nie ma ochoty wracać na górę po tę liczbę. */}
+      {widoczne.length > 0 && (
+        <p className="muted num doladowanie-podsumowanie">
+          Widzisz {widoczne.length} z {ileWszystkich}
+        </p>
       )}
     </>
   );

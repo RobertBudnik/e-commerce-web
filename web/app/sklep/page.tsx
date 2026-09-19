@@ -3,11 +3,37 @@ import { redirect } from 'next/navigation';
 import { ShopBrowser } from '@/components/product/ShopBrowser';
 import { getCategories, getStronaKatalogu } from '@/lib/queries';
 import { storeMode } from '@/lib/store-mode';
+import { siteUrl } from '@/lib/site';
 
-export const metadata: Metadata = {
-  title: 'Sklep',
-  description: 'Wszystkie produkty w sklepie Nordo — filtruj po kategorii, sortuj po cenie i ocenie.',
-};
+/**
+ * Adres kanoniczny liczony z kategorii, a nie stały.
+ *
+ * Filtr kategorii **zmienia treść** listy, więc `/sklep?kategoria=ceramika`
+ * zasługuje na własny adres w indeksie i sam jest swoim kanonicznym.
+ * Sortowanie, szukanie i numer strony pokazują **tę samą ofertę w innej
+ * kolejności albo porcji** — to jest duplikat i te adresy wskazują na wersję
+ * bez parametrów. Ucięcie wszystkiego jak leci wyrzuciłoby z indeksu strony
+ * kategorii, czyli dokładnie te, po których ktoś szuka „kubki kamionkowe".
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ kategoria?: string }>;
+}): Promise<Metadata> {
+  const { kategoria } = await searchParams;
+  const baza = siteUrl();
+  const kanoniczny =
+    kategoria && kategoria !== 'all'
+      ? `${baza}/sklep?kategoria=${encodeURIComponent(kategoria)}`
+      : `${baza}/sklep`;
+
+  return {
+    title: 'Sklep',
+    description:
+      'Wszystkie produkty w sklepie Nordo — filtruj po kategorii, sortuj po cenie i ocenie.',
+    alternates: { canonical: kanoniczny },
+  };
+}
 
 /**
  * Lista renderuje się na serwerze: robot i czytelnik dostają gotowy HTML

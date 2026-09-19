@@ -110,6 +110,10 @@ export function AdminPanel({ products, categories }: { products: Product[]; cate
       category: rodzajNazwa,
       price: Number(szkic.price) || 0,
       oldPrice: szkic.oldPrice ? Number(szkic.oldPrice) : null,
+      // Podgląd w panelu nie ma historii cen, więc nie ma skąd wziąć
+      // najniższej z 30 dni. `null` jest tu poprawną odpowiedzią: karta
+      // pokaże cenę bez obniżki, zamiast obniżki bez wymaganej informacji.
+      najnizsza30: null,
       rating: Number(szkic.rating) || 0,
       reviews: Number(szkic.reviews) || 0,
       stock: Number(szkic.stock) || 0,

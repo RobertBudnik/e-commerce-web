@@ -3,6 +3,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductGrid } from '@/components/product/ProductGrid';
+import {
+  jakoJson,
+  znacznikOkruszkow,
+  znacznikProduktu,
+} from '@/lib/dane-strukturalne';
+import { siteUrl } from '@/lib/site';
 import { BuyBox } from '@/components/product/BuyBox';
 import { BuyBar } from '@/components/product/BuyBar';
 import { TrustBlock } from '@/components/product/TrustBlock';
@@ -43,9 +49,16 @@ export async function generateMetadata({
   return {
     title: product.name,
     description: product.short,
+    // Adres kanoniczny bez parametrów. Karta produktu bywa otwierana
+    // z `?utm_source=…` z kampanii i z `?kategoria=…` z listy — dla Google
+    // to trzy różne adresy z tą samą treścią, czyli duplikat, który dzieli
+    // ocenę strony na trzy. Kanoniczny scala je z powrotem w jeden.
+    alternates: { canonical: `${siteUrl()}/produkt/${product.slug}` },
     openGraph: {
       title: product.name,
       description: product.short,
+      url: `${siteUrl()}/produkt/${product.slug}`,
+      type: 'website',
       images: product.image ? [{ url: product.image }] : undefined,
     },
   };
@@ -76,8 +89,41 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       ? Math.round((1 - product.price / product.oldPrice) * 100)
       : null;
 
+  // Okruszki liczone raz i używane dwa razy: raz jako widoczna nawigacja,
+  // raz jako znacznik dla Google. Dwie osobne listy rozjechałyby się przy
+  // pierwszej zmianie nazwy kategorii.
+  const baza = siteUrl();
+  const okruszki = [
+    { nazwa: 'Start', adres: `${baza}/` },
+    { nazwa: 'Sklep', adres: `${baza}/sklep` },
+    { nazwa: categoryName, adres: `${baza}/sklep?kategoria=${encodeURIComponent(product.category)}` },
+    { nazwa: product.name, adres: `${baza}/produkt/${product.slug}` },
+  ];
+
   return (
     <main className="container">
+      {/* Dane strukturalne: `Product` + `Offer` + `AggregateRating` w jednym
+          znaczniku, okruszki w drugim. Google czyta oba z tej samej strony.
+          `jakoJson` ucieka `<`, żeby `</script>` w opisie produktu nie zamknął
+          znacznika — opisy pisze człowiek przez panel. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jakoJson(
+            znacznikProduktu({
+              produkt: product,
+              nazwaKategorii: categoryName,
+              liczbaOpinii: opinie.length,
+              srednia: product.rating,
+            })
+          ),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jakoJson(znacznikOkruszkow(okruszki)) }}
+      />
+
       <nav className="breadcrumbs" aria-label="Ścieżka nawigacji">
         <Link href="/">Start</Link>
         <span className="sep">/</span>

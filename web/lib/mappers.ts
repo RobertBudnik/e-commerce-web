@@ -27,6 +27,9 @@ export function toProduct(
     category: row.category_id ?? '',
     price: row.price_cents / 100,
     oldPrice: row.old_price_cents ? row.old_price_cents / 100 : null,
+    // Mapper nie zna historii cen — dokłada ją `zOmnibusem()` w queries.ts,
+    // jednym zapytaniem na całą listę zamiast jednego na wiersz.
+    najnizsza30: null,
     rating: Number(row.rating ?? 0),
     reviews: row.reviews_count ?? 0,
     stock: row.stock ?? 0,

@@ -61,12 +61,17 @@ test.describe('Magazyn', () => {
     const wiersze = tresc(page).locator('.mag-stany .mag-wiersz');
     await expect(wiersze.first()).toBeVisible();
 
-    await page.getByPlaceholder('Szukaj nazwy lub SKU').fill('laptop');
+    // Przez `tresc()`, nie przez `page`. Reszta tego testu już tak robi, a te
+    // dwa wywołania zostały gołe i przy pewnym rozłożeniu czasów łapały dwa
+    // elementy: React trzyma drugą kopię pola w buforze strumieniowania
+    // (`#S:0`) poza `#tresc`, więc wyszukiwanie po całej stronie widzi je oba.
+    // To nie jest drugie pole na ekranie, tylko ślad po strumieniowaniu.
+    await tresc(page).getByPlaceholder('Szukaj nazwy lub SKU').fill('laptop');
     await expect(page).toHaveURL(/szukaj=laptop/, { timeout: 10_000 });
     await expect(wiersze).toHaveCount(1);
 
     // Fraza bez trafień mówi to wprost, zamiast pokazywać pustą kartę
-    await page.getByPlaceholder('Szukaj nazwy lub SKU').fill('zzzzz');
+    await tresc(page).getByPlaceholder('Szukaj nazwy lub SKU').fill('zzzzz');
     await expect(tresc(page).locator('.mag-pusto')).toContainText('Nic nie pasuje');
   });
 

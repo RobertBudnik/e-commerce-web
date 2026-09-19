@@ -8,6 +8,13 @@ export type Product = {
   category: string;
   price: number;
   oldPrice: number | null;
+  /**
+   * Najniższa cena z 30 dni, w złotych. Wymóg dyrektywy Omnibus przy każdej
+   * obniżce. `null` znaczy „nie policzono" — a wtedy interfejs nie ma prawa
+   * pokazać przekreślonej ceny, bo obniżka bez tej liczby jest niezgodna
+   * z prawem. Liczy to baza, nie mapper: odpowiedź wymaga historii cen.
+   */
+  najnizsza30: number | null;
   rating: number;
   reviews: number;
   stock: number;
