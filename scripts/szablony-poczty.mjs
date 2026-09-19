@@ -27,11 +27,11 @@ const KORZEN = join(dirname(fileURLToPath(import.meta.url)), '..');
  */
 const B = {
   tlo: '#ece9e1',
-  karta: '#f4f1ea',
+  karta: '#fbf7ee',
   ink: '#1c1a17',
   ink2: '#544f46',
   ink3: '#666055',
-  linia: '#dbd7cd',
+  linia: '#dbd3c2',
   naAkcencie: '#f4f1ea',
 };
 
