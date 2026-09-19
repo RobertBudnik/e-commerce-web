@@ -123,6 +123,20 @@ export async function getProductSlugs(): Promise<string[]> {
 /** PGRST103 — poproszono o zakres za końcem wyniku, np. `?strona=99`. */
 const ZAKRES_POZA_WYNIKIEM = 'PGRST103';
 
+/**
+ * PGRST202 — PostgREST nie zna takiej funkcji.
+ *
+ * W praktyce znaczy to jedno: **baza jest starsza niż kod**. Migracja
+ * dokładająca funkcję nie została jeszcze wdrożona na to środowisko.
+ * Zdarza się to zawsze w tym samym oknie — między wdrożeniem aplikacji
+ * a wdrożeniem schematu — i nie jest awarią bazy, tylko stanem przejściowym
+ * wdrożenia.
+ *
+ * Zmierzone na produkcji 19.09.2026: `katalog_szukaj` i `najnizsza_cena_30dni`
+ * oddawały 404/PGRST202, bo produkcja stała siedem migracji w tyle.
+ */
+const FUNKCJA_NIEZNANA = 'PGRST202';
+
 /** 42501 — RLS nie wypuszcza wiersza. Dla gościa oglądającego swoje zamówienie
  *  to nie usterka, tylko zaprojektowana granica: numer widzi, szczegółów nie. */
 const BRAK_UPRAWNIEN = '42501';
@@ -244,20 +258,42 @@ export async function getStronaKatalogu({
       p_ile: NA_STRONE,
     });
 
-    if (error) throw new BladZapytania('szukanie w katalogu', error);
+    // Brak funkcji w bazie nie ma prawa wywrócić wyszukiwarki.
+    //
+    // To jest łagodna degradacja, nie tłumienie błędu: gdy baza stoi
+    // w tyle za kodem, szukanie schodzi na starą ścieżkę PostgREST —
+    // gorszą, bo bez rankingu trafień, ale **działającą**. Klient dostaje
+    // wyniki zamiast strony błędu, a wpis w logu mówi wprost, czego
+    // brakuje, więc Sentry ma co zgłosić i nikt się nie nabierze, że
+    // ranking działa.
+    //
+    // Każdy inny błąd dalej leci w górę — to jest wyjątek na jeden
+    // konkretny, rozpoznany stan, nie furtka „przy błędzie rób cokolwiek".
+    if (error && error.code === FUNKCJA_NIEZNANA) {
+      console.error(
+        'Funkcja `katalog_szukaj` nie istnieje w bazie — szukanie bez rankingu. ' +
+          'Prawdopodobna przyczyna: niewdrożone migracje. Uruchom `supabase db push`.'
+      );
+      zapytanie = zapytanie.or(
+        `name.ilike.%${fraza.replace(/[%,]/g, ' ').trim()}%,` +
+          `short.ilike.%${fraza.replace(/[%,]/g, ' ').trim()}%`
+      );
+    } else {
+      if (error) throw new BladZapytania('szukanie w katalogu', error);
 
-    const wiersze = (data ?? []) as { produkt: ProductRow; laczna: number }[];
+      const wiersze = (data ?? []) as { produkt: ProductRow; laczna: number }[];
     // Łączna liczba trafień jedzie w każdym wierszu (to samo `count(*)` dla
     // całego wyniku), więc wystarczy wziąć ją z pierwszego. Brak wierszy
     // znaczy zero trafień.
-    const ileTrafien = wiersze.length > 0 ? Number(wiersze[0]!.laczna) : 0;
+      const ileTrafien = wiersze.length > 0 ? Number(wiersze[0]!.laczna) : 0;
 
-    return {
-      produkty: await zOmnibusem(wiersze.map((w) => toProduct(w.produkt, imageUrl))),
-      ile: ileTrafien,
-      strona: numer,
-      stron: Math.max(1, Math.ceil(ileTrafien / NA_STRONE)),
-    };
+      return {
+        produkty: await zOmnibusem(wiersze.map((w) => toProduct(w.produkt, imageUrl))),
+        ile: ileTrafien,
+        strona: numer,
+        stron: Math.max(1, Math.ceil(ileTrafien / NA_STRONE)),
+      };
+    }
   }
 
   const { data, error, count } = await zapytanie
