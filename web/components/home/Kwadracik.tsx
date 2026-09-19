@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { useEfektKursora, useRuchWylaczony } from '@/lib/ruch';
 
@@ -75,29 +75,74 @@ export function Kwadracik() {
   const bezRuchu = useRuchWylaczony();
   const kadr = useRef<HTMLDivElement>(null);
 
+  // Ostatnie położenie kursora i numer zamówionej klatki. Zdarzenie tylko
+  // zapisuje liczby; liczy i pisze do stylu wyłącznie `requestAnimationFrame`.
+  const kursor = useRef({ x: 0, y: 0 });
+  const klatka = useRef<number | null>(null);
+
   const sciana = SCIANY[aktywna]!;
 
+  useEffect(() => {
+    // Zamówiona klatka po odmontowaniu sięgnęłaby po nieistniejący węzeł.
+    return () => {
+      if (klatka.current !== null) cancelAnimationFrame(klatka.current);
+    };
+  }, []);
+
+  /**
+   * Przechył liczony raz na klatkę, nie raz na zdarzenie.
+   *
+   * `pointermove` przy myszy 1000 Hz potrafi paść kilkanaście razy między
+   * dwiema klatkami, a poprzednia wersja robiła przy każdym z nich
+   * `getBoundingClientRect()` — czyli wymuszony reflow. Przeglądarka musiała
+   * przeliczyć układ w środku obsługi zdarzenia, tyle razy ile zdarzeń,
+   * i stąd brało się klatkowanie przy szybkim ruchu nad bryłą.
+   *
+   * Teraz zdarzenie zapisuje dwie liczby i wychodzi. Pomiar i zapis do stylu
+   * dzieją się w `requestAnimationFrame`, czyli **najwyżej raz na klatkę**.
+   * Prostokąt czytany jest w środku klatki, a nie z pamięci — dzięki temu
+   * przewinięcie strony pod kursorem nie przesuwa punktu zerowego przechyłu.
+   */
   const ruch = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      const wezel = kadr.current;
-      if (!przechylAktywny || !wezel) return;
+      if (!przechylAktywny) return;
 
-      const p = wezel.getBoundingClientRect();
-      // Od -0,5 do 0,5 w obu osiach, licząc od środka kadru.
-      const x = (e.clientX - p.left) / p.width - 0.5;
-      const y = (e.clientY - p.top) / p.height - 0.5;
+      kursor.current.x = e.clientX;
+      kursor.current.y = e.clientY;
 
-      wezel.style.setProperty('--kw-x', `${(x * KAT).toFixed(2)}deg`);
-      wezel.style.setProperty('--kw-y', `${(-y * KAT).toFixed(2)}deg`);
-      // Paralaksa warstw: przesunięcie w tę samą stronę co przechył, ale
-      // w pikselach i słabsze, żeby warstwy nie odklejały się od kadru.
-      wezel.style.setProperty('--kw-px', `${(x * 14).toFixed(1)}px`);
-      wezel.style.setProperty('--kw-py', `${(y * 14).toFixed(1)}px`);
+      if (klatka.current !== null) return;
+      klatka.current = requestAnimationFrame(() => {
+        klatka.current = null;
+
+        const wezel = kadr.current;
+        if (!wezel) return;
+
+        const p = wezel.getBoundingClientRect();
+        if (p.width === 0 || p.height === 0) return;
+
+        // Od -0,5 do 0,5 w obu osiach, licząc od środka kadru.
+        const x = (kursor.current.x - p.left) / p.width - 0.5;
+        const y = (kursor.current.y - p.top) / p.height - 0.5;
+
+        wezel.style.setProperty('--kw-x', `${(x * KAT).toFixed(2)}deg`);
+        wezel.style.setProperty('--kw-y', `${(-y * KAT).toFixed(2)}deg`);
+        // Paralaksa warstw: przesunięcie w tę samą stronę co przechył, ale
+        // w pikselach i słabsze, żeby warstwy nie odklejały się od kadru.
+        wezel.style.setProperty('--kw-px', `${(x * 14).toFixed(1)}px`);
+        wezel.style.setProperty('--kw-py', `${(y * 14).toFixed(1)}px`);
+      });
     },
     [przechylAktywny]
   );
 
   const wyjscie = useCallback(() => {
+    // Klatka zamówiona tuż przed wyjściem ustawiłaby przechył po powrocie
+    // do zera, więc kasujemy ją razem ze zmiennymi.
+    if (klatka.current !== null) {
+      cancelAnimationFrame(klatka.current);
+      klatka.current = null;
+    }
+
     const wezel = kadr.current;
     if (!wezel) return;
     for (const zmienna of ['--kw-x', '--kw-y', '--kw-px', '--kw-py']) {

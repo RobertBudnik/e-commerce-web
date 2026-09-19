@@ -3,13 +3,11 @@
 import { useRef } from 'react';
 import { ProductCard } from './ProductCard';
 import { useUjawnianie } from '@/lib/ujawnianie';
+import { opoznienieKaskady } from '@/lib/kaskada';
 import { useFlip } from '@/lib/flip';
 import { Tilt } from '@/components/ruch/Tilt';
 import { PrzesuniecieOdPredkosci } from '@/components/ruch/PrzesuniecieOdPredkosci';
 import type { Category, Product } from '@/lib/types';
-
-/** Kaskada wejścia: 70 × √index — początek wyraźny, ósmy kafelek nie każe czekać. */
-const delayFor = (i: number) => Math.round(70 * Math.sqrt(Math.min(i, 11)));
 
 /**
  * Siatka kafelków z ujawnianiem przy przewijaniu. Obserwator siedzi tutaj,
@@ -48,7 +46,7 @@ export function ProductGrid({
             <ProductCard
               product={product}
               categoryName={nameOf(product.category)}
-              delay={delayFor(i)}
+              delay={opoznienieKaskady(i)}
             />
           </Tilt>
         ))}
