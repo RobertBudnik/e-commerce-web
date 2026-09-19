@@ -109,6 +109,24 @@ export async function getProductSlugs(): Promise<string[]> {
  * klient widzi „coś poszło nie tak" zamiast fałszywej pustki, a Sentry
  * dostaje wpis. Pusty wynik dalej znaczy pusto — bo to prawda.
  */
+/**
+ * Kody, które wyglądają jak błąd, a nie są awarią.
+ *
+ * Rozróżnienie jest sednem tej zmiany: rzucamy po to, żeby awaria przestała
+ * udawać pusty katalog — ale nie każdy `error` z PostgREST jest awarią.
+ * Te dwa przypadki niosą prawdziwą, spodziewaną odpowiedź i mają wrócić
+ * do wywołującego jako zwykły wynik. Oba złapało e2e i oba są tu wymienione
+ * z nazwy, zamiast ogólnego „przy błędzie zwróć pustkę", bo dopisanie
+ * trzeciego kodu ma być świadomą decyzją, a nie efektem ubocznym.
+ */
+
+/** PGRST103 — poproszono o zakres za końcem wyniku, np. `?strona=99`. */
+const ZAKRES_POZA_WYNIKIEM = 'PGRST103';
+
+/** 42501 — RLS nie wypuszcza wiersza. Dla gościa oglądającego swoje zamówienie
+ *  to nie usterka, tylko zaprojektowana granica: numer widzi, szczegółów nie. */
+const BRAK_UPRAWNIEN = '42501';
+
 class BladZapytania extends Error {
   constructor(co: string, przyczyna: { message?: string; code?: string } | null) {
     super(`Zapytanie „${co}" nie powiodło się: ${przyczyna?.message ?? 'brak szczegółów'}`);
@@ -249,7 +267,21 @@ export async function getStronaKatalogu({
     .order('id', { ascending: true })
     .range(od, od + NA_STRONE - 1);
 
-  if (error) throw new BladZapytania('strona katalogu', error);
+  // Strona za końcem listy to poprawne pytanie z pustą odpowiedzią, nie
+  // awaria: `?strona=99` przy dwunastu produktach ma pokazać pustą listę,
+  // a nie stronę błędu. PostgREST zgłasza to jako PGRST103.
+  if (error && error.code !== ZAKRES_POZA_WYNIKIEM) {
+    throw new BladZapytania('strona katalogu', error);
+  }
+  if (error) {
+    const ileWszystkich = count ?? 0;
+    return {
+      produkty: [],
+      ile: ileWszystkich,
+      strona: numer,
+      stron: Math.max(1, Math.ceil(ileWszystkich / NA_STRONE)),
+    };
+  }
 
   const ile = count ?? 0;
   return {
@@ -525,7 +557,13 @@ export async function getOrderByNumber(orderNumber: string): Promise<Order | nul
     .eq('order_number', orderNumber)
     .maybeSingle();
 
-  // Brak wiersza to prawda („nie ma takiego"), błąd zapytania to awaria.
+  // Trzy różne odpowiedzi, trzy różne zachowania:
+  //   brak wiersza      → „nie ma takiego zamówienia"
+  //   brak uprawnień    → „jest, ale nie dla Ciebie" — gość po zakupie widzi
+  //                       numer bez szczegółów i to jest zaprojektowane, nie
+  //                       usterka. RLS robi tu dokładnie swoją robotę.
+  //   inny błąd         → awaria, leci w górę
+  if (error && error.code === BRAK_UPRAWNIEN) return null;
   if (error) throw new BladZapytania('zamówienie po numerze', error);
   if (!data) return null;
   return toOrder(data as OrderRow);
