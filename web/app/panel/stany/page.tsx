@@ -5,7 +5,7 @@ import { SzukajStanow } from '@/components/magazyn/SzukajStanow';
 import { SegmentyStanow } from '@/components/magazyn/SegmentyStanow';
 import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getLicznikiMagazynu, getOstatnieRuchy, getStanyMagazynu } from '@/lib/queries';
-import { zeZnakiem } from '@/lib/format';
+import { GODZINA, zeZnakiem } from '@/lib/format';
 import { ile, POZYCJE } from '@/lib/odmiana';
 
 export const metadata: Metadata = {
@@ -14,8 +14,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-const GODZINA = new Intl.DateTimeFormat('pl-PL', { hour: '2-digit', minute: '2-digit' });
 
 const SEGMENTY = [
   { klucz: 'wszystko', etykieta: 'Wszystko' },

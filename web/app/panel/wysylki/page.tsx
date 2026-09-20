@@ -4,6 +4,7 @@ import { AkcjeZamowienia } from '@/components/panel/AkcjeZamowienia';
 import { wymagajBiura } from '@/lib/panel-dostep';
 import { getDoNadania, getWDrodze } from '@/lib/queries';
 import { Icon } from '@/components/Icon';
+import { DATA_GODZINA } from '@/lib/format';
 
 export const metadata: Metadata = {
   title: 'Wysyłki',
@@ -11,13 +12,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-const CZAS = new Intl.DateTimeFormat('pl-PL', {
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-});
 
 /**
  * Trzy stany, na które mapujemy surowy status od przewoźnika. Lista statusów
@@ -152,7 +146,7 @@ export default async function Wysylki() {
                         bez daty nie mówi, czy to sprzed minuty, czy sprzed dni. */}
                     <td className="num">
                       {p?.statusOdczyt ? (
-                        CZAS.format(new Date(p.statusOdczyt))
+                        DATA_GODZINA.format(new Date(p.statusOdczyt))
                       ) : (
                         <span className="muted">brak</span>
                       )}

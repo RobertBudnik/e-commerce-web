@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { wymagajBiura } from '@/lib/panel-dostep';
 import { getDziennik, getFinanse, getPrzeglad } from '@/lib/queries';
-import { money } from '@/lib/format';
+import { DATA_GODZINA, money } from '@/lib/format';
 import { Icon } from '@/components/Icon';
 
 export const metadata: Metadata = {
@@ -12,13 +12,6 @@ export const metadata: Metadata = {
 
 /** Liczby zmieniają się przy każdym zamówieniu — nic tu nie może iść z cache. */
 export const dynamic = 'force-dynamic';
-
-const CZAS = new Intl.DateTimeFormat('pl-PL', {
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-});
 
 export default async function Pulpit() {
   const user = await wymagajBiura('/panel');
@@ -135,7 +128,7 @@ export default async function Pulpit() {
             <ul className="pw-lista">
               {dziennik.slice(0, 6).map((w) => (
                 <li key={w.id} className="pw-wiersz">
-                  <span className="pw-wiersz-czas num">{CZAS.format(new Date(w.czas))}</span>
+                  <span className="pw-wiersz-czas num">{DATA_GODZINA.format(new Date(w.czas))}</span>
                   <span className="pw-wiersz-tresc">
                     <strong>{w.obiekt ?? w.obszar}</strong> — {w.opis}
                   </span>

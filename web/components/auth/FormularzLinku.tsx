@@ -1,17 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
 import { magicLinkAction, type AuthState } from '@/app/actions/auth';
-
-function Submit() {
-  const { pending } = useFormStatus();
-  return (
-    <button className="btn btn-block" type="submit" disabled={pending} style={{ marginTop: 20 }}>
-      {pending ? 'Wysyłam…' : 'Wyślij link do logowania'}
-    </button>
-  );
-}
+import { PrzyciskWysylki } from './PrzyciskWysylki';
 
 /**
  * Logowanie bez hasła.
@@ -45,7 +36,7 @@ export function FormularzLinku({ powrot }: { powrot: string }) {
         </p>
       )}
 
-      <Submit />
+      <PrzyciskWysylki etykieta="Wyślij link do logowania" wTrakcie="Wysyłam…" />
     </form>
   );
 }

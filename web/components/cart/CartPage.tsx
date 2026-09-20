@@ -12,6 +12,7 @@ import { checkoutAction } from '@/app/actions/checkout';
 import { money } from '@/lib/format';
 import { WARUNKI } from '@/lib/dane-sklepu';
 import { toast } from '@/components/ui/ToastHost';
+import { Ilosc } from '@/components/ui/Ilosc';
 
 type Defaults = {
   name: string;
@@ -132,30 +133,12 @@ export function CartPage({ defaults }: { defaults: Defaults }) {
                 </Link>
                 <div className="cart-item-meta">{money(info.price)} / szt.</div>
                 <div className="cart-item-actions">
-                  <div className="qty">
-                    <button
-                      type="button"
-                      aria-label="Zmniejsz ilość"
-                      onClick={() => bump(line.id, -1, info.stock)}
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      value={line.qty}
-                      min={1}
-                      max={info.stock}
-                      aria-label="Ilość"
-                      onChange={(e) => setQty(line.id, Number(e.target.value) || 0, info.stock)}
-                    />
-                    <button
-                      type="button"
-                      aria-label="Zwiększ ilość"
-                      onClick={() => bump(line.id, 1, info.stock)}
-                    >
-                      +
-                    </button>
-                  </div>
+                  <Ilosc
+                    wartosc={line.qty}
+                    stan={info.stock}
+                    onKrok={(d) => bump(line.id, d, info.stock)}
+                    onWpis={(n) => setQty(line.id, n, info.stock)}
+                  />
                   <button className="btn-link" type="button" onClick={() => remove(line.id)}>
                     Usuń
                   </button>

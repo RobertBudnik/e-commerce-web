@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { PrzyciskWysylki } from './PrzyciskWysylki';
 import { useActionState, useState } from 'react';
-import { useFormStatus } from 'react-dom';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { signInAction, signUpAction, type AuthState } from '@/app/actions/auth';
 import { useRuchWylaczony } from '@/lib/ruch';
@@ -26,15 +26,6 @@ const PANEL = {
   na_miejscu: { opacity: 1, x: 0 },
   wyjscie: (kierunek: number) => ({ opacity: 0, x: kierunek * -24 }),
 };
-
-function Submit({ label }: { label: string }) {
-  const { pending } = useFormStatus();
-  return (
-    <button className="btn btn-block" type="submit" disabled={pending} style={{ marginTop: 20 }}>
-      {pending ? 'Chwileczkę…' : label}
-    </button>
-  );
-}
 
 /**
  * Logowanie i rejestracja na Server Actions: hasło nie przechodzi przez
@@ -116,7 +107,7 @@ export function AuthTabs({ defaultTab, back }: { defaultTab: 'login' | 'register
               Zaloguj się linkiem
             </Link>
           </p>
-          <Submit label="Zaloguj się" />
+          <PrzyciskWysylki etykieta="Zaloguj się" wTrakcie="Chwileczkę…" />
         </form>
       ) : (
         <form action={signUp}>
@@ -140,7 +131,7 @@ export function AuthTabs({ defaultTab, back }: { defaultTab: 'login' | 'register
             />
             <p className="field-hint">Co najmniej osiem znaków, w tym mała litera, wielka i cyfra.</p>
           </div>
-          <Submit label="Załóż konto" />
+          <PrzyciskWysylki etykieta="Załóż konto" wTrakcie="Chwileczkę…" />
         </form>
       )}
       </PanelPrzejscia>

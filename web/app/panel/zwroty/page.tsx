@@ -3,6 +3,7 @@ import { PrzyjmijZwrot } from '@/components/magazyn/PrzyjmijZwrot';
 import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getZwroty } from '@/lib/queries';
 import { ile, ZWROTY } from '@/lib/odmiana';
+import { DATA_KROTKA } from '@/lib/format';
 
 export const metadata: Metadata = {
   title: 'Zwroty',
@@ -10,8 +11,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-const DATA = new Intl.DateTimeFormat('pl-PL', { day: '2-digit', month: '2-digit' });
 
 export default async function Zwroty() {
   await wymagajZaplecza('/panel/zwroty');
@@ -39,7 +38,7 @@ export default async function Zwroty() {
                 </span>
                 <span className="mag-nazwa">{z.klient}</span>
                 <span className="mag-meta">
-                  zgłoszony {DATA.format(new Date(z.zgloszony))}
+                  zgłoszony {DATA_KROTKA.format(new Date(z.zgloszony))}
                   {z.powod ? ` · ${z.powod}` : ''}
                 </span>
               </span>

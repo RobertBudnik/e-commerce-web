@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { wymagajWlasciciela } from '@/lib/panel-dostep';
 import { getDziennik } from '@/lib/queries';
+import { DATA_GODZINA } from '@/lib/format';
 
 export const metadata: Metadata = {
   title: 'Dziennik',
@@ -9,13 +10,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-const CZAS = new Intl.DateTimeFormat('pl-PL', {
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-});
 
 const OBSZARY = ['zamowienie', 'przesylka', 'rola', 'cena'];
 
@@ -80,7 +74,7 @@ export default async function Dziennik({
             <tbody>
               {wpisy.map((w) => (
                 <tr key={w.id}>
-                  <td className="num">{CZAS.format(new Date(w.czas))}</td>
+                  <td className="num">{DATA_GODZINA.format(new Date(w.czas))}</td>
                   <td>{w.kto}</td>
                   <td>
                     <span className="pw-stan">{w.obszar}</span>

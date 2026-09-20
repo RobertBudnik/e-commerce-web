@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { WyborRoli } from '@/components/panel/WyborRoli';
 import { wymagajWlasciciela } from '@/lib/panel-dostep';
 import { getOsobyZaplecza } from '@/lib/queries';
+import { DATA_PELNA } from '@/lib/format';
 
 export const metadata: Metadata = {
   title: 'Ludzie',
@@ -9,8 +10,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-const DATA = new Intl.DateTimeFormat('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
 
 const UPRAWNIENIA: Record<string, string[]> = {
   owner: ['katalog', 'zamówienia', 'magazyn', 'finanse', 'role', 'dziennik'],
@@ -66,7 +65,7 @@ export default async function Ludzie() {
                   {o.imie && <span className="muted"> · {o.email}</span>}
                   {o.id === ja.id && <span className="pw-stan"> to Ty</span>}
                 </td>
-                <td className="num">{DATA.format(new Date(o.odKiedy))}</td>
+                <td className="num">{DATA_PELNA.format(new Date(o.odKiedy))}</td>
                 <td>
                   <WyborRoli userId={o.id} email={o.email} rola={o.rola} mojeKonto={o.id === ja.id} />
                 </td>

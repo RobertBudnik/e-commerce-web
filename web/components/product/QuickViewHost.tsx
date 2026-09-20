@@ -9,6 +9,7 @@ import { ile, OPINIE } from '@/lib/odmiana';
 import { useCart } from '@/components/cart/CartProvider';
 import { useOknoModalne } from '@/lib/okno-modalne';
 import { useWishlist } from './WishlistProvider';
+import { Ilosc } from '@/components/ui/Ilosc';
 import type { Product } from '@/lib/types';
 
 /** Nazwa zdarzenia. Bez marki — szyld sklepu bywa zmieniany, kanał nie. */
@@ -106,28 +107,12 @@ export function QuickViewHost() {
                 {out ? 'Chwilowo niedostępny' : `Dostępny — ${product.stock} szt.`}
               </p>
               <div className="buy-row">
-                <div className="qty">
-                  <button type="button" aria-label="Zmniejsz ilość" onClick={() => setQty((q) => Math.max(1, q - 1))}>
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    value={qty}
-                    min={1}
-                    max={product.stock || 1}
-                    aria-label="Ilość"
-                    onChange={(e) =>
-                      setQty(Math.max(1, Math.min(Number(e.target.value) || 1, product.stock || 1)))
-                    }
-                  />
-                  <button
-                    type="button"
-                    aria-label="Zwiększ ilość"
-                    onClick={() => setQty((q) => Math.min(q + 1, product.stock || 1))}
-                  >
-                    +
-                  </button>
-                </div>
+                <Ilosc
+                  wartosc={qty}
+                  stan={product.stock}
+                  onKrok={(d) => setQty((q) => Math.max(1, Math.min(q + d, product.stock || 1)))}
+                  onWpis={(n) => setQty(Math.max(1, Math.min(n || 1, product.stock || 1)))}
+                />
                 <button
                   className="btn"
                   type="button"

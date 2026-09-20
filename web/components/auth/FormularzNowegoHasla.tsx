@@ -1,17 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
 import { updatePasswordAction, type AuthState } from '@/app/actions/auth';
-
-function Submit() {
-  const { pending } = useFormStatus();
-  return (
-    <button className="btn btn-block" type="submit" disabled={pending} style={{ marginTop: 20 }}>
-      {pending ? 'Zapisuję…' : 'Ustaw nowe hasło'}
-    </button>
-  );
-}
+import { PrzyciskWysylki } from './PrzyciskWysylki';
 
 /**
  * Ustawienie nowego hasła na sesji odzyskiwania.
@@ -60,7 +51,7 @@ export function FormularzNowegoHasla() {
         </p>
       )}
 
-      <Submit />
+      <PrzyciskWysylki etykieta="Ustaw nowe hasło" wTrakcie="Zapisuję…" />
     </form>
   );
 }

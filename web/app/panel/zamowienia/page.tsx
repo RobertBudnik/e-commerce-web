@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { wymagajBiura } from '@/lib/panel-dostep';
 import { getZamowieniaPanelu } from '@/lib/queries';
-import { money } from '@/lib/format';
+import { DATA_GODZINA, money } from '@/lib/format';
 
 export const metadata: Metadata = {
   title: 'Zamówienia',
@@ -10,13 +10,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-const DATA = new Intl.DateTimeFormat('pl-PL', {
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-});
 
 const STANY = ['kolejka', 'nowe', 'spakowane', 'wysłane', 'dostarczone', 'anulowane'];
 const PLATNOSCI = ['oczekuje', 'opłacone', 'nieudane', 'zwrócone'];
@@ -160,7 +153,7 @@ export default async function ZamowieniaPanelu({
                       {z.number}
                     </Link>
                   </td>
-                  <td className="num">{DATA.format(new Date(z.date))}</td>
+                  <td className="num">{DATA_GODZINA.format(new Date(z.date))}</td>
                   <td>{z.customer || z.email}</td>
                   <td>
                     <span className={klasaStanu(z.status)}>{z.status}</span>

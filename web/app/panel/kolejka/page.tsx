@@ -3,14 +3,13 @@ import Link from 'next/link';
 import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getKolejkaZamowien, getLicznikiZamowien } from '@/lib/queries';
 import { ile, POZYCJE } from '@/lib/odmiana';
+import { GODZINA } from '@/lib/format';
 export const metadata: Metadata = {
   title: 'Kolejka',
   description: 'Kolejka pakowania.',
 };
 
 export const dynamic = 'force-dynamic';
-
-const GODZINA = new Intl.DateTimeFormat('pl-PL', { hour: '2-digit', minute: '2-digit' });
 
 const ZAKLADKI = [
   { klucz: 'nowe', etykieta: 'Nowe' },

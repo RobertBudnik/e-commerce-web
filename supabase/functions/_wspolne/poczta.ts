@@ -68,6 +68,12 @@ type Przycisk = { etykieta: string; adres: string };
  */
 export function skorupa(opcje: {
   tytul: string;
+  /**
+   * Zajawka do listy wiadomości. Klient poczty pokazuje ją obok tematu,
+   * a bez niej wciąga tam pierwszy tekst z treści — czyli nazwę sklepu
+   * i samo „Cześć,". Po otwarciu wiadomości jest niewidoczna.
+   */
+  zajawka?: string;
   naglowek: string;
   wstep: string;
   tresc?: string;
@@ -75,7 +81,20 @@ export function skorupa(opcje: {
   stopka?: string;
   adresSklepu: string;
 }): string {
-  const { tytul, naglowek, wstep, tresc = '', przycisk, stopka = '', adresSklepu } = opcje;
+  const {
+    tytul,
+    zajawka = '',
+    naglowek,
+    wstep,
+    tresc = '',
+    przycisk,
+    stopka = '',
+    adresSklepu,
+  } = opcje;
+
+  const blokZajawki = zajawka
+    ? `<div style="display:none;font-size:1px;color:${BARWY.tlo};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${bezpieczne(zajawka)}</div>\n`
+    : '';
 
   const blokPrzycisku = przycisk
     ? `
@@ -108,7 +127,7 @@ export function skorupa(opcje: {
 </style>
 </head>
 <body style="margin:0;padding:0;background-color:${BARWY.tlo};">
-<table role="presentation" class="tlo" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${BARWY.tlo};">
+${blokZajawki}<table role="presentation" class="tlo" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${BARWY.tlo};">
   <tr><td align="center" style="padding:32px 16px;">
 
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;max-width:600px;">

@@ -1,17 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
 import { resetPasswordAction, type AuthState } from '@/app/actions/auth';
-
-function Submit() {
-  const { pending } = useFormStatus();
-  return (
-    <button className="btn btn-block" type="submit" disabled={pending} style={{ marginTop: 20 }}>
-      {pending ? 'Wysyłam…' : 'Wyślij link'}
-    </button>
-  );
-}
+import { PrzyciskWysylki } from './PrzyciskWysylki';
 
 /**
  * Prośba o link do nowego hasła.
@@ -44,7 +35,7 @@ export function FormularzResetu() {
         </p>
       )}
 
-      <Submit />
+      <PrzyciskWysylki etykieta="Wyślij link" wTrakcie="Wysyłam…" />
     </form>
   );
 }

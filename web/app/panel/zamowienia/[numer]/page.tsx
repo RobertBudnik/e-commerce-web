@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { AkcjeZamowienia } from '@/components/panel/AkcjeZamowienia';
 import { wymagajZaplecza } from '@/lib/panel-dostep';
 import { getZamowieniePanelu } from '@/lib/queries';
-import { money } from '@/lib/format';
+import { DATA_GODZINA_PELNA, money } from '@/lib/format';
 
 export const metadata: Metadata = {
   title: 'Zamówienie',
@@ -12,13 +12,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-const CZAS = new Intl.DateTimeFormat('pl-PL', {
-  day: 'numeric',
-  month: 'long',
-  hour: '2-digit',
-  minute: '2-digit',
-});
 
 export default async function SzczegolyZamowienia({
   params,
@@ -62,7 +55,7 @@ export default async function SzczegolyZamowienia({
           </Link>
           <h1>{z.number}</h1>
           <p className="muted">
-            {CZAS.format(new Date(z.date))} · {z.status}
+            {DATA_GODZINA_PELNA.format(new Date(z.date))} · {z.status}
             {!pakujacy && <> · płatność {z.paymentStatus}</>}
           </p>
         </div>
@@ -165,7 +158,7 @@ export default async function SzczegolyZamowienia({
                   {przesylka.status}
                   <span className="muted">
                     {' '}
-                    · odczyt {przesylka.statusOdczyt ? CZAS.format(new Date(przesylka.statusOdczyt)) : 'brak'}
+                    · odczyt {przesylka.statusOdczyt ? DATA_GODZINA_PELNA.format(new Date(przesylka.statusOdczyt)) : 'brak'}
                   </span>
                 </>
               ) : (
@@ -199,7 +192,7 @@ export default async function SzczegolyZamowienia({
           <ul className="pw-lista">
             {slad.map((w) => (
               <li key={w.id} className="pw-wiersz">
-                <span className="pw-wiersz-czas num">{CZAS.format(new Date(w.czas))}</span>
+                <span className="pw-wiersz-czas num">{DATA_GODZINA_PELNA.format(new Date(w.czas))}</span>
                 <span className="pw-wiersz-tresc">{w.opis}</span>
               </li>
             ))}

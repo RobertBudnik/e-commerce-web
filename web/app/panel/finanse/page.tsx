@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { wymagajBiura } from '@/lib/panel-dostep';
 import { getFinanse } from '@/lib/queries';
-import { money } from '@/lib/format';
+import { DZIEN, money } from '@/lib/format';
 
 export const metadata: Metadata = {
   title: 'Finanse',
@@ -9,8 +9,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-const DZIEN = new Intl.DateTimeFormat('pl-PL', { day: 'numeric', month: 'short' });
 
 export default async function Finanse() {
   await wymagajBiura('/panel/finanse');
