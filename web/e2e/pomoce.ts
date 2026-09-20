@@ -14,8 +14,8 @@ export const CZAS_ZAMOWIENIA = process.env.CI ? 60_000 : 20_000;
 
 /** Konta z seeda lokalnego. Na produkcji nie istnieją. */
 export const KONTA = {
-  klient: { email: 'klient@nordo.pl', haslo: 'nordo-local-dev' },
-  zaplecze: { email: 'admin@nordo.pl', haslo: 'nordo-local-dev' },
+  klient: { email: 'klient@sklep.example', haslo: 'lokalne-haslo-dev' },
+  zaplecze: { email: 'admin@sklep.example', haslo: 'lokalne-haslo-dev' },
 };
 
 /**
@@ -68,13 +68,13 @@ export async function zaloguj(page: Page, konto: { email: string; haslo: string 
   // tak wywrócił się przebieg zwrotów: test wylądował na ekranie logowania
   // z nagłówkiem gościa, choć `zaloguj` już zwróciło. Przycisk konta
   // z nazwą jest dowodem, że serwer widzi sesję.
-  await expect(page.getByRole('button', { name: /Nordo HQ|Robert Kowalski/ })).toBeVisible({
+  await expect(page.getByRole('button', { name: /Zaplecze sklepu|Robert Kowalski/ })).toBeVisible({
     timeout: 15_000,
   });
 }
 
 export async function wyloguj(page: Page) {
-  await page.getByRole('button', { name: /Nordo HQ|Robert Kowalski|Gość/ }).first().click();
+  await page.getByRole('button', { name: /Zaplecze sklepu|Robert Kowalski|Gość/ }).first().click();
   await page.getByRole('button', { name: 'Wyloguj' }).click();
   await page.waitForURL('/');
 }

@@ -110,7 +110,7 @@ export function znacznikProduktu(opcje: {
  * `BreadcrumbList` — ścieżka okruszków w wyniku wyszukiwania.
  *
  * Google pokazuje ją zamiast surowego adresu, więc zamiast
- * „nordo.pl › produkt › kubek-popiolowy" widać „Sklep › Ceramika › Kubek".
+ * „sklep.pl › produkt › kubek-popiolowy" widać „Sklep › Ceramika › Kubek".
  */
 export function znacznikOkruszkow(
   okruszki: { nazwa: string; adres: string }[]

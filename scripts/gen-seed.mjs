@@ -26,7 +26,7 @@ const PERMISSIONS = {
 const out = [];
 
 out.push(`-- =============================================================================
--- Nordo — dane startowe
+-- Dane startowe
 -- Generowane: node scripts/gen-seed.mjs > supabase/seed.sql
 -- =============================================================================
 
@@ -83,7 +83,7 @@ do $$
 declare
   admin_id uuid;
 begin
-  select id into admin_id from auth.users where email = 'admin@nordo.pl';
+  select id into admin_id from auth.users where email = 'admin@sklep.example';
 
   if admin_id is null then
     admin_id := gen_random_uuid();
@@ -99,10 +99,10 @@ begin
       phone_change, phone_change_token, reauthentication_token
     ) values (
       '00000000-0000-0000-0000-000000000000', admin_id, 'authenticated', 'authenticated',
-      'admin@nordo.pl', crypt('nordo-local-dev', gen_salt('bf')),
+      'admin@sklep.example', crypt('lokalne-haslo-dev', gen_salt('bf')),
       now(), now(), now(),
       '{"provider":"email","providers":["email"]}'::jsonb,
-      '{"full_name":"Nordo HQ"}'::jsonb,
+      '{"full_name":"Zaplecze sklepu"}'::jsonb,
       '', '', '', '', '', '', '', ''
     );
 
@@ -111,7 +111,7 @@ begin
       provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
     ) values (
       admin_id, admin_id,
-      jsonb_build_object('sub', admin_id::text, 'email', 'admin@nordo.pl', 'email_verified', true),
+      jsonb_build_object('sub', admin_id::text, 'email', 'admin@sklep.example', 'email_verified', true),
       'email', now(), now(), now()
     )
     on conflict do nothing;
@@ -128,7 +128,7 @@ end $$;
  * plus dwa zamówienia gościa. Dzięki temu widać różnicę, którą robi RLS:
  * właściciel widzi wszystkie trzy, klient wyłącznie swoje jedno.
  * ------------------------------------------------------------------------- */
-const DEMO_CUSTOMER = { email: 'klient@nordo.pl', name: 'Robert Kowalski' };
+const DEMO_CUSTOMER = { email: 'klient@sklep.example', name: 'Robert Kowalski' };
 const STATUS = { 'w drodze': 'wysłane', dostarczone: 'dostarczone' };
 
 const parseAddress = (line) => {
@@ -200,7 +200,7 @@ begin
       phone_change, phone_change_token, reauthentication_token
     ) values (
       '00000000-0000-0000-0000-000000000000', customer_id, 'authenticated', 'authenticated',
-      ${q(DEMO_CUSTOMER.email)}, crypt('nordo-local-dev', gen_salt('bf')),
+      ${q(DEMO_CUSTOMER.email)}, crypt('lokalne-haslo-dev', gen_salt('bf')),
       now(), now(), now(),
       '{"provider":"email","providers":["email"]}'::jsonb,
       ${q(JSON.stringify({ full_name: DEMO_CUSTOMER.name }))}::jsonb,

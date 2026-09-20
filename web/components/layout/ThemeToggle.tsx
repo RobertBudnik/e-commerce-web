@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Icon } from '@/components/Icon';
-
-const KLUCZ = 'nordo-theme';
+import { KLUCZ_MOTYWU, KLUCZ_MOTYWU_STARY } from '@/lib/klucze';
 
 /**
  * Przełącznik motywu. Klasę na <html> ustawia już skrypt blokujący z layoutu —
@@ -25,7 +24,7 @@ export function ThemeToggle() {
     // z poprzedniego motywu — księżyc na ciemnym tle.
     const pytanie = matchMedia('(prefers-color-scheme: dark)');
     const zmiana = (e: MediaQueryListEvent) => {
-      if (localStorage.getItem(KLUCZ)) return;
+      if (localStorage.getItem(KLUCZ_MOTYWU) || localStorage.getItem(KLUCZ_MOTYWU_STARY)) return;
       setCiemny(e.matches);
     };
     pytanie.addEventListener('change', zmiana);
@@ -38,7 +37,8 @@ export function ThemeToggle() {
     const nowy = !ciemny;
     document.documentElement.classList.toggle('dark', nowy);
     try {
-      localStorage.setItem(KLUCZ, nowy ? 'dark' : 'light');
+      localStorage.setItem(KLUCZ_MOTYWU, nowy ? 'dark' : 'light');
+      localStorage.removeItem(KLUCZ_MOTYWU_STARY);
     } catch {
       /* tryb prywatny bez zapisu — motyw zadziała do końca sesji */
     }

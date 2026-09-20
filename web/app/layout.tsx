@@ -11,6 +11,7 @@ import { OdsloniecieStopki } from '@/components/ruch/OdsloniecieStopki';
 import { WishlistProvider } from '@/components/product/WishlistProvider';
 import { headers } from 'next/headers';
 import { NAGLOWEK_NONCE } from '@/lib/csp';
+import { KLUCZ_MOTYWU, KLUCZ_MOTYWU_STARY } from '@/lib/klucze';
 import { getSessionUser } from '@/lib/queries';
 import { MARKA } from '@/lib/dane-sklepu';
 import { siteUrl } from '@/lib/site';
@@ -31,7 +32,11 @@ import { siteUrl } from '@/lib/site';
 const SKRYPT_MOTYWU = `
 (function () {
   try {
-    var zapis = localStorage.getItem('nordo-theme');
+    var czytaj = function () {
+      return localStorage.getItem('${KLUCZ_MOTYWU}')
+        || localStorage.getItem('${KLUCZ_MOTYWU_STARY}');
+    };
+    var zapis = czytaj();
     var pytanie = matchMedia('(prefers-color-scheme: dark)');
     var ciemny = zapis === 'dark' || (zapis !== 'light' && pytanie.matches);
     if (ciemny) document.documentElement.classList.add('dark');
@@ -41,7 +46,7 @@ const SKRYPT_MOTYWU = `
     // sklep jasny. Zapis użytkownika wygrywa, więc kto wybrał motyw ręcznie,
     // ten go trzyma.
     pytanie.addEventListener('change', function (e) {
-      if (localStorage.getItem('nordo-theme')) return;
+      if (czytaj()) return;
       document.documentElement.classList.toggle('dark', e.matches);
     });
   } catch (e) {}

@@ -191,7 +191,7 @@ check('macierz uprawnień wypełniona', Number(c.perms) === 20, `jest ${c.perms}
 check('właściciel ma rolę', Number(c.roles) >= 1);
 
 // Użytkownicy testowi
-const { rows: [owner] } = await db.query(`select id from auth.users where email = 'admin@nordo.pl'`);
+const { rows: [owner] } = await db.query(`select id from auth.users where email = 'admin@sklep.example'`);
 const { rows: [customer] } = await db.query(`
   insert into auth.users (email, aud, role) values ('klient@example.com', 'authenticated', 'authenticated')
   returning id

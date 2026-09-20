@@ -1,9 +1,9 @@
 ---
 name: zgodnosc-sklepu
-description: Doprowadza sklep Nordo do zgodności ze sprzedażą konsumencką w PL/UE — zgoda na regulamin i klauzula RODO w koszyku, dane sprzedawcy, prawo odstąpienia, zgodność towaru z umową, Omnibus, GPSR, ujawnienie procesorów, spójność trybu catalog/single. Użyj zawsze, gdy pada „zgodność", „RODO", „regulamin", „polityka prywatności", „prawa konsumenta", „Omnibus", „GPSR", „audyt prawny", „czy mogę zacząć sprzedawać", „przed startem sklepu", a także przy każdej pracy nad koszykiem, stronami w web/app/informacje, trybem sprzedaży (NEXT_PUBLIC_STORE_MODE, store-mode.ts) i przy dodawaniu obietnic handlowych na stronie. Użyj też, gdy ktoś prosi o „naprawienie wszystkich błędów prawnych naraz".
+description: Doprowadza sklep do zgodności ze sprzedażą konsumencką w PL/UE — zgoda na regulamin i klauzula RODO w koszyku, dane sprzedawcy, prawo odstąpienia, zgodność towaru z umową, Omnibus, GPSR, ujawnienie procesorów, spójność trybu catalog/single. Użyj zawsze, gdy pada „zgodność", „RODO", „regulamin", „polityka prywatności", „prawa konsumenta", „Omnibus", „GPSR", „audyt prawny", „czy mogę zacząć sprzedawać", „przed startem sklepu", a także przy każdej pracy nad koszykiem, stronami w web/app/informacje, trybem sprzedaży (NEXT_PUBLIC_STORE_MODE, store-mode.ts) i przy dodawaniu obietnic handlowych na stronie. Użyj też, gdy ktoś prosi o „naprawienie wszystkich błędów prawnych naraz".
 ---
 
-# Zgodność sklepu Nordo
+# Zgodność sklepu
 
 Sklep sprzedaje elektronikę konsumentom w Polsce. Ścieżka zakupowa jest
 technicznie poprawna — przycisk mówi wprost `Zamawiam i płacę · {kwota}`,

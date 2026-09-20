@@ -27,7 +27,7 @@ export function NawigacjaSklepu() {
   return (
     <nav className="flex h-[52px] items-center gap-8 border-b border-border bg-nav-bg px-6">
       <span className="font-display text-[15px] font-semibold tracking-tight">
-        nordo<span className="text-orange">.</span>
+        sklep<span className="text-orange">.</span>
       </span>
 
       <div className="hidden flex-1 justify-center gap-7 md:flex">
@@ -47,8 +47,8 @@ export function NawigacjaSklepu() {
           ☾
         </button>
         <span className="flex items-center gap-2 rounded-full border border-border py-1 pr-3 pl-1">
-          <Avatar inicjaly="NH" />
-          <span className="t-small">Nordo HQ</span>
+          <Avatar inicjaly="ZS" />
+          <span className="t-small">Zaplecze sklepu</span>
         </span>
         <button type="button" className="btn btn-ghost btn-sm">
           Koszyk <Badge>2</Badge>

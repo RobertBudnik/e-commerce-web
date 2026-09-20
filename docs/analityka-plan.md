@@ -230,8 +230,8 @@ zakupu**. Druga jest ważniejsza — pierwszą właściciel i tak zna z magazynu
 **Bez biblioteki wykresów.** Sklep waży dziś ok. 102 kB JS-u plus Sentry;
 dokładanie Rechartsa dla siedmiu słupków byłoby drożej niż wszystko, co ten
 ekran pokazuje. Słupki rysuje się `<svg>` z serwera, kolorami z tokenów
-(`--accent`, `--line`), monochromatycznie — zgodnie z
-[`.claude/skills/nordo-design`](../.claude/skills/nordo-design/SKILL.md).
+(`--accent`, `--line`), monochromatycznie — zgodnie ze skillem
+[`wyglad-i-ux`](../.claude/skills/wyglad-i-ux/SKILL.md).
 Komponent serwerowy, zero `'use client'`.
 
 ---

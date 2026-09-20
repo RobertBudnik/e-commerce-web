@@ -1,8 +1,8 @@
 {
-  "name": "nordo-shop",
+  "name": "sklep",
   "private": true,
   "version": "0.1.0",
-  "description": "Sklep Nordo — Next.js (App Router) + Supabase",
+  "description": "Sklep — Next.js (App Router) + Supabase",
   "scripts": {
     "dev": "npm --prefix web run dev",
     "build": "npm --prefix web run build",

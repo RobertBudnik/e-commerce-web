@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Wspólny fundament efektów z sekcji „Zaawansowany ruch" w `nordo-design`.
+ * Wspólny fundament efektów ruchu. Reguły — czasy, krzywe, co wolno animować
+ * — stoją w `.claude/skills/ruch-i-animacje`.
  *
  * Dwa pytania, które zadaje każdy z nich, i dwie odpowiedzi, które muszą być
  * liczone tak samo wszędzie — inaczej jeden efekt wyłączy się przy

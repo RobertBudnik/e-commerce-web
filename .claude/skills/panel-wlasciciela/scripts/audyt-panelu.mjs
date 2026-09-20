@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Audyt zaplecza Nordo — higiena panelu właściciela.
+ * Audyt zaplecza — higiena panelu właściciela.
  *
  * Sprawdza to, czego typecheck i testy schematu nie łapią: czy granica dostępu
  * naprawdę idzie przez bazę, czy sekret nie wyciekł do przeglądarki i czy nowa

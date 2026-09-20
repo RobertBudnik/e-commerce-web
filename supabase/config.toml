@@ -158,7 +158,7 @@ enabled = true
 # in emails.
 # Lokalnie: http://localhost:3000 (serwer deweloperski Next.js) — skrypty
 # `npm run db:start` i `db:reset` podstawiają tę wartość same. Pod domenę
-# wystarczy wyeksportować SITE_URL, np. SITE_URL="https://nordo.pl".
+# wystarczy wyeksportować SITE_URL, np. SITE_URL="https://twoja-domena.pl".
 site_url = "env(SITE_URL)"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""

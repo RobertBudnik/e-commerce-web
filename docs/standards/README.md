@@ -1,4 +1,4 @@
-# Standardy Nordo
+# Standardy
 
 Zestaw list kontrolnych, po których idziemy przy zmianach. Nie są to kopie
 cudzych dokumentów — każda pozycja jest przepisana pod ten projekt, z linkiem
@@ -19,5 +19,6 @@ Przed wdrożeniem większej zmiany przejdź listę z pliku, którego zmiana doty
 Pozycje oznaczone **[auto]** ma sprawdzać CI albo skrypt — jeśli nie sprawdza,
 to jest to dług, nie decyzja.
 
-Reguły wyglądu i ruchu interfejsu są osobno, w skillu `nordo-design`.
+Reguły wyglądu i ruchu interfejsu są osobno, w skillach `wyglad-i-ux`
+i `ruch-i-animacje`.
 Ten katalog opisuje zgodność i bezpieczeństwo, nie estetykę.

@@ -123,7 +123,7 @@ jako `⟨DO UZUPEŁNIENIA: …⟩` — skrypt audytu je wyłapie.
 `web/components/layout/SiteFooter.tsx`, `web/lib/strony-informacyjne.ts`
 
 Nigdzie w sklepie nie ma nazwy firmy, adresu, NIP-u, REGON-u ani kontaktu.
-Stopka mówi tylko „© 2026 Nordo".
+Stopka mówi tylko „© 2026" plus nazwa sklepu.
 
 Podstawa: art. 12 ust. 1 pkt 2-3 UPK oraz art. 5 uśude — dane identyfikujące
 przedsiębiorcę mają być dostępne w sposób stały i łatwy.

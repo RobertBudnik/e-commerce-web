@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Nordo — modernistyczny minimalizm w dwóch motywach.
+   Arkusz sklepu — modernistyczny minimalizm w dwóch motywach.
    Hairline'y zamiast obwódek, cienie tylko na interakcji, dużo światła.
 
    Motyw przełącza klasa `dark` na <html>. Wartości bazowe siedzą w dwóch
@@ -2966,7 +2966,7 @@ code {
 /* ==========================================================================
    Zaawansowany ruch
 
-   Osobna warstwa opisana w `.claude/skills/nordo-design` — efekty budujące
+   Osobna warstwa — efekty budujące
    charakter strony, nie reagujące na akcję. Sufit 400 ms z tabeli ruchu
    użytkowego ich nie obowiązuje; obowiązuje za to wyłącznik dla
    `prefers-reduced-motion` i chowanie się przed dotykiem.

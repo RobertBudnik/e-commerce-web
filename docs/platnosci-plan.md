@@ -1,6 +1,6 @@
 # Płatności — co jest, czego brakuje, w jakiej kolejności
 
-Nordo ma już kod płatności po obu stronach: `create-checkout` zakłada sesję
+Sklep ma już kod płatności po obu stronach: `create-checkout` zakłada sesję
 u operatora, `stripe-webhook` potwierdza wpłatę i woła `mark_order_paid()`.
 Ten dokument nie jest planem wdrożenia od zera — jest listą tego, co zostało
 między działającym kodem a przyjmowaniem prawdziwych pieniędzy.
@@ -38,7 +38,7 @@ Dwa niezależne powody:
    to powłoka wokół `/magazyn` — cztery zakładki magazynowe, instalowana
    kablem, poza App Store. Koszyka tam nie ma i nie ma czego kupić.
 
-Wniosek: temat IAP wraca dopiero, gdyby powstała konsumencka aplikacja Nordo
+Wniosek: temat IAP wraca dopiero, gdyby powstała konsumencka aplikacja sklepu
 w App Store — i nawet wtedy przy towarze fizycznym odpowiedzią jest Apple Pay
 przez Stripe'a, nie IAP.
 

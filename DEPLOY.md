@@ -1,4 +1,4 @@
-# Nordo — wyjście na produkcję
+# Wyjście na produkcję
 
 Kolejność ma znaczenie: najpierw baza, potem funkcje Edge, na końcu front.
 Każdy krok da się cofnąć poza jednym — `db push` na zdalnej bazie.

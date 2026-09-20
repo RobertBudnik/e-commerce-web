@@ -18,7 +18,7 @@ Cała sekcja jest za logowaniem (`wymagajZaplecza`), oznaczona
 ### Dwie twarze
 
 Ten sam kod renderuje się dwojako, a rozróżnia je **wyłącznie powłoka**
-(User-Agent `NordoApp` albo tryb standalone), nie adres:
+(User-Agent aplikacji albo tryb standalone), nie adres:
 
 | | przeglądarka | powłoka (aplikacja na telefonie) |
 |---|---|---|

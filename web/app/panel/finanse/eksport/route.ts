@@ -66,7 +66,7 @@ export async function GET(request: Request) {
     );
 
   const csv = `﻿${KOLUMNY.join(';')}\n${wiersze.join('\n')}\n`;
-  const nazwa = `nordo-sprzedaz-${od}-${new Date().toISOString().slice(0, 10)}.csv`;
+  const nazwa = `sprzedaz-${od}-${new Date().toISOString().slice(0, 10)}.csv`;
 
   return new NextResponse(csv, {
     headers: {

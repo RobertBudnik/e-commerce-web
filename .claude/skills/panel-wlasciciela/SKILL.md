@@ -1,9 +1,9 @@
 ---
 name: panel-wlasciciela
-description: Zaplecze Nordo — jedna aplikacja, dwie twarze: sklep dla klienta i panel firmy po zalogowaniu na konto organizacji. Prowadzi budowę i rozbudowę zaplecza: zamówienia i zwroty, wysyłki z paczkomatami InPost (ShipX, Geowidget), finanse i raporty, katalog z cenami, nadawanie ról i dziennik audytu. Użyj zawsze, gdy pada „panel", „admin", „zaplecze", „system dla właściciela", „ekran dla firmy", „zamówienia w panelu", „wysyłki", „paczkomat", „InPost", „nadaj przesyłkę", „etykieta", „raport sprzedaży", „utarg", „marża", „eksport dla księgowej", „kto to zmienił", „nadaj rolę pracownikowi", a także przy każdej pracy w web/app/panel, web/app/magazyn, przy funkcjach zamówień w SQL (ustaw_stan_zamowienia, nadaj_przesylke, cancel_order, przyjmij_zwrot) i przy macierzy uprawnień role_permissions. Użyj też, gdy ktoś chce, żeby ten sam adres wyglądał dla klienta jak sklep, a po zalogowaniu jako admin pokazywał panel firmy.
+description: Zaplecze sklepu — jedna aplikacja, dwie twarze: sklep dla klienta i panel firmy po zalogowaniu na konto organizacji. Prowadzi budowę i rozbudowę zaplecza: zamówienia i zwroty, wysyłki z paczkomatami InPost (ShipX, Geowidget), finanse i raporty, katalog z cenami, nadawanie ról i dziennik audytu. Użyj zawsze, gdy pada „panel", „admin", „zaplecze", „system dla właściciela", „ekran dla firmy", „zamówienia w panelu", „wysyłki", „paczkomat", „InPost", „nadaj przesyłkę", „etykieta", „raport sprzedaży", „utarg", „marża", „eksport dla księgowej", „kto to zmienił", „nadaj rolę pracownikowi", a także przy każdej pracy w web/app/panel, web/app/magazyn, przy funkcjach zamówień w SQL (ustaw_stan_zamowienia, nadaj_przesylke, cancel_order, przyjmij_zwrot) i przy macierzy uprawnień role_permissions. Użyj też, gdy ktoś chce, żeby ten sam adres wyglądał dla klienta jak sklep, a po zalogowaniu jako admin pokazywał panel firmy.
 ---
 
-# Panel właściciela Nordo
+# Panel właściciela
 
 Jedna aplikacja, jedna baza, dwie zupełnie różne role. Klient widzi sklep i nic
 poza sklepem. Konto organizacji dostaje po zalogowaniu panel: zamówienia,
@@ -92,7 +92,7 @@ kto gdzie pracuje.
 
 Panel właściciela mówi językiem sklepu — te same tokeny, ta sama typografia,
 `tabular-nums` na każdej kwocie. Przed zmianą wyglądu przeczytaj skill
-`nordo-design`; kolorów ani `z-index`-ów nie wpisuj z palca.
+`wyglad-i-ux`; kolorów ani `z-index`-ów nie wpisuj z palca.
 
 Zaplecze nie potrzebuje efektów z sekcji „Zaawansowany ruch". Właściciel patrzy
 na te ekrany codziennie po piętnaście razy — paralaksa w tabeli zamówień

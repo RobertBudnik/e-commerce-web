@@ -11,9 +11,12 @@ import { useOknoModalne } from '@/lib/okno-modalne';
 import { useWishlist } from './WishlistProvider';
 import type { Product } from '@/lib/types';
 
+/** Nazwa zdarzenia. Bez marki — szyld sklepu bywa zmieniany, kanał nie. */
+const ZDARZENIE = 'sklep:quickview';
+
 /** Otwiera podgląd z dowolnego miejsca — kafelka, wyników szukania, listy życzeń. */
 export function openQuickView(product: Product) {
-  window.dispatchEvent(new CustomEvent('nordo:quickview', { detail: product }));
+  window.dispatchEvent(new CustomEvent(ZDARZENIE, { detail: product }));
 }
 
 /**
@@ -37,8 +40,8 @@ export function QuickViewHost() {
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
     };
 
-    window.addEventListener('nordo:quickview', onOpen);
-    return () => window.removeEventListener('nordo:quickview', onOpen);
+    window.addEventListener(ZDARZENIE, onOpen);
+    return () => window.removeEventListener(ZDARZENIE, onOpen);
   }, []);
 
   // Okno żyje przez cały czas wyjścia, więc hak pilnuje `product`, nie

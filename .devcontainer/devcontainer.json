@@ -1,5 +1,5 @@
 {
-  "name": "Nordo",
+  "name": "Sklep",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
 
   // Lokalny Supabase to kilkanaście kontenerów, więc kontener roboczy sam

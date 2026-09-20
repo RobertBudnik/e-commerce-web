@@ -11,7 +11,7 @@ import { defineConfig, devices } from '@playwright/test';
 const baseURL = process.env.E2E_BASE_URL;
 
 if (!baseURL) {
-  throw new Error('Ustaw E2E_BASE_URL na adres wdrożenia, np. https://nordo-abc123.vercel.app');
+  throw new Error('Ustaw E2E_BASE_URL na adres wdrożenia, np. https://sklep-abc123.vercel.app');
 }
 
 export default defineConfig({

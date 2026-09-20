@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from '@/components/Icon';
 import { useOknoModalne } from '@/lib/okno-modalne';
+import { MARKA } from '@/lib/dane-sklepu';
 
 type Pozycja = { href: string; label: string };
 
@@ -61,9 +62,7 @@ export function MobileNav({ pozycje }: { pozycje: Pozycja[] }) {
         >
           <div className="navsheet-panel" ref={panelRef}>
             <div className="navsheet-top">
-              <span className="logo">
-                Nordo
-              </span>
+              <span className="logo">{MARKA.nazwa}</span>
               <button
                 type="button"
                 className="icon-btn"

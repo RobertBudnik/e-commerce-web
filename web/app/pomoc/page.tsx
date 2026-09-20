@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SLUGI_INFO, STRONY_INFO } from '@/lib/strony-informacyjne';
-import { SPRZEDAWCA, doUzupelnienia } from '@/lib/dane-sklepu';
+import { MARKA, SPRZEDAWCA, doUzupelnienia } from '@/lib/dane-sklepu';
 
 export const metadata: Metadata = {
   title: 'Pomoc',
-  description: 'Dostawa, zwroty, reklamacje i kontakt ze sklepem Nordo.',
+  description: `Dostawa, zwroty, reklamacje i kontakt ze sklepem ${MARKA.nazwa}.`,
 };
 
 export default function Pomoc() {

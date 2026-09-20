@@ -50,7 +50,7 @@ export const NAGLOWEK_CSP = CSP_EGZEKWOWANA
   : 'Content-Security-Policy-Report-Only';
 
 /** Nonce jedzie do layoutu osobnym nagłówkiem żądania, pod własną nazwą. */
-export const NAGLOWEK_NONCE = 'x-nordo-nonce';
+export const NAGLOWEK_NONCE = 'x-nonce';
 
 /**
  * Nonce ma być nie do odgadnięcia — inaczej jest tylko ozdobą. 16 losowych

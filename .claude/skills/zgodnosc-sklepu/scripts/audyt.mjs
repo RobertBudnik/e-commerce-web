@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Audyt zgodności sklepu Nordo.
+ * Audyt zgodności sklepu.
  *
  * Sprawdza ustalenia po wzorcach w kodzie, nie po numerach linii — dzięki temu
  * przeżywa refaktor i nie trzeba go poprawiać po każdym przesunięciu importu.

@@ -1,4 +1,4 @@
-# Nordo na Next.js (App Router)
+# Front sklepu — Next.js (App Router)
 
 Front sklepu: Next.js 15 z sesją w ciasteczkach. Baza, migracje, polityki RLS
 i funkcje SQL są wspólne z katalogiem nadrzędnym — tutaj siedzi wyłącznie

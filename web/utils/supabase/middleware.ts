@@ -13,11 +13,10 @@ import { NAGLOWEK_CSP, NAGLOWEK_NONCE, losujNonce, politykaCsp } from '@/lib/csp
 const GUARDED = ['/konto', '/panel'];
 
 export async function updateSession(request: NextRequest) {
-  // Ścieżka dopisana do nagłówków ŻĄDANIA, nie odpowiedzi — komponent
-  // serwerowy czyta przez headers() to, co przyszło, a nie to, co wyjdzie.
-  // Dzięki temu layout wie, że renderuje magazyn, i pomija chrom sklepu.
+  // Kopia nagłówków ŻĄDANIA: dopisujemy do niej nonce i politykę, więc
+  // komponent serwerowy czyta przez headers() to, co przyszło, a nie to,
+  // co wyjdzie.
   const naglowki = new Headers(request.headers);
-  naglowki.set('x-nordo-path', request.nextUrl.pathname);
 
   // Nonce losowany dla każdego żądania. Layout czyta go pod własną nazwą
   // i podpina do skryptu motywu; Next wyłuskuje go z nagłówka polityki
@@ -40,8 +39,8 @@ export async function updateSession(request: NextRequest) {
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           // Z `naglowki`, nie z surowego żądania: inaczej odpowiedź powstaje
-          // bez nonce'a i bez `x-nordo-path`, a dzieje się to wyłącznie przy
-          // odświeżeniu sesji — czyli rzadko i nie na każdym wejściu.
+          // bez nonce'a, a dzieje się to wyłącznie przy odświeżeniu sesji —
+          // czyli rzadko i nie na każdym wejściu.
           response = NextResponse.next({ request: { headers: naglowki } });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, sessionCookieOptions(options))

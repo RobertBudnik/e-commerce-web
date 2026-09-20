@@ -1,5 +1,5 @@
 -- =============================================================================
--- Nordo — katalog demo dla produkcji
+-- Katalog demo dla produkcji
 --
 -- Wycinek z supabase/seed.sql: wyłącznie kategorie, produkty i kupony.
 -- Świadomie NIE zawiera:

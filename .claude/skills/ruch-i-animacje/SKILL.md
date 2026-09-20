@@ -1,9 +1,9 @@
 ---
 name: ruch-i-animacje
-description: Zasady ruchu w interfejsie Nordo — czasy trwania, krzywe easing, które właściwości CSS wolno animować, przerywalność, kiedy nie animować i jak uszanować prefers-reduced-motion. Reguły pochodzą z zewnętrznych źródeł (Material Design 3, Apple HIG, Nielsen Norman Group, WCAG 2.2, animations.dev), każda z linkiem. Użyj zawsze, gdy pada „animacja", „przejście", „hover", „mikrointerakcja", „płynność", „fade", „slide", „scroll reveal", „motion", a także przy każdej pracy w web/components/ruch/, przy `transition` i `@keyframes` w globals.css i przy dodawaniu ruchu do nowego ekranu.
+description: Zasady ruchu w interfejsie sklepu — czasy trwania, krzywe easing, które właściwości CSS wolno animować, przerywalność, kiedy nie animować i jak uszanować prefers-reduced-motion. Reguły pochodzą z zewnętrznych źródeł (Material Design 3, Apple HIG, Nielsen Norman Group, WCAG 2.2, animations.dev), każda z linkiem. Użyj zawsze, gdy pada „animacja", „przejście", „hover", „mikrointerakcja", „płynność", „fade", „slide", „scroll reveal", „motion", a także przy każdej pracy w web/components/ruch/, przy `transition` i `@keyframes` w globals.css i przy dodawaniu ruchu do nowego ekranu.
 ---
 
-# Ruch w interfejsie Nordo
+# Ruch w interfejsie sklepu
 
 Ten plik nie jest zbiorem opinii. Każda reguła ma źródło i link — bo o czasach
 animacji łatwo się kłócić bez końca, a policzone badania i systemy projektowe

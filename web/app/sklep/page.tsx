@@ -4,6 +4,7 @@ import { ShopBrowser } from '@/components/product/ShopBrowser';
 import { getCategories, getStronaKatalogu } from '@/lib/queries';
 import { storeMode } from '@/lib/store-mode';
 import { siteUrl } from '@/lib/site';
+import { MARKA } from '@/lib/dane-sklepu';
 
 /**
  * Adres kanoniczny liczony z kategorii, a nie stały.
@@ -29,8 +30,7 @@ export async function generateMetadata({
 
   return {
     title: 'Sklep',
-    description:
-      'Wszystkie produkty w sklepie Nordo — filtruj po kategorii, sortuj po cenie i ocenie.',
+    description: `Wszystkie produkty w sklepie ${MARKA.nazwa} — filtruj po kategorii, sortuj po cenie i ocenie.`,
     alternates: { canonical: kanoniczny },
   };
 }

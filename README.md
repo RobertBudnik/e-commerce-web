@@ -1,4 +1,4 @@
-# Nordo — sklep e-commerce
+# Sklep e-commerce
 
 Next.js 15 (App Router) na froncie, Supabase na zapleczu. Cała logika handlowa
 siedzi w Postgresie: ceny, rabaty, dostawa, rezerwacja towaru i uprawnienia.
@@ -28,14 +28,14 @@ npm run dev
 
 Sklep: <http://localhost:3000>. Studio bazy: <http://127.0.0.1:54323>.
 
-Konta z seeda (wyłącznie lokalnie): `admin@nordo.pl` i `klient@nordo.pl`,
-hasło `nordo-local-dev`.
+Konta z seeda (wyłącznie lokalnie): `admin@sklep.example` i `klient@sklep.example`,
+hasło `lokalne-haslo-dev`.
 
 ## Struktura
 
 ```
 web/                 front na Next.js — patrz web/README.md
-  e2e/               19 testów Playwrighta po lokalnym stacku (pisze do bazy)
+  e2e/               11 plików Playwrighta po lokalnym stacku (pisze do bazy)
   e2e-smoke/         testy dymne po wdrożeniu (wyłącznie odczyt)
 supabase/
   migrations/        schemat, RLS, funkcje handlowe, kubełek na zdjęcia
@@ -44,8 +44,8 @@ supabase/
 scripts/
   seed-data.mjs      katalog demonstracyjny
   gen-seed.mjs       seed-data.mjs → supabase/seed.sql
-  test-schema.mjs    86 testów schematu na Postgresie w WASM
-.github/workflows/   CI, testy dymne po wdrożeniu, CodeQL
+  test-schema.mjs    171 testów schematu na Postgresie w WASM
+.github/workflows/   CI, testy dymne po wdrożeniu, wdrażanie migracji
 .devcontainer/       Codespaces z Dockerem — patrz .devcontainer/README.md
 ```
 
@@ -98,8 +98,8 @@ Zestaw dymny — wyłącznie odczyt, bezpieczny na produkcji.
 | workflow | kiedy | co robi |
 |---|---|---|
 | `.github/workflows/ci.yml` | PR i push na `main` | testy schematu, typy, audyt zależności, build produkcyjny i pełne e2e na Supabase w Dockerze |
-| `.github/workflows/dym.yml` | po wdrożeniu przez Vercela | testy dymne po adresie podglądu — tylko odczyt |
-| `.github/workflows/codeql.yml` | PR, push, tygodniowo | skan bezpieczeństwa; **wymaga repozytorium publicznego** albo Advanced Security |
+| `.github/workflows/dym.yml` | po wdrożeniu produkcyjnym przez Vercela | testy dymne po adresie wdrożenia — tylko odczyt |
+| `.github/workflows/migracje.yml` | ręcznie (`workflow_dispatch`) | `supabase db push` na produkcję za bramką potwierdzenia |
 
 Praca w chmurze: [`.devcontainer/README.md`](.devcontainer/README.md) —
 Codespaces z Dockerem, więc lokalny Supabase działa bez własnej maszyny.
@@ -107,7 +107,7 @@ Codespaces z Dockerem, więc lokalny Supabase działa bez własnej maszyny.
 ## Czego brakuje do produkcji
 
 - klucze operatora płatności — bez nich zamówienie powstaje, ale nikt go nie opłaci
-- powiadomienia e-mail o zamówieniu, wysyłce i anulowaniu
-- faktury, integracja z kurierem, numer przesyłki
-- opinie klientów — `rating` i `reviews` to dziś liczby z ziarna
-- stronicowanie katalogu i szukanie po stronie serwera (Postgres FTS)
+- faktury i paragony — sklep ich nie wystawia, plan w [docs/platnosci-plan.md](docs/platnosci-plan.md)
+- integracja z API przewoźnika — numer przesyłki wpisuje się dziś ręcznie w panelu
+- dane sprzedawcy i obietnice handlowe w `web/lib/dane-sklepu.ts` — pola ze znacznikiem `⟨…⟩`
+  nie są wypełnione, a sklep celowo nie wyświetla sekcji, której nie ma

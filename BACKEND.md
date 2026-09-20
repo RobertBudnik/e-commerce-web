@@ -1,4 +1,4 @@
-# Nordo — backend na Supabase
+# Backend na Supabase
 
 Warstwa serwerowa: Postgres ze wszystkimi regułami dostępu w bazie (RLS), logika
 handlowa w funkcjach SQL, płatności w funkcjach Edge. Nic nie jest przybite do
@@ -101,7 +101,7 @@ Nadanie roli pracownikowi:
 
 ```sql
 insert into public.user_roles (user_id, role)
-select id, 'staff' from auth.users where email = 'magazyn@nordo.pl';
+select id, 'staff' from auth.users where email = 'magazyn@sklep.example';
 ```
 
 Rola zapisana w tokenie żyje do jego wygaśnięcia. Odebranie uprawnień wymaga
@@ -138,8 +138,8 @@ unieważnienia sesji (`auth.admin.signOut(user_id)`), samo skasowanie wiersza ni
 Nic w kodzie nie zawiera adresu na sztywno. Do przełączenia wystarczy:
 
 ```bash
-export SITE_URL="https://nordo.pl"
-export ADDITIONAL_REDIRECT_URL="https://nordo.pl/logowanie"
+export SITE_URL="https://twoja-domena.pl"
+export ADDITIONAL_REDIRECT_URL="https://twoja-domena.pl/logowanie"
 
 npx supabase link --project-ref <ref-projektu>
 npx supabase db push                 # migracje na zdalną bazę
@@ -152,7 +152,7 @@ Do tego w panelu Supabase: **Authentication → URL Configuration** ustawić Sit
 na domenę, a w Stripe wskazać webhook na
 `https://<ref>.supabase.co/functions/v1/stripe-webhook`.
 
-Seed z kontem `admin@nordo.pl` i hasłem wpisanym w pliku jest wyłącznie do pracy
+Seed z kontem `admin@sklep.example` i hasłem wpisanym w pliku jest wyłącznie do pracy
 lokalnej — `db push` go nie wysyła, ale nie wolno go uruchamiać na produkcji.
 
 ## Czego jeszcze nie ma

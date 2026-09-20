@@ -1,8 +1,8 @@
 {
-  "name": "nordo-web",
+  "name": "sklep-web",
   "private": true,
   "version": "0.1.0",
-  "description": "Nordo — sklep na Next.js (App Router) z sesją w ciasteczkach",
+  "description": "Front sklepu — Next.js (App Router) z sesją w ciasteczkach",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",

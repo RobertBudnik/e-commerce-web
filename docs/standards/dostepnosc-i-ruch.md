@@ -14,7 +14,7 @@ Palety nie da się rzetelnie zmierzyć z DOM-u — `color-mix()` i `oklch()`
 psują odczyt przez `getComputedStyle`, a `canvas.fillStyle` normalizuje je
 niekonsekwentnie. **Kontrast liczyć z tokenów**, skryptem, nie na oko.
 
-Stan tokenów Nordo (motyw jasny; ciemny jest wszędzie ≥ 4,2):
+Stan tokenów sklepu (motyw jasny; ciemny jest wszędzie ≥ 4,2):
 
 | | bg | surface | panel | bg-sunken |
 |---|---|---|---|---|

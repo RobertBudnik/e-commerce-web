@@ -187,7 +187,7 @@ export const ORDERS = [
     date: '2026-07-14',
     status: 'w drodze',
     customer: 'Robert Kowalski',
-    email: 'robert@nordo.pl',
+    email: 'robert@sklep.example',
     address: 'Krucza 12/4, 00-001 Warszawa',
     phone: '+48 600 100 200',
     shipping: 0,

@@ -10,10 +10,10 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { toast } from '@/components/ui/ToastHost';
 import { money } from '@/lib/format';
 import { specsToText } from '@/lib/specs';
+import { KLUCZ_SZKICU_PRODUKTU } from '@/lib/klucze';
 import type { Category, Product } from '@/lib/types';
 
 const MAX_BAJTOW = 5 * 1024 * 1024;
-const KLUCZ_SZKICU = 'nordo-szkic-produktu';
 const PODPOWIEDZ_ZDJECIA = 'Przeciągnij plik, wklej ze schowka albo wybierz z dysku. JPG, PNG, WebP lub AVIF, do 5 MB.';
 
 /** Pola, które widać na kafelku — tylko one muszą żyć w stanie. */
@@ -80,7 +80,7 @@ export function AdminPanel({ products, categories }: { products: Product[]; cate
   // źródłem prawdy jest wiersz z bazy, nie to, co ktoś zostawił w karcie.
   useEffect(() => {
     try {
-      const zapis = localStorage.getItem(KLUCZ_SZKICU);
+      const zapis = localStorage.getItem(KLUCZ_SZKICU_PRODUKTU);
       if (zapis) setSzkic({ ...PUSTY_SZKIC, ...JSON.parse(zapis) });
     } catch {
       /* prywatne okno albo uszkodzony wpis — szkic to wygoda, nie wymóg */
@@ -91,8 +91,8 @@ export function AdminPanel({ products, categories }: { products: Product[]; cate
     if (editing) return;
     try {
       const cos = Object.values(szkic).some((v) => v && v !== '0' && v !== 'grid');
-      if (cos) localStorage.setItem(KLUCZ_SZKICU, JSON.stringify(szkic));
-      else localStorage.removeItem(KLUCZ_SZKICU);
+      if (cos) localStorage.setItem(KLUCZ_SZKICU_PRODUKTU, JSON.stringify(szkic));
+      else localStorage.removeItem(KLUCZ_SZKICU_PRODUKTU);
     } catch {
       /* jw. */
     }
@@ -167,7 +167,7 @@ export function AdminPanel({ products, categories }: { products: Product[]; cate
     setHint(PODPOWIEDZ_ZDJECIA);
     form.current?.reset();
     try {
-      localStorage.removeItem(KLUCZ_SZKICU);
+      localStorage.removeItem(KLUCZ_SZKICU_PRODUKTU);
     } catch {
       /* jw. */
     }

@@ -1,5 +1,5 @@
 -- =============================================================================
--- Nordo — dane startowe
+-- Dane startowe
 -- Generowane: node scripts/gen-seed.mjs > supabase/seed.sql
 -- =============================================================================
 
@@ -70,7 +70,7 @@ do $$
 declare
   admin_id uuid;
 begin
-  select id into admin_id from auth.users where email = 'admin@nordo.pl';
+  select id into admin_id from auth.users where email = 'admin@sklep.example';
 
   if admin_id is null then
     admin_id := gen_random_uuid();
@@ -86,10 +86,10 @@ begin
       phone_change, phone_change_token, reauthentication_token
     ) values (
       '00000000-0000-0000-0000-000000000000', admin_id, 'authenticated', 'authenticated',
-      'admin@nordo.pl', crypt('nordo-local-dev', gen_salt('bf')),
+      'admin@sklep.example', crypt('lokalne-haslo-dev', gen_salt('bf')),
       now(), now(), now(),
       '{"provider":"email","providers":["email"]}'::jsonb,
-      '{"full_name":"Nordo HQ"}'::jsonb,
+      '{"full_name":"Zaplecze sklepu"}'::jsonb,
       '', '', '', '', '', '', '', ''
     );
 
@@ -98,7 +98,7 @@ begin
       provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
     ) values (
       admin_id, admin_id,
-      jsonb_build_object('sub', admin_id::text, 'email', 'admin@nordo.pl', 'email_verified', true),
+      jsonb_build_object('sub', admin_id::text, 'email', 'admin@sklep.example', 'email_verified', true),
       'email', now(), now(), now()
     )
     on conflict do nothing;
@@ -119,7 +119,7 @@ declare
   customer_id uuid;
   order_id uuid;
 begin
-  select id into customer_id from auth.users where email = 'klient@nordo.pl';
+  select id into customer_id from auth.users where email = 'klient@sklep.example';
 
   if customer_id is null then
     customer_id := gen_random_uuid();
@@ -133,7 +133,7 @@ begin
       phone_change, phone_change_token, reauthentication_token
     ) values (
       '00000000-0000-0000-0000-000000000000', customer_id, 'authenticated', 'authenticated',
-      'klient@nordo.pl', crypt('nordo-local-dev', gen_salt('bf')),
+      'klient@sklep.example', crypt('lokalne-haslo-dev', gen_salt('bf')),
       now(), now(), now(),
       '{"provider":"email","providers":["email"]}'::jsonb,
       '{"full_name":"Robert Kowalski"}'::jsonb,
@@ -144,7 +144,7 @@ begin
       provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
     ) values (
       customer_id, customer_id,
-      jsonb_build_object('sub', customer_id::text, 'email', 'klient@nordo.pl', 'email_verified', true),
+      jsonb_build_object('sub', customer_id::text, 'email', 'klient@sklep.example', 'email_verified', true),
       'email', now(), now(), now()
     )
     on conflict do nothing;
@@ -170,7 +170,7 @@ begin
       subtotal_cents, discount_cents, shipping_cents, total_cents,
       shipping_address, created_at
     ) values (
-      'NOR-2026-0418', customer_id, 'klient@nordo.pl', '+48 600 100 200',
+      'NOR-2026-0418', customer_id, 'klient@sklep.example', '+48 600 100 200',
       'wysłane', 'opłacone',
       72800, 0, 0, 72800,
       jsonb_build_object(

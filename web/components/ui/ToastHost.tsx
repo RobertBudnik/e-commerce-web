@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from 'react';
 
+/** Nazwa zdarzenia. Bez marki — szyld sklepu bywa zmieniany, kanał nie. */
+const ZDARZENIE = 'sklep:toast';
+
 /**
  * Toast bez biblioteki: zdarzenie na `window`, jeden element w DOM.
  * `role="status"` czyta czytnik ekranu, animację robi klasa `.show`.
  */
 export function toast(message: string) {
-  window.dispatchEvent(new CustomEvent('nordo:toast', { detail: message }));
+  window.dispatchEvent(new CustomEvent(ZDARZENIE, { detail: message }));
 }
 
 export function ToastHost() {
@@ -24,9 +27,9 @@ export function ToastHost() {
       timer = setTimeout(() => setVisible(false), 2400);
     };
 
-    window.addEventListener('nordo:toast', onToast);
+    window.addEventListener(ZDARZENIE, onToast);
     return () => {
-      window.removeEventListener('nordo:toast', onToast);
+      window.removeEventListener(ZDARZENIE, onToast);
       clearTimeout(timer);
     };
   }, []);

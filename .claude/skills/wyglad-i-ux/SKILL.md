@@ -1,9 +1,9 @@
 ---
 name: wyglad-i-ux
-description: Reguły wyglądu i użyteczności sklepu Nordo — hierarchia wizualna, typografia, odstępy i grupowanie, układ listy produktów, karty produktu, koszyka, wyszukiwarki i nawigacji. Reguły pochodzą z zewnętrznych źródeł (Baymard Institute, Nielsen Norman Group, Laws of UX), każda z linkiem i uzasadnieniem z badań. Użyj zawsze, gdy pada „wygląd", „układ", „layout", „hierarchia", „typografia", „odstępy", „karta produktu", „lista produktów", „filtry", „sortowanie", „koszyk", „wyszukiwarka", „makieta", „mockup", „przeprojektowanie", a także przy każdej pracy nad ekranami sklepu w web/app i komponentami w web/components.
+description: Reguły wyglądu i użyteczności sklepu — hierarchia wizualna, typografia, odstępy i grupowanie, układ listy produktów, karty produktu, koszyka, wyszukiwarki i nawigacji. Reguły pochodzą z zewnętrznych źródeł (Baymard Institute, Nielsen Norman Group, Laws of UX), każda z linkiem i uzasadnieniem z badań. Użyj zawsze, gdy pada „wygląd", „układ", „layout", „hierarchia", „typografia", „odstępy", „karta produktu", „lista produktów", „filtry", „sortowanie", „koszyk", „wyszukiwarka", „makieta", „mockup", „przeprojektowanie", a także przy każdej pracy nad ekranami sklepu w web/app i komponentami w web/components.
 ---
 
-# Wygląd i UX sklepu Nordo
+# Wygląd i UX sklepu
 
 Reguły z badań, nie z gustu. Każda ma źródło — bo „mnie się tak podoba" nie jest
 argumentem, którym da się rozstrzygnąć spór o układ karty produktu.
