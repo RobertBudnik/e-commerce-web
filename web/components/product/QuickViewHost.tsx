@@ -28,7 +28,6 @@ export function QuickViewHost() {
   const [product, setProduct] = useState<Product | null>(null);
   const [visible, setVisible] = useState(false);
   const [qty, setQty] = useState(1);
-  const closeBtn = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
 
   const cart = useCart();
@@ -79,7 +78,6 @@ export function QuickViewHost() {
             type="button"
             aria-label="Zamknij podgląd"
             onClick={close}
-            ref={closeBtn}
           >
             <Icon name="close" />
           </button>

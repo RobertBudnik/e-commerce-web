@@ -46,6 +46,17 @@ async function adresZadajacego(): Promise<string> {
  * Czy wolno wysłać. Zapisuje próbę tylko wtedy, gdy wolno — inaczej odbita
  * próba przedłużałaby blokadę bez końca.
  *
+ * **Sondy idą po kolei, nie równolegle.** `limit_poczty` jest jednocześnie
+ * pytaniem i zapisem: gdy przepuszcza, od razu dokłada wiersz do licznika.
+ * Przy `Promise.all` obie sondy zapisywały się zawsze, więc żądanie odbite
+ * przez limit skrzynki i tak zjadało jedno miejsce z puli adresu IP — czyli
+ * dokładnie to, czemu miało zapobiegać zdanie wyżej. Kto trzykrotnie prosił
+ * o link do jednej skrzynki, tracił przy okazji trzy z dziesięciu prób IP
+ * i nie mógł już wysłać nic nawet na inny adres.
+ *
+ * Pierwsza idzie skrzynka, bo jej okno jest ciaśniejsze (3–5 na godzinę wobec
+ * 10–15 dla adresu IP), więc to ona odbija częściej.
+ *
  * Gdy baza nie odpowie, przepuszczamy. To świadomy wybór: limit chroni przed
  * nadużyciem, ale awaria licznika nie może zamykać rejestracji wszystkim.
  */
@@ -58,24 +69,24 @@ export async function wolnoWyslac(email: string, rodzaj: RodzajWysylki): Promise
   });
   if (bladSkrotu) return true;
 
+  const poAdresie = await supabase.rpc('limit_poczty', {
+    p_klucz: `email:${skrot}`,
+    p_rodzaj: rodzaj,
+    p_ile: okno.adres[0],
+    p_sekundy: okno.adres[1],
+  });
+  if (poAdresie.error) return true;
+  if (poAdresie.data !== true) return false;
+
   const ip = await adresZadajacego();
 
-  const [poIp, poAdresie] = await Promise.all([
-    supabase.rpc('limit_poczty', {
-      p_klucz: `ip:${ip}`,
-      p_rodzaj: rodzaj,
-      p_ile: okno.ip[0],
-      p_sekundy: okno.ip[1],
-    }),
-    supabase.rpc('limit_poczty', {
-      p_klucz: `email:${skrot}`,
-      p_rodzaj: rodzaj,
-      p_ile: okno.adres[0],
-      p_sekundy: okno.adres[1],
-    }),
-  ]);
+  const poIp = await supabase.rpc('limit_poczty', {
+    p_klucz: `ip:${ip}`,
+    p_rodzaj: rodzaj,
+    p_ile: okno.ip[0],
+    p_sekundy: okno.ip[1],
+  });
+  if (poIp.error) return true;
 
-  if (poIp.error || poAdresie.error) return true;
-
-  return poIp.data === true && poAdresie.data === true;
+  return poIp.data === true;
 }

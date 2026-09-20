@@ -20,7 +20,6 @@ import { Ilosc } from '@/components/ui/Ilosc';
  */
 export function MiniCart() {
   const { lines, open, setOpen, setQty, bump, remove } = useCart();
-  const closeBtn = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLElement>(null);
   const pathname = usePathname();
 
@@ -68,7 +67,6 @@ export function MiniCart() {
             type="button"
             aria-label="Zamknij koszyk"
             onClick={() => setOpen(false)}
-            ref={closeBtn}
           >
             <Icon name="close" />
           </button>
