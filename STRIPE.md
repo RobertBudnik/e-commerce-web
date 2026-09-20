@@ -94,6 +94,19 @@ Zdarzenia do subskrypcji:
 - `checkout.session.async_payment_succeeded`
 - `checkout.session.expired`
 - `checkout.session.async_payment_failed`
+- `charge.refunded` — bez tego zwrot zrobiony w panelu Stripe'a nie dociera
+  do bazy i zamówienie zostaje „opłacone" na zawsze
+- `charge.dispute.created` — obciążenie zwrotne. Baza go nie odnotowuje
+  (nie ma na to stanu), ale webhook krzyczy o nim w dzienniku; spór bez
+  odpowiedzi w terminie przegrywa się automatycznie
+
+Na produkcji ustaw też tryb endpointu — bez tego endpoint testowy wpięty
+przez pomyłkę w produkcyjny projekt zapisze zamówienia z kart testowych jako
+prawdziwą sprzedaż:
+
+```bash
+npx supabase secrets set STRIPE_TRYB=live
+```
 
 Funkcja webhooka musi być wdrożona bez weryfikacji JWT — Stripe nie nosi tokenu
 użytkownika, autentyczność potwierdza podpis:

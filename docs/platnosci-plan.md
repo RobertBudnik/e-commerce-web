@@ -61,27 +61,42 @@ sztuki, nie abonamenty. Gdyby kiedyś doszły, wtedy powstaje osobna tabela
 `subscriptions` z `stripe_subscription_id` i `current_period_end`; dzisiaj to
 byłby pusty schemat pod przyszłość, która może nie nadejść.
 
-**Czego brakuje: tabeli przetworzonych zdarzeń operatora.**
+**Doszła tabela przetworzonych zdarzeń operatora** (migracja
+`20260920090000`).
 
 `mark_order_paid()` jest idempotentna względem *stanu* zamówienia i to wystarcza
-przy powtórce tego samego zdarzenia. Nie wystarcza, gdy operator dośle zdarzenia
-w innej kolejności albo gdy dojdzie zwrot: nie ma śladu, które `event.id` już
-przeszły przez webhook.
+przy powtórce tego samego zdarzenia. Nie wystarczało, gdy operator dosłał
+zdarzenia w innej kolejności albo gdy doszedł zwrot: nie było śladu, które
+`event.id` już przeszły przez webhook.
 
 ```sql
 create table public.platnosci_zdarzenia (
   event_id text primary key,           -- evt_... od operatora
   typ text not null,
   order_id uuid references public.orders (id) on delete set null,
-  odebrane_at timestamptz not null default now()
+  livemode boolean,
+  stan text not null default 'w_toku' check (stan in ('w_toku', 'zrobione')),
+  odebrane_at timestamptz not null default now(),
+  zrobione_at timestamptz
 );
-alter table public.platnosci_zdarzenia enable row level security;
--- Bez polityk: pisze wyłącznie webhook kluczem service_role, który omija RLS.
--- Odczyt dla zaplecza dopiszemy, gdy powstanie ekran historii płatności.
 ```
 
-Webhook wstawia wiersz **przed** obsługą; konflikt na kluczu głównym znaczy
-„to już było" i kończy 200 bez ruszania zamówienia.
+Kolumna `stan` jest ważniejsza, niż wygląda, i pierwsza wersja tego planu miała
+ją źle. Było tu napisane: „webhook wstawia wiersz **przed** obsługą; konflikt na
+kluczu głównym znaczy »to już było«". To daje semantykę **co najwyżej raz**:
+gdy funkcja padnie w połowie, ponowienie zobaczy wpis i grzecznie odpuści
+zdarzenie, które nigdy nie zostało obsłużone. Przy płatności to najgorszy
+możliwy wybór — cicho gubi pieniądze.
+
+Dlatego wiersz powstaje na wejściu ze stanem `w_toku`, a dopiero udana obsługa
+przestawia go na `zrobione`. Powtórka zdarzenia `zrobione` odpada bez ruszania
+zamówienia; powtórka po padzie (`w_toku`) zostaje obsłużona jeszcze raz.
+Wszystkie operacje pod spodem są idempotentne, więc drugie przejście niczego
+nie psuje.
+
+Tabela nie ma polityk RLS i to jest zamierzone: RLS jest włączone, więc bez
+polityki nikt nie sięgnie do niej z przeglądarki. Pisze wyłącznie webhook
+kluczem `service_role`, który RLS omija.
 
 ---
 
@@ -92,22 +107,49 @@ Kolejność od najpilniejszego.
 - [x] **Adresy powrotu.** `success_url` i `cancel_url` wskazywały
       `/order-confirmed.html` i `/cart.html` ze statycznej wersji sklepu — obie
       dają dziś 404. Naprawione: `/zamowienie/{numer}` i `/koszyk`.
-- [ ] **Klucz idempotencji przy zakładaniu sesji.** `create-checkout` wysyła
-      POST do Stripe'a bez nagłówka `Idempotency-Key`. Zerwane połączenie po
-      stronie klienta i ponowne dotknięcie „Zamawiam" zakłada drugą sesję
-      płatności na to samo zamówienie. Nagłówek `Idempotency-Key: <order.id>`
-      sprawia, że operator oddaje tę samą sesję zamiast tworzyć nową.
-- [ ] **Tabela zdarzeń** z punktu 2 — wstawka na wejściu do webhooka.
-- [ ] **Zwroty pieniędzy.** Dziś webhook obsługuje cztery zdarzenia sesji.
-      Brakuje `charge.refunded` → `payment_status = 'zwrócone'`. Bez tego
-      zwrot zrobiony w panelu Stripe'a nie dociera do bazy i zamówienie
-      zostaje „opłacone" na zawsze. Dopisać zdarzenie w panelu operatora
-      **i** gałąź w `switch`.
-- [ ] **Wygasanie sesji a rezerwacja towaru.** `create_order()` zdejmuje stan
-      od razu, a `checkout.session.expired` przychodzi domyślnie po 24 godzinach.
-      Przez dobę towar porzuconego koszyka jest niedostępny dla innych. Do
-      rozważenia: `expires_at` na sesji ustawiony na 30–60 minut (minimum
-      Stripe'a to 30 minut).
+- [x] **Webhook nie umiał anulować.** `cancel_order()` sprawdza
+      `authorize('orders.write')`, ta woła `current_role_name()`, a ta zwraca
+      null przy pustym `auth.uid()`. Klucz `service_role` nie niesie
+      użytkownika, więc webhook dostawał „Brak uprawnień", oddawał 500,
+      operator ponawiał przez dobę i odpuszczał — **a zarezerwowany towar nie
+      wracał na magazyn nigdy**. Potwierdzone sondą na produkcji.
+      Naprawione osobną funkcją `anuluj_sesje_platnosci()`, wystawioną
+      wyłącznie webhookowi; `cancel_order()` zostaje nietknięte, bo to ono
+      obsługuje klienta.
+- [x] **`checkout.session.completed` nie znaczy „zapłacono".** Przy metodach
+      z odroczonym rozliczeniem sesja domyka się ze stanem `unpaid`,
+      a pieniądze potwierdza dopiero `async_payment_succeeded`. Webhook
+      oznaczał wpłatę od razu, więc zamówienie szło do realizacji przed
+      zaksięgowaniem przelewu. Teraz sprawdza `payment_status` sesji.
+- [x] **Kwota i waluta sprawdzane przed oznaczeniem wpłaty** — w webhooku
+      wobec `orders.total_cents` i jeszcze raz w `mark_order_paid()`, po
+      drugiej stronie granicy `service_role`.
+- [x] **Klucz idempotencji przy zakładaniu sesji.** `Idempotency-Key: <order.id>`
+      w `create-checkout`. Bez niego zerwane połączenie i ponowne dotknięcie
+      „Zamawiam" zakładało drugą sesję płatności na to samo zamówienie.
+- [x] **Tabela zdarzeń** z punktu 2 — `platnosci_zdarzenia`, ze znacznikiem
+      zajęcia. Samo „wstaw na wejściu" gubiłoby zdarzenia po padzie w połowie
+      obsługi, więc wiersz powstaje jako `w_toku` i dopiero udana obsługa
+      przestawia go na `zrobione`.
+- [x] **Zwroty pieniędzy.** `charge.refunded` → `oznacz_zwrot_platnosci()`.
+      Zwrot częściowy zostawia stan „opłacone" — rozstrzyga o tym porównanie
+      kwot, bo operator wysyła to samo zdarzenie w obu przypadkach.
+      **Zdarzenie trzeba jeszcze dopisać w panelu operatora.**
+- [x] **Rotacja sekretu webhooka.** Nagłówek podpisu niesie przez okno
+      przejściowe kilka podpisów `v1`; `Object.fromEntries` zachowywało
+      ostatni, więc w dniu rotacji połowa zdarzeń odpadłaby z 400.
+- [x] **Limit składania zamówień po stronie bazy.** Zapora z `create-checkout`
+      liczyła próby w funkcji brzegowej, a `create_order` jest wystawione
+      gościom pod `/rest/v1/rpc`. Sesji płatności tą drogą nie da się założyć
+      (testowanie kart dalej zamknięte), ale zdejmowanie stanu magazynowego
+      już tak. Wyzwalacz na `orders`: dziesięć zamówień na godzinę na adres.
+- [x] **Tryb endpointu (`STRIPE_TRYB`).** Podpis chroni przed obcym nadawcą,
+      nie przed własną pomyłką: endpoint testowy wpięty w produkcyjny projekt
+      podpisuje się poprawnie swoim sekretem.
+- [x] **Wygasanie sesji a rezerwacja towaru.** `expires_at` ustawione na
+      godzinę (`ZYCIE_SESJI_SEKUND`), więc porzucony koszyk zwalnia towar po
+      godzinie zamiast po dobie. Działa dopiero razem z pierwszym punktem —
+      bez niego zdarzenie o wygaśnięciu i tak odbijało się od uprawnień.
 - [ ] **Anulowanie a zwrot środków.** `cancel_order()` zwraca towar na magazyn,
       ale nie dotyka `payment_status`. Po poprawce z migracji
       `20260807160000` klient nie anuluje już opłaconego zamówienia sam — robi
@@ -151,13 +193,22 @@ przejść przed pierwszą prawdziwą złotówką:
 | karta odrzucona | `4000 0000 0000 0002` | powrót na `cancel_url`, zamówienie zostaje `oczekuje` |
 | wymagane 3D Secure | `4000 0025 0000 3155` | po uwierzytelnieniu ta sama ścieżka co udana |
 | BLIK | tryb testowy z panelu | jak wyżej; sprawdzić, czy metoda w ogóle się pokazuje |
-| powtórka zdarzenia | `stripe events resend <id>` | nic się nie zmienia drugi raz |
-| wygaśnięcie sesji | `checkout.session.expired` | `cancel_order()`, towar wraca na stan |
+| powtórka zdarzenia | `stripe events resend <id>` | nic się nie zmienia drugi raz, w `platnosci_zdarzenia` dalej jeden wiersz |
+| wygaśnięcie sesji | `stripe trigger checkout.session.expired` | zamówienie `anulowane`, **towar wraca na stan** |
+| przelew w drodze | P24 w trybie testowym, sesja `unpaid` | zamówienie zostaje `oczekuje` do `async_payment_succeeded` |
+| zwrot pełny | zwrot w panelu operatora | `payment_status = 'zwrócone'` |
+| zwrot częściowy | zwrot części kwoty | `payment_status` zostaje `opłacone` |
 | zły podpis | `curl` z podmienionym nagłówkiem | 400 „Nieprawidłowy podpis" |
 | webhook przed powrotem klienta | zapłać i zamknij kartę przed przekierowaniem | zamówienie i tak opłacone |
+| jedenaste zamówienie z adresu | `create_order` w pętli przez `/rest/v1/rpc` | odmowa „Za dużo zamówień" |
 
-Ostatni jest najważniejszy i najczęściej pomijany: powrót na stronę sukcesu
-niczego nie potwierdza, potwierdza webhook.
+Przedostatni jest najważniejszy i najczęściej pomijany: powrót na stronę
+sukcesu niczego nie potwierdza, potwierdza webhook.
+
+Wiersze o wygaśnięciu, zwrocie i limicie nie wymagają Stripe'a — sprawdza je
+`npm run db:test` na prawdziwym Postgresie, w tym samym kontekście
+`service_role`, w którym pracuje webhook. Tam siedziała usterka, której żaden
+test przez przeglądarkę by nie złapał.
 
 ---
 
@@ -184,20 +235,43 @@ niczego nie potwierdza, potwierdza webhook.
       towaru jest w kodzie (`zglos_zwrot` → `przyjmij_zwrot`), ale zwrot
       **pieniędzy** robi człowiek w panelu Stripe'a. To akceptowalne przy
       obecnej skali — pod warunkiem że ktoś tego pilnuje.
-- [ ] **Region danych.** Projekt Supabase w UE (Frankfurt), Vercel `fra1`.
-      Zgodne z tym, co obiecuje polityka prywatności. Nie zmieniać bez
-      przejrzenia dokumentów.
+- [ ] **Region danych.** Projekt Supabase stoi w `eu-west-1`, czyli
+      **w Irlandii, a nie we Frankfurcie** — sprawdzone w panelu, wcześniej
+      ten punkt mówił nieprawdę. Vercel `fra1`. Oba w UE, więc pod RODO nic
+      się nie zmienia, ale polityka prywatności ma wymieniać to, co jest.
+      Nie zmieniać bez przejrzenia dokumentów.
 
 ---
 
 ## Kolejność wdrażania
 
-1. Klucz testowy Stripe, `stripe listen`, przeklikanie ośmiu scenariuszy z §5.
-2. Włączenie BLIK i Przelewy24 w panelu operatora.
-3. `Idempotency-Key` w `create-checkout`.
-4. Tabela `platnosci_zdarzenia` + wstawka na wejściu webhooka.
-5. Obsługa `charge.refunded`.
+Punkty 1–2 są blokadami: bez nich reszta jest bezprzedmiotowa, bo sklep bez
+danych sprzedawcy nie ma prawa przyjąć złotówki od konsumenta, a kod płatności
+nie działa na schemacie sprzed jedenastu migracji.
+
+1. **Dane sprzedawcy** w `web/lib/dane-sklepu.ts` → `SPRZEDAWCA` i przepisanie
+   regulaminu oraz polityki prywatności na treść. Dziś strona
+   `/informacje/regulamin` wyświetla klientowi instrukcję dla programisty.
+2. **Wdrożenie migracji** — `Actions → Migracje na produkcję → WDRAZAM`.
+   Produkcja stoi za repozytorium; brakuje m.in. `limity_poczty` (bez niej
+   zapora kasy przepuszcza wszystko, bo jest napisana tak, żeby awaria licznika
+   nie zamykała sklepu) i `kolejka_zadan` (bez niej nie wychodzi potwierdzenie
+   zamówienia).
+3. **Wdrożenie funkcji brzegowych.** `stripe-webhook` nie jest wdrożony
+   w ogóle — dziś klient zapłaciłby, a zamówienie zostałoby `oczekuje`
+   na zawsze:
+
+   ```bash
+   npx supabase functions deploy stripe-webhook --no-verify-jwt
+   npx supabase functions deploy create-checkout
+   ```
+
+4. Klucz testowy Stripe, `stripe listen`, przeklikanie scenariuszy z §5.
+5. Włączenie BLIK i Przelewy24 w panelu operatora, dopisanie `charge.refunded`
+   i `charge.dispute.created` do subskrypcji endpointu.
 6. Front: stan przekierowania, powrót z anulowanej płatności, „Zapłać teraz".
-7. Faktury i uzupełnienie dokumentów prawnych — równolegle, bo to nie kod.
-8. Klucze `live`, endpoint webhooka na domenie, pierwsze zamówienie na własnej
-   karcie i sprawdzenie, czy pieniądze doszły.
+   To jedyne, czego ta tura nie ruszała — są to braki konwersji, nie dziury
+   w bezpieczeństwie.
+7. Faktury i uzupełnienie pozostałych dokumentów — równolegle, bo to nie kod.
+8. Klucze `live`, `STRIPE_TRYB=live`, endpoint webhooka na domenie, pierwsze
+   zamówienie na własnej karcie i sprawdzenie, czy pieniądze doszły.

@@ -53,6 +53,16 @@ async function asService() {
   await db.query(`select set_config('request.jwt.claims', '', false)`);
 }
 
+/**
+ * Kontekst webhooka operatora płatności: klucz `service_role`, żaden
+ * użytkownik. To jest ta różnica, przez którą `cancel_order()` odmawiał —
+ * `auth.uid()` jest tu puste, więc `authorize()` nie ma czego sprawdzić.
+ */
+async function asWebhook() {
+  await db.exec('reset role;');
+  await db.query(`select set_config('request.jwt.claims', '{"role":"service_role"}', false)`);
+}
+
 // ---------------------------------------------------------------------------
 // Atrapa warstwy auth Supabase
 // ---------------------------------------------------------------------------
@@ -406,7 +416,11 @@ console.log('\nFunkcje zamknięte przed przeglądarką');
 await asService();
 
 for (const [nazwa, sygnatura] of [
-  ['mark_order_paid', 'public.mark_order_paid(uuid, text, text)'],
+  ['mark_order_paid', 'public.mark_order_paid(uuid, text, text, integer)'],
+  ['anuluj_sesje_platnosci', 'public.anuluj_sesje_platnosci(uuid, public.payment_status)'],
+  ['oznacz_zwrot_platnosci', 'public.oznacz_zwrot_platnosci(text, integer, integer)'],
+  ['zdarzenie_platnosci_zajmij', 'public.zdarzenie_platnosci_zajmij(text, text, uuid, boolean)'],
+  ['zdarzenie_platnosci_zamknij', 'public.zdarzenie_platnosci_zamknij(text)'],
   ['take_stock', 'public.take_stock(uuid, integer, text, uuid)'],
   ['return_stock', 'public.return_stock(uuid, integer, text, uuid)'],
   ['handle_new_user', 'public.handle_new_user()'],
@@ -505,6 +519,231 @@ await throws(
   () => db.query(`select * from public.cancel_order($1)`, [order.id]),
   'Brak uprawnień'
 );
+
+// ---------------------------------------------------------------------------
+// Bezpieczeństwo ścieżki płatności
+//
+// Wszystkie te testy odtwarzają kontekst webhooka, bo tam siedziały usterki:
+// funkcja wołana kluczem service_role nie ma użytkownika, więc każde
+// sprawdzenie oparte na auth.uid() odmawia jej z automatu.
+// ---------------------------------------------------------------------------
+console.log('\nBezpieczeństwo płatności');
+
+await asService();
+const { rows: [sonda] } = await db.query(
+  `insert into public.products (name, slug, price_cents, stock, is_active)
+   values ('Sonda płatności', 'sonda-platnosci', 4900, 100, true)
+   returning id, price_cents`
+);
+
+// --- Anulowanie wygasłej sesji, czyli to, czego webhook nie umiał ----------
+await asUser(customer.id);
+const { rows: [wygasle] } = await db.query(
+  `select * from public.create_order($1::jsonb, $2, null, null, null, '2026-08-23')`,
+  [JSON.stringify([{ product_id: sonda.id, qty: 2 }]), 'platnosci@example.com']
+);
+
+await asWebhook();
+const stanPrzedWygasnieciem = (
+  await db.query(`select stock from public.products where id = $1`, [sonda.id])
+).rows[0].stock;
+
+const porzucone = await db.query(`select * from public.anuluj_sesje_platnosci($1, null)`, [
+  wygasle.id,
+]);
+check('webhook anuluje wygasłą sesję', porzucone.rows[0].status === 'anulowane', `${porzucone.rows[0].status}`);
+
+const stanPoWygasnieciu = (
+  await db.query(`select stock from public.products where id = $1`, [sonda.id])
+).rows[0].stock;
+check(
+  'towar z wygasłej sesji wraca na magazyn',
+  stanPoWygasnieciu === stanPrzedWygasnieciem + 2,
+  `${stanPoWygasnieciu} vs ${stanPrzedWygasnieciem}`
+);
+
+// --- Kwota wpłaty wobec rachunku ------------------------------------------
+await asUser(customer.id);
+const { rows: [doZaplaty] } = await db.query(
+  `select * from public.create_order($1::jsonb, $2, null, null, null, '2026-08-23')`,
+  [JSON.stringify([{ product_id: sonda.id, qty: 1 }]), 'platnosci@example.com']
+);
+
+await asWebhook();
+await throws(
+  'wpłata niezgodna z rachunkiem odrzucona',
+  () =>
+    db.query(`select * from public.mark_order_paid($1, 'stripe', 'pi_sonda', $2)`, [
+      doZaplaty.id,
+      doZaplaty.total_cents - 100,
+    ]),
+  'nie zgadza się z rachunkiem'
+);
+
+const wciazCzeka = (
+  await db.query(`select payment_status from public.orders where id = $1`, [doZaplaty.id])
+).rows[0];
+check(
+  'odrzucona wpłata nie rusza stanu płatności',
+  wciazCzeka.payment_status === 'oczekuje',
+  `${wciazCzeka.payment_status}`
+);
+
+const zgodna = await db.query(`select * from public.mark_order_paid($1, 'stripe', 'pi_sonda', $2)`, [
+  doZaplaty.id,
+  doZaplaty.total_cents,
+]);
+check('wpłata zgodna z rachunkiem przechodzi', zgodna.rows[0].payment_status === 'opłacone');
+
+// Zdarzenie o wygaśnięciu potrafi dojść PO potwierdzeniu wpłaty — kolejność
+// u operatora nie jest gwarantowana. Opłacone zamówienie ma to przetrwać.
+const stanPrzedProba = (
+  await db.query(`select stock from public.products where id = $1`, [sonda.id])
+).rows[0].stock;
+const nietkniete = await db.query(`select * from public.anuluj_sesje_platnosci($1, null)`, [
+  doZaplaty.id,
+]);
+check(
+  'opłacone zamówienie nie da się anulować przez webhook',
+  nietkniete.rows[0].status !== 'anulowane' && nietkniete.rows[0].payment_status === 'opłacone',
+  `${nietkniete.rows[0].status} / ${nietkniete.rows[0].payment_status}`
+);
+const stanPoProbie = (
+  await db.query(`select stock from public.products where id = $1`, [sonda.id])
+).rows[0].stock;
+check('i towar nie wraca drugi raz na magazyn', stanPoProbie === stanPrzedProba, `${stanPoProbie}`);
+
+// --- Ślad zdarzeń operatora ------------------------------------------------
+const pierwszy = await db.query(
+  `select public.zdarzenie_platnosci_zajmij('evt_sonda_1', 'checkout.session.completed', $1, false) as ok`,
+  [doZaplaty.id]
+);
+check('nowe zdarzenie idzie do obsługi', pierwszy.rows[0].ok === true);
+
+// Powtórka PRZED domknięciem znaczy „poprzednie podejście padło" — zdarzenie
+// ma przejść jeszcze raz, bo inaczej gubi się płatność.
+const poPadzie = await db.query(
+  `select public.zdarzenie_platnosci_zajmij('evt_sonda_1', 'checkout.session.completed', $1, false) as ok`,
+  [doZaplaty.id]
+);
+check('zdarzenie w toku wraca do obsługi po padzie', poPadzie.rows[0].ok === true);
+
+await db.query(`select public.zdarzenie_platnosci_zamknij('evt_sonda_1')`);
+const poZamknieciu = await db.query(
+  `select public.zdarzenie_platnosci_zajmij('evt_sonda_1', 'checkout.session.completed', $1, false) as ok`,
+  [doZaplaty.id]
+);
+check('domknięte zdarzenie nie wraca', poZamknieciu.rows[0].ok === false);
+
+// --- Zwrot pieniędzy -------------------------------------------------------
+const czesciowy = await db.query(
+  `select * from public.oznacz_zwrot_platnosci('pi_sonda', $1, $2)`,
+  [Math.floor(doZaplaty.total_cents / 2), doZaplaty.total_cents]
+);
+check(
+  'zwrot częściowy zostawia zamówienie opłacone',
+  czesciowy.rows[0].payment_status === 'opłacone',
+  `${czesciowy.rows[0].payment_status}`
+);
+
+const pelny = await db.query(`select * from public.oznacz_zwrot_platnosci('pi_sonda', $1, $2)`, [
+  doZaplaty.total_cents,
+  doZaplaty.total_cents,
+]);
+check('zwrot pełny przestawia na zwrócone', pelny.rows[0].payment_status === 'zwrócone', `${pelny.rows[0].payment_status}`);
+
+await throws(
+  'zwrot wpłaty spoza bazy zgłasza błąd',
+  () => db.query(`select * from public.oznacz_zwrot_platnosci('pi_nieznane', 100, 100)`),
+  'Nie ma zamówienia o wpłacie'
+);
+
+// --- Webhook musi mieć prawo wołać to, co powyżej --------------------------
+// Platforma nadaje `service_role` EXECUTE na nowych funkcjach domyślnymi
+// uprawnieniami, ale to ustawienie projektu, nie repozytorium — nie widać go
+// ani w `db diff`, ani w migracjach. Gdyby zniknęło, webhook przestałby
+// działać w całości, a jedyne, co by się odezwało, to 500 przy każdej
+// płatności. Stąd jawne nadania w migracji i ten test na nie.
+await asService();
+for (const sygnatura of [
+  'public.mark_order_paid(uuid, text, text, integer)',
+  'public.anuluj_sesje_platnosci(uuid, public.payment_status)',
+  'public.oznacz_zwrot_platnosci(text, integer, integer)',
+  'public.zdarzenie_platnosci_zajmij(text, text, uuid, boolean)',
+  'public.zdarzenie_platnosci_zamknij(text)',
+]) {
+  const { rows } = await db.query(
+    `select has_function_privilege('service_role', $1, 'execute') as ma`,
+    [sygnatura]
+  );
+  const nazwa = sygnatura.slice('public.'.length, sygnatura.indexOf('('));
+  check(`${nazwa}: webhook uruchomi`, rows[0].ma === true, `service_role=${rows[0].ma}`);
+}
+
+await asWebhook();
+
+// --- Zdarzenia o zamówieniach, których tu nie ma ---------------------------
+// Sesja z innego wdrożenia albo z drugiego trybu operatora. Obie ścieżki mają
+// odpaść RAZ, a nie wracać w nieskończoność: wyjątek znaczy dla webhooka
+// „ponów", a zamówienie, którego nie ma, nie pojawi się przy dziesiątej próbie.
+const obce = '00000000-0000-0000-0000-0000000000ff';
+
+const pustka = await db.query(`select * from public.anuluj_sesje_platnosci($1, null)`, [obce]);
+check(
+  'anulowanie nieznanego zamówienia oddaje pustkę, nie wyjątek',
+  pustka.rows[0].id === null,
+  `${pustka.rows[0].id}`
+);
+
+const sladObcy = await db.query(
+  `select public.zdarzenie_platnosci_zajmij('evt_sonda_obce', 'checkout.session.expired', $1, false) as ok`,
+  [obce]
+);
+check('ślad zdarzenia znosi nieznane zamówienie', sladObcy.rows[0].ok === true);
+const bezWskazania = await db.query(
+  `select order_id from public.platnosci_zdarzenia where event_id = 'evt_sonda_obce'`
+);
+check(
+  'i zapisuje je bez wskazania na zamówienie',
+  bezWskazania.rows[0].order_id === null,
+  `${bezWskazania.rows[0].order_id}`
+);
+
+// --- Limit składania zamówień po stronie bazy ------------------------------
+// Zapora z `create-checkout` liczy próby w funkcji brzegowej, a `create_order`
+// jest wystawione gościom pod /rest/v1/rpc. Ten limit domyka tę drugą drogę.
+await asUser(customer.id);
+let zlozone = 0;
+let odbite = '';
+for (let i = 0; i < 12; i++) {
+  try {
+    await db.query(
+      `select * from public.create_order($1::jsonb, $2, null, null, null, '2026-08-23')`,
+      [JSON.stringify([{ product_id: sonda.id, qty: 1 }]), 'limit@example.com']
+    );
+    zlozone++;
+  } catch (e) {
+    odbite = e.message;
+    break;
+  }
+}
+check('limit przepuszcza dziesięć zamówień na adres', zlozone === 10, `${zlozone}`);
+check('jedenaste odbite', odbite.includes('Za dużo zamówień'), odbite || 'brak odmowy');
+
+// Webhook i seed wstawiają zamówienia hurtem i limit ich nie dotyczy —
+// inaczej import z poprzedniego sklepu kończyłby się w połowie.
+await asWebhook();
+const hurtem = await db.query(
+  `insert into public.orders (email, zgoda_wersja, zgoda_at)
+   values ('limit@example.com', '2026-08-23', now()) returning id`
+);
+check('limit nie dotyczy webhooka', Boolean(hurtem.rows[0].id));
+
+// Produkt sondy znika z katalogu — dalsze testy liczą pozycje widoczne dla
+// gościa i nie mają powodu wiedzieć o rekwizytach tej sekcji. Kasować go nie
+// można: wiszą na nim pozycje zamówień z testów wyżej.
+await asService();
+await db.query(`update public.products set is_active = false where id = $1`, [sonda.id]);
 
 // ---------------------------------------------------------------------------
 console.log('\nRow Level Security');

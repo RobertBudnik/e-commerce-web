@@ -218,6 +218,22 @@ Deno.serve(async (req) => {
       headers: {
         Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
         'Content-Type': 'application/x-www-form-urlencoded',
+        /**
+         * Klucz idempotencji — identyfikator zamówienia, bo to on jest tu
+         * jednostką pracy.
+         *
+         * Bez niego zerwane połączenie po stronie klienta i ponowne dotknięcie
+         * „Zamawiam" zakłada u operatora DRUGĄ sesję płatności na to samo
+         * zamówienie. Obie są ważne, obie da się opłacić, a `payment_intent_id`
+         * ma unikalny indeks — więc drugie potwierdzenie rozbija się o bazę,
+         * już po pobraniu pieniędzy. Z tym nagłówkiem operator oddaje tę samą
+         * sesję zamiast tworzyć nową.
+         *
+         * Zakres klucza to 24 godziny po stronie operatora, a sesja i tak żyje
+         * godzinę (patrz ZYCIE_SESJI_SEKUND) — okno idempotencji obejmuje więc
+         * całe życie sesji z zapasem.
+         */
+        'Idempotency-Key': order.id,
       },
       body: params,
     });

@@ -15,3 +15,6 @@ blob-report/
 # Katalog powstaje, gdy przebieg Playwrighta ma nieustawioną zmienną ze
 # ścieżką zrzutów — nazwa bierze się wtedy wprost z „undefined".
 undefined/
+
+# Katalog powiązania z hostingiem — niesie identyfikatory projektu.
+.vercel/
