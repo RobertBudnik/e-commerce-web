@@ -18,7 +18,7 @@
     "poczta:szablony": "node scripts/szablony-poczty.mjs"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite": "^0.5.11",
     "supabase": "^2.117.0"
   }
 }
